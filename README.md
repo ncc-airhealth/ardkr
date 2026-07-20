@@ -60,12 +60,12 @@ STAC asset의 `href`에는 R2 객체 key가 그대로 담겨 있어, 버킷/엔�
 1. collection 추가 요청을 정의합니다 (무엇을, 어떤 검증 기준으로).
 2. 에이전트가 **검증 절차를 포함한** 처리 스크립트 `pipeline/process/<collection-id>.py`를
    작성합니다.
-3. 담당자가 `geovars run <collection-id>`로 실행합니다.
+3. 담당자가 `pipeline/` 실행기(`pipeline/run.py`)로 스크립트를 실행합니다.
 
 처리 스크립트는 ① collection 정의 → ② item/asset 로컬 프로세싱 → ③ 검증 →
 ④ R2 업로드 → ⑤ STAC 메타데이터 저장 순으로 진행합니다. Python 의존성은 PEP 723으로
 스크립트마다 독립 선언하고 lock으로 고정합니다. 시스템 의존성(GDAL/GEOS/PROJ)은
-스크립트가 지정한 **Docker+pixi 이미지 버전**으로 고정되며, 래퍼(`geovars run`)가 해당
+스크립트가 지정한 **Docker+pixi 이미지 버전**으로 고정되며, 실행기(`pipeline/run.py`)가 해당
 컨테이너 안에서 스크립트를 실행합니다. 세부는
 [`knowledge/decisions/pipeline-architecture.md`](knowledge/decisions/pipeline-architecture.md).
 

@@ -14,15 +14,25 @@ timestamp: 2026-07-21
 ## 모노레포 구조
 
 ```
-geovars/                       # 패키지 (대시보드·파이프라인 유틸·카탈로그 검색·모델링)
-pipeline/
-  images/<YYYY.MM.DD>/         # 시스템 환경 정의: pixi.toml + pixi.lock + Dockerfile
-  process/<collection-id>.py   # flat 처리 스크립트 (+ <collection-id>.py.lock)
+geovars/                       # geovars 컴포넌트 (자기완결)
+  pyproject.toml               #   패키지 정의 + optional extras
+  geovars/                     #   임포트 패키지 (대시보드·파이프라인 유틸·카탈로그 검색·모델링)
+pipeline/                      # 처리 실행 워크스페이스
+  run.py                       #   실행기: image 해석 → 컨테이너 → lock → uv run
+  images/<YYYY.MM.DD>/         #   시스템 환경 정의: pixi.toml + pixi.lock + Dockerfile
+  process/<collection-id>.py   #   flat 처리 스크립트 (+ <collection-id>.py.lock)
 stac-metadata/                 # STAC JSON (데이터 사실의 SSOT). 버전 차원은 여기
 knowledge/                     # OKF 지식
 .claude/                       # 에이전트 skills
 .gitignore  CLAUDE.md  README.md
 ```
+
+- **컴포넌트 자기완결**: 각 최상위 디렉토리는 동급 컴포넌트다. Python 패키징 설정은
+  레포 루트가 아니라 `geovars/`가 소유하고(`geovars/pyproject.toml`), 임포트 패키지는
+  `geovars/geovars/`에 둔다(src-layout 대신 한 겹 중첩). 루트는 "레포=패키지"가 아니라
+  모노레포다.
+- **실행 소유권**: 처리 스크립트를 실행하는 책임은 `pipeline/` 워크스페이스에 있다.
+  실행기는 `pipeline/run.py`이며, geovars 패키지의 콘솔 명령이 아니다.
 
 ## 처리 스크립트 모델
 
@@ -68,12 +78,13 @@ knowledge/                     # OKF 지식
   (기각: multi-arch — cross-arch 부동소수점/SIMD 출력 차이 위험. plain Dockerfile+apt —
   apt 미러가 옛 버전을 지워 rebuild 불가. pixi-only — OS 층 미고정 + pixi 신생 도구 리스크.)
 
-## 실행 — Python 래퍼 (크로스플랫폼)
+## 실행 — pipeline/ 워크스페이스의 실행기 (크로스플랫폼)
 
-- 개발은 **Windows·Mac 동시**. 래퍼는 **Python CLI**(`geovars`의 콘솔 명령, 예:
-  `geovars run <collection-id>`)로 세 OS에서 동일 실행. (`.sh`는 Windows 네이티브 불가라 기각.)
-  컨테이너 없이도 도는 얇은 호스트 부트스트랩으로 chicken-egg 회피.
-- 래퍼 한 번 실행: ① 스크립트 상단 `image` 읽기 → 그 컨테이너 진입 → ② lock 처리 →
+- 처리 스크립트 실행은 **`pipeline/` 워크스페이스의 책임**이다. 실행기 `pipeline/run.py`
+  (Python, stdlib 부트스트랩)로 Windows·Mac·Linux에서 동일 실행. (`.sh`는 Windows 네이티브
+  불가라 기각. geovars 패키지의 콘솔 명령으로 두는 방식도 기각 — 실행은 파이프라인 관심사지
+  라이브러리 관심사가 아니다.) 컨테이너 없이도 도는 얇은 부트스트랩으로 chicken-egg 회피.
+- 실행기 한 번 실행: ① 스크립트 상단 `image` 읽기 → 그 컨테이너 진입 → ② lock 처리 →
   ③ `uv run --script`.
 - **lock 동작 규칙**: **없으면 컨테이너 안에서 생성 / 있으면 frozen 그대로 사용 / 재-lock은
   명시적 플래그로만**(`--relock`). 매 실행 자동 재생성 금지(pin 무효화 방지). 재-lock은
@@ -92,7 +103,8 @@ knowledge/                     # OKF 지식
 
 ## 미해결
 
-- 래퍼(`geovars run`)의 세부 구현·인자.
+- 실행기(`pipeline/run.py`)의 진입 방식·인자. (현재 경로/`image`/lock 판정 로직만 구현.
+  컨테이너 진입·`uv`/`docker` 연동과 CLI 진입점은 미구현.)
 - 이미지 레지스트리 선택(GHCR / R2 등)과 보존 운영.
 - CI 도입 시: lock 커밋 검사, catalog 정합성 등 게이트.
 

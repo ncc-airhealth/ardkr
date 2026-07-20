@@ -37,7 +37,7 @@ timestamp: 2026-07-21
 
 1. 인간의 collection 추가 요청 정의
 2. 에이전트가 처리 스크립트(`pipeline/process/<collection-id>.py`) 작성 (**검증 절차 포함**)
-3. 인간이 `geovars run <collection-id>`로 실행
+3. 인간이 `pipeline/` 실행기(`pipeline/run.py`)로 실행
 
 처리 스크립트 내부:
 
