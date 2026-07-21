@@ -13,8 +13,11 @@ timestamp: 2026-07-20
 
 ## 1. agent-native
 
-모든 작업은 에이전트 하네스(claude code, codex 등)와의 대화로 수행하고, **모든 지식은
-이 레포 안에 존재**한다. 인간의 암묵지가 레포 밖에 남으면 안 된다.
+모든 작업은 **Claude Code**와의 대화로 수행하고, **모든 지식은 이 레포 안에 존재**한다.
+인간의 암묵지가 레포 밖에 남으면 안 된다. 하네스는 Claude 전용으로 고정한다 — 팀이 Claude
+구독 플랜을 지원하고, 포착 메커니즘(`recall-knowledge`/`capture-knowledge`)이 Claude Code
+skill에 의존하기 때문이다 (2026-07-21 확정,
+[/decisions/knowledge-capture.md](/decisions/knowledge-capture.md)).
 
 - 지식은 "저장 위치"가 아니라 **"포착 시점"**의 문제다. 지식은 큰맘 먹고 쓰는 문서가
   아니라 매 세션에서 흘러나오므로, 포착을 **모든 작업의 강제 부산물**로 만든다.

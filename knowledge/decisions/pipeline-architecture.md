@@ -89,7 +89,9 @@ knowledge/                     # OKF 지식
 - **lock 동작 규칙**: **없으면 컨테이너 안에서 생성 / 있으면 frozen 그대로 사용 / 재-lock은
   명시적 플래그로만**(`--relock`). 매 실행 자동 재생성 금지(pin 무효화 방지). 재-lock은
   의존성을 의도적으로 바꾸는 것이므로, 산출물이 발행됐다면 **새 버전으로 취급**.
-- **lock 커밋은 필수**(규칙). CI 강제(없으면 실패)는 CI 도입 시점으로 미룸.
+- **lock 커밋은 필수**(규칙). **CI는 도입하지 않기로 확정** — 커밋 여부를 확인하는 자동
+  게이트는 없다. 위반은 사후 발견에 의존한다
+  ([/decisions/reproducibility.md](/decisions/reproducibility.md)).
 
 ## 공용 유틸 — geovars 단일 패키지
 
@@ -104,9 +106,15 @@ knowledge/                     # OKF 지식
 ## 미해결
 
 - 실행기(`pipeline/run.py`)의 진입 방식·인자. (현재 경로/`image`/lock 판정 로직만 구현.
-  컨테이너 진입·`uv`/`docker` 연동과 CLI 진입점은 미구현.)
+  컨테이너 진입·`uv`/`docker` 연동과 CLI 진입점은 미구현.) 정확한 CLI 계약은 실행기를
+  실제로 구현할 때 정하고 `capture-knowledge`로 사후 반영한다.
 - 이미지 레지스트리 선택(GHCR / R2 등)과 보존 운영.
-- CI 도입 시: lock 커밋 검사, catalog 정합성 등 게이트.
+- provenance schema(이미지 digest·lock·입출력 manifest)의 정확한 필드명, R2 업로드·STAC
+  발행의 staging·복구 절차, 재현 원커맨드 — 구현 시점에 정하고 사후 포착.
+
+CI는 도입하지 않기로 확정했으므로
+([/decisions/reproducibility.md](/decisions/reproducibility.md)), lock 커밋·catalog
+정합성 등의 자동 게이트는 이 목록에서 제외한다 — 미해결이 아니라 **안 하기로 결정**됐다.
 
 ## 관련
 

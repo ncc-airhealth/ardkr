@@ -39,9 +39,12 @@ pin한다.
 
 ### 강제
 
-- lock은 "선택"이 아니라 **필수**다 — "선택"은 재현성이 죽는 전형적 경로. 현재는 **커밋
-  규칙으로 필수화**하고, CI 강제(없으면 빌드 실패)는 CI 도입 시점으로 미룬다. 래퍼는 lock을
-  없으면 생성/있으면 frozen으로 다뤄, 옛 스크립트 재실행이 pin을 무효화하지 않게 한다
+- lock은 "선택"이 아니라 **필수**다 — "선택"은 재현성이 죽는 전형적 경로. 단, **CI는
+  도입하지 않기로 확정**했다 ([/decisions/knowledge-capture.md](/decisions/knowledge-capture.md)).
+  → lock 필수는 **커밋 규칙(정책)으로만** 강제되고, "생성된 lock이 실제로 커밋됐는가"를
+  자동으로 확인하는 게이트는 두지 않는다. 위반은 사후(재현 시도 실패, self-review)에나
+  발견된다 — 이 리스크는 의식적으로 감수한다. 래퍼는 lock을 없으면 생성/있으면 frozen으로
+  다뤄, 옛 스크립트 재실행이 pin을 무효화하지 않게 한다
   ([/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)).
 
 ### 보존 정책 (삭제 금지)
@@ -63,6 +66,9 @@ pin한다.
 - **버전 경로만으로 pin** — 메타데이터가 mutable하면 같은 경로가 다른 내용을 가리킬 수
   있다. 해석-규정 필드를 버전 내 불변으로 못박아 해소.
 - **deprecated 데이터 주기적 삭제** — 과거 산출물의 재현을 파괴한다. 냉동으로 대체.
+- **CI로 lock 커밋 강제** — 검토했으나 CI를 아예 도입하지 않기로 확정하면서 함께 기각.
+  자동 게이트 없이 정책·self-review에 의존하는 리스크를 감수하기로 함
+  ([/decisions/knowledge-capture.md](/decisions/knowledge-capture.md)).
 
 ## 관련
 

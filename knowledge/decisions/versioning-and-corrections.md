@@ -1,7 +1,7 @@
 ---
 type: decision
 title: 버전 관리와 정정
-description: 해석-규정 필드는 버전 내 불변, 해석을 바꾸는 정정은 새 버전. deprecated/successor로 과거 사용자에게 forward-pointer 제공.
+description: 해석-규정 필드는 버전 내 불변, 해석을 바꾸는 정정은 새 버전. 버전 식별자는 MAJOR.MINOR.PATCH로 고정. deprecated/successor로 과거 사용자에게 forward-pointer 제공.
 tags: [stac, versioning, corrections, deprecation]
 timestamp: 2026-07-21
 ---
@@ -10,9 +10,14 @@ timestamp: 2026-07-21
 
 ## 결정
 
-- 버전 차원은 `stac-metadata/` 아래에 산다 (버전 식별자는 semantic version 또는 `YYYY.MM.DD`).
-  처리 스크립트는 flat(최신)이고 버전 재현은 git commit provenance로 한다
+- 버전 차원은 `stac-metadata/` 아래에 산다. **버전 식별자는 `MAJOR.MINOR.PATCH`로 고정**
+  (예: `0.0.123`, `3.1.0`) — 앞자리 0(leading zero)은 금지한다. 각 자리가 무슨 의미인지
+  (어떤 변경이면 어디를 올리는지)는 규정하지 않는다 — 유일한 규칙은 **새 버전은 사전식으로
+  이전 버전보다 커야 한다**(단조 증가, "최신" 판정·정렬용). 처리 스크립트는 flat(최신)이고
+  버전 재현은 git commit provenance로 한다
   ([/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)).
+  (기각한 대안: `YYYY.MM.DD` 병용 — collection마다 포맷이 섞이면 "최신" 판정이 기계적으로
+  어려워짐. 2026-07-21 확정.)
 - 데이터 파일(asset)은 **불변**. 버전이 바뀌면 덮어쓰지 않고 새 버전 생성.
 - 메타데이터 필드는 두 종류로 나뉜다:
   - **해석-규정 필드**(`proj:code`, 컬럼 의미, 결측값 코드 등) — 데이터 바이트를 안

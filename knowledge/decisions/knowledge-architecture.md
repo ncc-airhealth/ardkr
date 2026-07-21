@@ -1,7 +1,7 @@
 ---
 type: decision
 title: 지식 아키텍처 — STAC vs OKF 경계
-description: 데이터에 관한 사실은 STAC이 SSOT, 그 외 간접 지식은 OKF. 충돌 시 우선순위와 provenance 위치까지 규정.
+description: 데이터에 관한 사실은 STAC이 SSOT, 그 외 간접 지식은 OKF. 충돌 시 우선순위, provenance 위치, description 서술 컨벤션(한국어·권장 템플릿)까지 규정.
 tags: [stac, okf, ssot, provenance]
 timestamp: 2026-07-21
 ---
@@ -31,7 +31,14 @@ timestamp: 2026-07-21
 
 - 정정의 근거("왜 shipped 문서와 다른가")는 **STAC 안에 인라인**(`description`)으로 둔다 —
   값과 근거가 같은 곳에 살아야 다리가 끊기지 않는다.
-- 정해진 문법 없이 **자연어로 자유롭게 서술**한다 — 무엇을, 왜, 어떤 근거로 고쳤는지.
+- `description`은 **한국어로 작성**한다.
+- 정해진 문법을 강제하지는 않지만(마커·스키마 도입은 검토 후 기각), caveat·정정을 적을 때는
+  아래 **3칸 권장 템플릿**을 따른다 (권장일 뿐 강제 아님 — CI 검증도 없음, 2026-07-21):
+  - **대상** — 어떤 필드/기간/지역에 해당하는 주의사항인지
+  - **내용·원인** — 무엇이 문제였고 왜 그런지
+  - **근거** — 오라클 citation(코드북 조항, 또는 기관 해명의 결론과 근거). 문의 이력 자체는
+    OKF([/decisions/knowledge-capture.md](/decisions/knowledge-capture.md))에 남기고,
+    여기엔 결론과 근거만 적는다.
 - 개인정보 최소화: 실명·이메일·전화보다 **기관·부서 단위 귀속**을 기본으로 한다
   (가벼운 서술 컨벤션, 강제 아님).
 
