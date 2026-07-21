@@ -19,6 +19,30 @@ timestamp: 2026-07-21
   한다 (버킷명/엔드포인트만 별도 env). 카탈로그가 public이어도 asset(R2)은 자격증명
   게이트라, un-credentialed 탐색은 메타데이터까지만 도달한다.
 
+## root catalog.json 구현 (2026-07-21)
+
+빈 root 카탈로그를 pystac으로 생성해 `stac-metadata/catalog.json`에 커밋했다.
+
+```python
+import pystac
+
+catalog = pystac.Catalog(id="geovars", title="...", description="...")
+catalog.normalize_and_save(
+    root_href="stac-metadata",
+    catalog_type=pystac.CatalogType.SELF_CONTAINED,
+)
+```
+
+- **`SELF_CONTAINED`(상대경로만)를 택함, `ABSOLUTE_PUBLISHED`는 보류** — 서빙 URL(raw.githubusercontent
+  경로 등)이 아직 확정되지 않았다(`geovars/pyproject.toml`의 repo-url TODO와 동일 사유). URL이
+  확정되면 `ABSOLUTE_PUBLISHED`(self href를 그 URL로 고정) 전환을 재검토한다 — 미해결로 아래에 남김.
+- **한국어 설명은 `ensure_ascii=False`로 재직렬화 필요** — pystac 기본 직렬화(`json.dump`)는
+  `ensure_ascii=True`라 한국어가 `\uXXXX`로 이스케이프되어 diff·PR 리뷰가 불가능해진다(원칙
+  "커밋된 JSON이 diff·PR 리뷰 대상" 위반). `normalize_and_save` 이후 `json.load` →
+  `json.dump(ensure_ascii=False, indent=2)`로 재저장해야 사람이 읽을 수 있는 diff가 된다. Collection/
+  Item JSON을 쓸 때도 동일하게 재직렬화할 것 — geovars.catalog/geovars.pipeline 헬퍼 구현 시
+  이 재직렬화를 기본값으로 넣는 것을 고려(TODO).
+
 ## 카탈로그 구조 vs 레포
 
 - **루트 catalog (정문 · discovery)** — collection당 **최신 버전만 child**. 사용자가 기본적으로
@@ -62,6 +86,8 @@ timestamp: 2026-07-21
 - geovars 카탈로그 유틸 API 세부 (extent/temporal 검색 등).
 - static STAC 서빙을 raw.githubusercontent로 계속 갈지, 규모가 커지면 GitHub Pages/R2 서빙으로
   옮길지 (rate limit·CDN 성격 고려).
+- `catalog.json`의 `catalog_type`을 서빙 URL 확정 시 `SELF_CONTAINED` → `ABSOLUTE_PUBLISHED`로
+  바꿀지 (위 "root catalog.json 구현" 참고).
 
 ## 관련
 

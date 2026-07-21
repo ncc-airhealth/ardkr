@@ -11,3 +11,18 @@ STAC 카탈로그를 **JSON으로 직접 커밋**한다 (데이터에 관한 사
 
 세부: [`../knowledge/decisions/catalog-and-access.md`](../knowledge/decisions/catalog-and-access.md),
 [`../knowledge/decisions/versioning-and-corrections.md`](../knowledge/decisions/versioning-and-corrections.md)
+
+## root catalog.json
+
+`catalog.json`은 collection이 아직 없는 빈 root STAC Catalog다(pystac
+`normalize_and_save(catalog_type=SELF_CONTAINED)`로 생성, 상대경로만 사용 — 서빙 URL이
+확정되면 `ABSOLUTE_PUBLISHED`로 전환 검토). Collection을 추가할 때는 다음 load-mutate-save
+절차를 따른다(카탈로그와 개별 collection 파일이 어긋나지 않게 pystac으로만 조작):
+
+```python
+import pystac
+
+catalog = pystac.Catalog.from_file("stac-metadata/catalog.json")
+catalog.add_child(collection)  # collection 객체 생성/수정
+catalog.normalize_and_save("stac-metadata", catalog_type=pystac.CatalogType.SELF_CONTAINED)
+```

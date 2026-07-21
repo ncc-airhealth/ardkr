@@ -73,10 +73,52 @@ knowledge/                     # OKF 지식
 
   시스템 deps를 올리면 새 `images/<날짜>/`를 만들고, 옛 스크립트는 계속 옛 `image`를 가리킴
   ([/decisions/reproducibility.md](/decisions/reproducibility.md)의 시스템 층 pin).
-- **단일 정규 arch `linux/amd64`** — 한 arch = 결정론적 출력. Mac(arm64)에선 에뮬레이션으로
-  실행(느리지만 결과는 정규 arch로 통일). 대량 처리 속도가 문제되면 그때 재검토.
-  (기각: multi-arch — cross-arch 부동소수점/SIMD 출력 차이 위험. plain Dockerfile+apt —
-  apt 미러가 옛 버전을 지워 rebuild 불가. pixi-only — OS 층 미고정 + pixi 신생 도구 리스크.)
+- **단일 정규 arch `linux/arm64`** — 한 arch = 결정론적 출력(어떤 arch를 고르든 이 성질은
+  유지된다). **팀이 주로 Apple Silicon Mac에서 작업**하므로, 그 환경에서 에뮬레이션 없이
+  네이티브로 빌드·실행되는 쪽을 정규로 택함(2026-07-21, 최초엔 `linux/amd64`로 시작했다가
+  당일 뒤집음 — 발행 전 draft 상태라 "정정"이 아니라 그냥 고쳐 씀,
+  [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)의
+  in-place 금지 규칙은 이미 발행된 STAC 산출물 대상이라 여기 해당 없음).
+  x86_64 호스트(인텔 맥·클라우드 러너 등)에서는 반대로 에뮬레이션이 필요해진다 — CI를
+  안 쓰기로 확정했으므로 이 비용은 주로 사람이 드물게 x86_64에서 빌드/실행할 때만 발생.
+  대량 처리 속도나 팀 구성이 바뀌면(x86_64 비중이 늘면) 재검토.
+  (기각: multi-arch — cross-arch 부동소수점/SIMD 출력 차이 위험(같은 스크립트가 arch에 따라
+  다른 결과를 낼 수 있음). `linux/amd64` 유지 — 팀 실사용 환경(Apple Silicon)과 안 맞아
+  매 빌드/실행에서 불필요한 에뮬레이션 비용을 짐. plain Dockerfile+apt — apt 미러가 옛 버전을
+  지워 rebuild 불가. pixi-only — OS 층 미고정 + pixi 신생 도구 리스크.)
+
+### 첫 이미지 `pipeline/images/2026.07.21/` (2026-07-21)
+
+아직 어떤 처리 스크립트도 없는 상태에서, 뼈대 작업의 일환으로 최초 이미지를 만들었다. 같은 날
+안에 정규 arch를 `linux/amd64`에서 `linux/arm64`로 뒤집었다(위 "단일 정규 arch" 참고) — 아래는
+최종(arm64) 상태.
+
+- **`pixi.toml`**: `platforms = ["linux-aarch64"]`(conda-forge에서 리눅스 ARM64를 가리키는
+  이름), `dependencies`에 `python=3.12.*`, `gdal>=3.13,<4`, `geos>=3.14,<4`, `proj>=9.8,<10`,
+  `uv>=0.11,<0.12` (2026-07-21 시점 conda-forge 최신 리졸브 — amd64로 처음 `pixi add`했을 때와
+  버전이 완전히 동일하게 aarch64에서도 solve됨을 확인). 향후 스크립트가 실제로 필요로 하는
+  라이브러리가 늘면 이 최초 이미지에 추가하거나, 필요시 새 날짜 디렉토리를 판다.
+- **`pixi.lock` 생성은 `pixi lock`으로 충분** — 설치 없이 solve만 하므로, 개발자가 x86_64
+  머신에서 작업해도 `linux-aarch64` lock을 문제없이 만들 수 있다(반대 방향도 마찬가지). 에뮬레이션은
+  실제 `docker build`/`docker run` 시점, 그것도 실행 host arch와 이미지 arch가 다를 때만 필요하다.
+- **`Dockerfile`은 2-stage**:
+  1. build 스테이지 — 공식 설치 스크립트(`curl -fsSL https://pixi.sh/install.sh | sh`)로
+     pixi 자체를 설치한 뒤 `pixi install --locked` 실행. (기각한 대안: `ghcr.io/prefix-dev/pixi`
+     사전빌드 베이스 이미지 — 정확한 태그가 존재·유지되는지 확인 없이 고정하는 리스크를
+     피하려고 설치 스크립트 방식을 택함.) 설치 스크립트는 실행 중인 arch를 자동 감지해 맞는
+     pixi 바이너리를 받으므로 arm64 전환 때 이 줄은 그대로 두었다.
+  2. 최종 스테이지 — `build`에서 만들어진 `.pixi/envs/default`만 복사해 런타임 이미지를 슬림하게
+     유지(pixi 자체·빌드 캐시는 최종 이미지에 남지 않음).
+  - 모든 `FROM`에 `--platform=linux/arm64`를 명시적으로 박아, x86_64 호스트에서 빌드해도 항상
+    정규 arch(linux/arm64)로 고정되게 했다(위 "단일 정규 arch" 결정과 실제로 일치시킴).
+  - pixi 버전은 `pixi.lock`을 만든 버전(`v0.65.0`)으로 install 스크립트에 명시 고정 — "latest"로
+    두면 컨테이너 안 pixi가 더 최신 lock 포맷(v7 등)을 요구해 불필요한 재-lock을 유발할 수 있음을
+    실제로 확인했다(최초 빌드 시 `PIXI_VERSION` 미지정 → v7 업그레이드 경고 발생 → 버전 고정 후
+    재현).
+  - Apple Silicon Mac(호스트=arm64)에서 `docker build --platform linux/arm64` 후 `docker run`으로
+    `uname -m`(`aarch64`, 에뮬레이션 경고 없음) / `gdalinfo --version`(GDAL 3.13.1) /
+    `python3 --version`(3.12.13) / `uv --version`(0.11.29, `aarch64-unknown-linux-gnu` 빌드)
+    네이티브 정상 동작 검증 완료.
 
 ## 실행 — pipeline/ 워크스페이스의 실행기 (크로스플랫폼)
 

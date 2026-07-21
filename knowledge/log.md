@@ -2,6 +2,16 @@
 
 ## 2026-07-21
 
+- Creation — `stac-metadata/catalog.json`: 빈 root STAC 카탈로그를 pystac
+  `normalize_and_save(catalog_type=SELF_CONTAINED)`로 생성. `ABSOLUTE_PUBLISHED` 대신
+  `SELF_CONTAINED`을 택한 이유와, 한국어 diff 리뷰를 위한 `ensure_ascii=False` 재직렬화 필요성을
+  [catalog-and-access](/decisions/catalog-and-access.md) "root catalog.json 구현" 절에 기록.
+- Creation — `pipeline/images/2026.07.21/`: 첫 시스템 환경 정의(`pixi.toml`+`pixi.lock`+
+  `Dockerfile`, python/gdal/geos/proj/uv). Dockerfile은 pixi 설치 스크립트 기반 2-stage 빌드.
+  같은 날 안에 정규 arch를 `linux/amd64`에서 `linux/arm64`로 뒤집음(팀이 주로 Apple Silicon
+  Mac에서 작업 — 네이티브 실행 우선, 아직 미발행 draft라 in-place 수정). arm64로 빌드·실행
+  검증(`uname -m`=aarch64, gdal/python/uv 정상) 완료. 세부는
+  [pipeline-architecture](/decisions/pipeline-architecture.md) "단일 정규 arch" · "첫 이미지" 절.
 - Creation — [ponytail-plugin](/decisions/ponytail-plugin.md): Ponytail(코드 최소주의
   Claude Code 플러그인)을 프로젝트 스코프(`.claude/settings.json`의
   `extraKnownMarketplaces`+`enabledPlugins`)로 도입. pipeline/process/*.py의 flat/
