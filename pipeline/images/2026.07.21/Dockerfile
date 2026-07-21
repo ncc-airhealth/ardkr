@@ -16,7 +16,8 @@ COPY pixi.toml pixi.lock ./
 RUN pixi install --locked
 
 FROM --platform=linux/arm64 ubuntu:24.04
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+# git: uv가 `git+...` 의존성(geovars 패키지의 commit pin)을 resolve하려면 필요하다.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /image
 COPY --from=build /image/.pixi/envs/default /image/.pixi/envs/default

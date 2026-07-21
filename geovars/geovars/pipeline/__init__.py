@@ -8,12 +8,12 @@ geovars 를 git commit 으로 pin 해 옛 스크립트 재현성을 지킨다.
 
 담을 것(TODO):
 - 원본 S3 호환 스토리지(현재 Cloudflare R2) 스냅샷 입력 로딩 + file:checksum(Multihash) 검증
-- STAC Item/Collection 생성 헬퍼(pystac) → stac-metadata/ 로 기록
 - 처리 provenance(생성 git commit + image 버전) 기록
 """
 
 from __future__ import annotations
 
+import hashlib
 import os
 from pathlib import Path
 
@@ -22,6 +22,13 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
         'geovars.pipeline 은 pystac 이 필요합니다: pip install "geovars[pipeline]"'
+    ) from exc
+
+try:
+    import boto3
+except ImportError as exc:  # pragma: no cover
+    raise ImportError(
+        'geovars.pipeline 은 boto3 가 필요합니다: pip install "geovars[pipeline]"'
     ) from exc
 
 
@@ -48,3 +55,35 @@ def duckdb_cache_dir() -> Path:
 def scratch_dir() -> Path:
     """현재 처리 스크립트(collection)의 중간산출물 스크래치 디렉토리."""
     return Path(os.environ.get("GEOVARS_SCRATCH_DIR", str(cache_root() / "pipeline")))
+
+
+def multihash_sha256(data: bytes) -> str:
+    """STAC File Info extension의 `file:checksum` 형식(Multihash, sha2-256)으로 인코딩.
+
+    Multihash = <함수코드><다이제스트 길이><다이제스트>, sha2-256은 0x12/0x20 →
+    16진 접두 "1220" + sha256 hex digest.
+    """
+    return "1220" + hashlib.sha256(data).hexdigest()
+
+
+def upload_asset(local_path: str | Path, key: str) -> str:
+    """로컬 파일을 S3 호환 버킷(GEOVARS_S3_*)에 업로드하고 file:checksum(Multihash)을 반환.
+
+    같은 checksum을 객체 커스텀 메타데이터에도 넣어 HEAD 요청으로 1차 검증 가능하게 한다
+    (knowledge/decisions/reproducibility.md 3층 pin의 "입력 collection 층").
+    """
+    data = Path(local_path).read_bytes()
+    checksum = multihash_sha256(data)
+    client = boto3.client(
+        "s3",
+        endpoint_url=os.environ["GEOVARS_S3_ENDPOINT_URL"],
+        aws_access_key_id=os.environ["GEOVARS_S3_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["GEOVARS_S3_SECRET_ACCESS_KEY"],
+    )
+    client.put_object(
+        Bucket=os.environ["GEOVARS_S3_BUCKET_NAME"],
+        Key=key,
+        Body=data,
+        Metadata={"checksum": checksum},
+    )
+    return checksum
