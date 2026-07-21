@@ -50,6 +50,43 @@ knowledge/                     # OKF 지식
     하므로(유틸·image가 그 시점 것이어야 함) 스크립트 복사본은 중복. flat + commit이 더 단순.
   - 감수한 트레이드오프: HEAD에서 모든 버전 스크립트를 나란히 보는 편의를 포기하는 대신,
     단순성 + 재현 메커니즘 단일화(commit pin)를 택함.
+- **lock 파일은 스크립트와 같은 디렉터리에 둔다(`<collection-id>.py.lock`)** — `pipeline/
+  process.lock/` 같은 별도 경로 분리를 검토했으나, **uv가 스크립트 lock의 저장 위치를
+  전혀 커스터마이즈할 수 없음**을 실제로 확인(`uv lock --script`/`uv run --script` 모두
+  `<script>.lock`을 스크립트 바로 옆에 고정, 관련 플래그·env var 없음, `uv --version` 0.10.11
+  기준). `run.py`가 매번 복사·이동으로 흉내내는 방법도 검토했으나 복잡도 대비 이득이 낮아
+  기각 — 파일트리가 번잡하면 에디터의 File Nesting 설정(예: VSCode
+  `explorer.fileNesting.patterns`, `*.py.lock`을 같은 이름 `.py` 아래 접기)으로 해결.
+
+### Processor 클래스 템플릿 (2026-07-21)
+
+`pipeline/process/<collection-id>.py`는 함수 나열이 아니라 **`Processor` 클래스 하나**로
+쓰는 것을 공식 템플릿으로 확정했다(첫 실사용:
+[/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)).
+사유: 향후 처리 단계 간 상태 공유·가독성.
+
+```python
+class Processor:
+    COLLECTION_ID = "..."   # = 파일명 = collection id
+    VERSION = "0.1.0"
+    TITLE = "..."
+    DESCRIPTION = "..."
+    # 그 외 collection 고유 설정·하드코딩 데이터도 클래스 변수로
+
+    def build_...(self) -> ...:
+        ...  # 처리 단계 하나당 메서드 하나
+
+    def run(self) -> None:
+        ...  # 단계 메서드들을 순서대로 호출하는 오케스트레이터
+
+
+if __name__ == "__main__":
+    Processor().run()
+```
+
+- **PEP723 의존성은 정확한 버전(`==`)으로 고정**한다(예: `duckdb==1.5.4`) — lock 파일이
+  전이 의존성까지 이미 고정하므로 정보상 중복이지만, 헤더만 봐도 재현 버전을 바로 알 수
+  있는 명시성을 우선한다. lock이 SSOT라는 점은 변하지 않는다(재현성은 lock이 보장).
 
 ## 시스템 환경 — Docker + pixi (최대 durability)
 
@@ -165,7 +202,7 @@ knowledge/                     # OKF 지식
 .cache/
   uv/                       # uv wheel/venv 캐시 (UV_CACHE_DIR)
   duckdb/                   # duckdb extension·spill(temp_directory)
-  s3/                       # S3 호환 오브젝트 스토리지(현재 Cloudflare R2) 객체 로컬 read-through 미러
+  s3/                       # S3 호환 오브젝트 스토리지(현재 Cloudflare R2)의 로컬 미러(양방향)
   pipeline/<collection-id>/ # 스크립트별 중간산출물·스크래치
 ```
 
@@ -174,6 +211,13 @@ knowledge/                     # OKF 지식
   고정된 원본의 로컬 미러일 뿐 권위 있는 입력이 아니다([/decisions/reproducibility.md](/decisions/reproducibility.md)의
   3층 pin이 진짜 권위). `pipeline/<id>/`의 중간산출물도 스크립트가 처음부터 다시 만들어낼 수
   있어야 하며, "숨은 입력"이 되면 안 된다.
+- **`s3/`는 양방향 미러(2026-07-21)**: 다운로드 read-through 미러였던 원래 개념에, **업로드
+  전 스테이징**도 같은 자리로 통합했다 — 처리 스크립트가 산출물을 실제 S3 key와 동일한
+  상대경로(`.cache/s3/<key>`)에 직접 쓰고, 그 파일을 그대로 업로드한다
+  (`geovars.pipeline.s3_cache_path(key)`/`upload_asset(key)`). `.cache/s3/`가 버킷
+  네임스페이스를 그대로 반영하는 로컬 거울이라는 하나의 개념으로 통일해, 별도
+  `pipeline/<id>/` scratch 경로와 실제 버킷 key 사이의 매핑을 스크립트가 따로 관리할 필요를
+  없앴다. 첫 실사용: [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md).
 - **경로 노출은 env var로**: 컨테이너 안 스크립트는 host 절대경로를 몰라도 되게, `run.py`가
   `UV_CACHE_DIR`(uv가 직접 읽음), `GEOVARS_CACHE_ROOT`, `GEOVARS_S3_CACHE_DIR`,
   `GEOVARS_DUCKDB_CACHE_DIR`, `GEOVARS_SCRATCH_DIR`(collection별)를 주입하고,
@@ -198,6 +242,25 @@ knowledge/                     # OKF 지식
   자기 extra만 — 스크립트가 `geovars[pipeline]`을 끌 때 대시보드·모델링 deps가 안 딸려오게.
   (분리가 실제로 아프면 그때 안정 코어를 별 패키지로 떼어냄.)
 
+### git-commit pin 실사용 검증 (2026-07-21)
+
+첫 실제 처리 스크립트(`pipeline/process/geovars-references.py`,
+[/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md))로
+"geovars를 git commit으로 pin" 방식을 처음 실제로 돌려봤다.
+
+- 레포에 `origin`(`github.com/ncc-airhealth/geovars`)이 이미 있지만, **아직 push
+  안 한 로컬 커밋도 즉시 pin해 반복 개발**할 수 있어야 해서 GitHub URL 대신
+  `geovars[pipeline,catalog] @ git+file:///workspace@<commit>#subdirectory=geovars`
+  (컨테이너 bind mount로 이미 보이는 로컬 레포를 `git+file://`로 참조)를 썼다. 실제
+  GitHub 호스팅 pin(`git+https://github.com/...@<commit>`)은 push 이후 별도 검증
+  필요 — 미해결로 남김.
+- **컨테이너 이미지에 `git`이 없어 처음엔 실패할 뻔했다** — uv가 `git+` 의존성을
+  resolve하려면 `git` 실행파일이 필요하다. `pipeline/images/2026.07.21/Dockerfile`
+  최종 스테이지에 `git` 패키지를 추가했다(아직 발행 전 draft 이미지라 in-place 수정,
+  버전 새 날짜로 안 판 이유는 위 "단일 정규 arch" 사례와 동일).
+- 스크립트를 고쳐 geovars 쪽 pin 커밋 해시가 바뀌면 `--relock` 필요(의존성 변경 =
+  재-lock 대상, 위 "lock 동작 규칙" 그대로).
+
 ## 미해결
 
 - 이미지 레지스트리 선택(GHCR / R2 등)과 보존 운영. 정해지기 전까지 `pipeline/run.py`는
@@ -205,6 +268,9 @@ knowledge/                     # OKF 지식
   "CLI 계약과 컨테이너 실행 구현" 참고).
 - provenance schema(이미지 digest·lock·입출력 manifest)의 정확한 필드명, R2 업로드·STAC
   발행의 staging·복구 절차, 재현 원커맨드 — 구현 시점에 정하고 사후 포착.
+- `geovars`를 실제 GitHub 호스팅 커밋(`git+https://github.com/ncc-airhealth/geovars.git@<commit>`)으로
+  pin하는 경로는 아직 미검증 — 지금은 `git+file:///workspace@<commit>`(로컬 pin)만
+  확인됨(위 "git-commit pin 실사용 검증"). push 이후 검증 필요.
 
 CI는 도입하지 않기로 확정했으므로
 ([/decisions/reproducibility.md](/decisions/reproducibility.md)), lock 커밋·catalog

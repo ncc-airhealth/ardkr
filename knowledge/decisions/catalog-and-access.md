@@ -53,6 +53,34 @@ catalog.normalize_and_save(
   "다시 해야 한다"를 알 수 있다
   ([/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)).
 
+## collection 버전 디렉터리 구현 (2026-07-21)
+
+첫 실제 collection(`geovars-references`,
+[/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md))으로
+실제 구현하며 정한 구체적 경로 규칙: **`stac-metadata/<collection-id>/version=<version>/`**
+(Hive 스타일 `version=<version>` 명명, S3 asset key도 동일 컨벤션)에 collection을
+self-contained로 저장(`collection.json` + `<item-id>/<item-id>.json`), 루트
+`catalog.json`의 `rel: child` 링크는 그 collection id의 기존 링크를 지우고 새 버전
+경로로 교체(과거 버전 디렉터리는 디스크에서 지우지 않음 — "루트는 최신만, 레포는
+전-버전" 그대로). `geovars.catalog.register_collection_version()`으로 구현. 같은 함수가
+저장된 모든 JSON을 `ensure_ascii=False`로 재직렬화해, 위 "root catalog.json 구현"에
+남겨뒀던 TODO(Collection/Item에도 재직렬화 적용)를 해소했다.
+
+- **pystac 버그 주의**: `Collection.normalize_and_save(root_href, ...)`에서
+  `root_href`의 마지막 경로 조각에 `.`이 있으면(`version=0.1.0` 같은 버전 문자열) pystac이
+  파일명+확장자로 오인해 그 조각을 통째로 잘라버린다 — **`root_href` 끝에 `/`를
+  반드시 붙여야** 회피된다. 실제로 처음엔 이 버그로 `geovars-references/0.1.0/`이
+  아니라 `geovars-references/`에 파일이 떨어지는 걸 발견하고 고쳤다
+  ([/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)
+  "발견한 버그" 참고).
+- **`pystac.layout.TemplateLayoutStrategy`는 검토 후 기각** — 대상 객체가 트리의
+  root일 때(`is_root=True`, 우리처럼 collection을 그 자체로 저장) 템플릿을 무시하고
+  `BestPracticesLayoutStrategy`로 폴백함을 실제 테스트로 확인. 우회하려면 루트
+  Catalog에서부터 전체를 매번 `normalize_and_save`해야 하는데, 이는 위 "카탈로그 구조
+  vs 레포"의 **증분 등록**(한 collection 서브트리만 건드림) 원칙과 충돌해 기각. 세부:
+  [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)
+  "두 번째 grilling 라운드".
+
 ## 카탈로그 유지 절차 (pystac load-mutate-save)
 
 1. 레포에서 catalog를 pystac으로 관리.

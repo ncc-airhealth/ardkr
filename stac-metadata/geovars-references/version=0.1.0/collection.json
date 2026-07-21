@@ -1,0 +1,45 @@
+{
+  "type": "Collection",
+  "id": "geovars-references",
+  "stac_version": "1.1.0",
+  "description": "geovars 프로젝트와 관련된 연구자료(논문) 서지 정보. item의 asset은 pandas로 만든 parquet 테이블(논문별 서지 메타데이터 행)이고, STAC Scientific Citation extension(sci:publications)으로 인용 정보를 기록한다. 동시에 pipeline 인프라(처리 → S3 업로드 → STAC 카탈로그 등록) 전체 경로를 검증하는 용도로도 쓰인다.",
+  "links": [
+    {
+      "rel": "root",
+      "href": "./collection.json",
+      "type": "application/json",
+      "title": "geovars 프로젝트 관련 연구자료"
+    },
+    {
+      "rel": "item",
+      "href": "./references/references.json",
+      "type": "application/geo+json"
+    }
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/version/v1.2.0/schema.json"
+  ],
+  "version": "0.1.0",
+  "title": "geovars 프로젝트 관련 연구자료",
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          -180.0,
+          -90.0,
+          180.0,
+          90.0
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "2026-07-21T00:00:00Z",
+          null
+        ]
+      ]
+    }
+  },
+  "license": "proprietary"
+}

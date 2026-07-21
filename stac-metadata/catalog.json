@@ -9,6 +9,12 @@
       "href": "./catalog.json",
       "type": "application/json",
       "title": "geovars 공간데이터 카탈로그"
+    },
+    {
+      "rel": "child",
+      "href": "./geovars-references/version=0.1.0/collection.json",
+      "type": "application/json",
+      "title": "geovars 프로젝트 관련 연구자료"
     }
   ],
   "title": "geovars 공간데이터 카탈로그"

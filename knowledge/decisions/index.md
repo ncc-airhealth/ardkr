@@ -28,3 +28,7 @@ grilling 세션(2026-07-20)에서 확정한 설계 결정 기록. 각 문서는 
 - [/decisions/secrets-and-s3-client.md](/decisions/secrets-and-s3-client.md) —
   Cloudflare R2 연동 시크릿 관리: .env/.env.template 루트 위치, boto3+cloudpathlib[s3]
   조합, GEOVARS_S3_* 벤더 중립 명명(실제 스토리지는 R2), sign() 헬퍼는 추후 과제
+- [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md) —
+  첫 실제 collection(geovars-references, 연구자료 서지): 인프라 전체 경로 검증 겸
+  실사용, STAC Scientific Citation extension, geovars 공용 유틸 git-pin 실사용,
+  pystac 버전 디렉터리 버그 발견·수정

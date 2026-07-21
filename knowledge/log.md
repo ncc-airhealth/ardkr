@@ -2,6 +2,43 @@
 
 ## 2026-07-21
 
+- Update — `geovars-references` 세 번째 리뷰 반영: `REFERENCES`(클래스 변수)를
+  `references`(`@property`)로 분리(클래스 변수엔 collection 메타데이터만), duckdb→pandas
+  로 단순화(`pd.DataFrame(...).to_parquet()`), STAC extension을 pystac 공식 클래스
+  (`ScientificExtension`/`VersionExtension`/`FileExtension`)로 교체 — 그 결과 collection
+  에 `version` 필드가 처음으로 STAC 메타데이터에 기록되고, `cite-as` link도 자동 생성됨.
+  [geovars-references-collection](/decisions/geovars-references-collection.md)
+  "세 번째 리뷰 반영" 참고.
+- Update — 사용자 리뷰로 `geovars-references` 구현을 두 번째 `/grill-me` 라운드로 개선:
+  버전 디렉터리를 `version=<version>`(Hive 스타일)로, S3 업로드 전 스테이징을
+  `.cache/s3/<key 그대로>`(양방향 미러)로, `pipeline/process/*.py`를 `Processor` 클래스
+  공식 템플릿으로, PEP723 의존성을 정확한 버전(`==`)으로 고정. lock 파일을 별도 경로로
+  옮기는 안은 **uv가 지원하지 않음을 실제 확인 후 기각**(스크립트 옆 유지). pystac
+  `TemplateLayoutStrategy` 도입도 검토 후 기각(증분 등록 모델과 충돌, 실제 테스트로
+  확인). [geovars-references-collection](/decisions/geovars-references-collection.md)
+  "두 번째 grilling 라운드", [pipeline-architecture](/decisions/pipeline-architecture.md)
+  "Processor 클래스 템플릿", [catalog-and-access](/decisions/catalog-and-access.md)
+  "collection 버전 디렉터리 구현" 참고.
+- Creation — [geovars-references-collection](/decisions/geovars-references-collection.md) +
+  첫 실제 STAC collection `geovars-references` 등록(`stac-metadata/geovars-references/0.1.0/`):
+  geovars 프로젝트 관련 연구자료(논문) 서지, item 1개(테이블) + duckdb→parquet asset,
+  STAC Scientific Citation extension(`sci:publications`)으로 인용정보 기록. 첫 항목은
+  DOI `10.11108/kagis.2024.27.3.060`(김원경 외, 2024). `pipeline/process/
+  geovars-references.py`가 처리 스크립트. S3 업로드 후 `file:checksum`(Multihash)을
+  실제 바이트 해시로 재검증 완료(일치 확인).
+  - `geovars.pipeline`에 `multihash_sha256()`/`upload_asset()`, `geovars.catalog`에
+    `register_collection_version()` 신규 구현(첫 실사용).
+  - `geovars` 공용 유틸을 **처음으로 git-commit pin**해 소비(`git+file:///workspace@
+    <commit>#subdirectory=geovars` — 아직 GitHub push 전이라 로컬 pin). 컨테이너에
+    `git`이 없어 `pipeline/images/2026.07.21/Dockerfile`에 추가(draft 이미지 in-place
+    수정). 세부: [pipeline-architecture](/decisions/pipeline-architecture.md)
+    "git-commit pin 실사용 검증".
+  - **pystac 버그 발견·수정**: `normalize_and_save(root_href)`가 root_href의 마지막
+    조각에 `.`이 있으면(버전 문자열 `0.1.0` 등) 파일명+확장자로 오인해 잘라버림 —
+    trailing `/`로 회피. [catalog-and-access](/decisions/catalog-and-access.md)
+    "collection 버전 디렉터리 구현"에 기록, `ensure_ascii=False` 재직렬화 TODO도 이
+    김에 해소.
+
 - Creation — [secrets-and-s3-client](/decisions/secrets-and-s3-client.md): Cloudflare R2
   연동을 위한 시크릿 관리 확정. `.env`/`.env.template` 레포 루트(pipeline/과 geovars 패키지가
   자격증명 공유), 비-비밀 값(버킷명·엔드포인트)은 `.env.template`에 실제 값 커밋, 컨테이너
