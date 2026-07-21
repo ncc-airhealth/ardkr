@@ -2,6 +2,21 @@
 
 ## 2026-07-21
 
+- Creation — [secrets-and-s3-client](/decisions/secrets-and-s3-client.md): Cloudflare R2
+  연동을 위한 시크릿 관리 확정. `.env`/`.env.template` 레포 루트(pipeline/과 geovars 패키지가
+  자격증명 공유), 비-비밀 값(버킷명·엔드포인트)은 `.env.template`에 실제 값 커밋, 컨테이너
+  전달은 run.py 수정 없이 bind mount로 자동 노출, 클라이언트는 `boto3`+`cloudpathlib[s3]`
+  (`geovars/pyproject.toml`의 `pipeline` extra에 추가). planetary_computer식 `sign()` 헬퍼는
+  추후 과제로 유예. 임시 PEP723 스모크테스트(`pipeline/process/_r2_smoketest.py`, 확인 후
+  삭제)로 boto3·cloudpathlib 둘 다 R2(`bucket=geovars`) 연결 성공 확인.
+- Update — 환경변수·헬퍼 이름을 `GEOVARS_R2_*`/`r2_cache_dir()`에서 **벤더 중립
+  `GEOVARS_S3_*`/`s3_cache_dir()`**로 전환(`geovars.pipeline`, `pipeline/run.py`,
+  `.env`/`.env.template`, `.cache/s3/`) — 실제 스토리지는 여전히 Cloudflare R2([infrastructure](/decisions/infrastructure.md))
+  지만, 버킷·엔드포인트·키 구성이 S3 호환 API 표준이라 후임자가 다른 S3 호환 스토리지로
+  전환할 가능성을 이름 비용 없이 열어둠. 전환 후 재확인(smoketest)까지 완료.
+  [secrets-and-s3-client](/decisions/secrets-and-s3-client.md) "벤더 중립 명명" 참고.
+- Update — [infrastructure](/decisions/infrastructure.md): TBD였던 버킷명(`geovars`)·
+  엔드포인트·스토리지 티어(일반 클래스)·자격증명 발급 요청 대상을 실제 값으로 채움.
 - Creation — `pipeline/run.py` 컨테이너 실행 구현: 레포 volume mount(스크립트 즉시 반영,
   이미지 재빌드 불필요), `docker image inspect` 후 없으면 로컬 빌드 폴백, lock_action에 따라
   GENERATE/RELOCK만 `uv lock` 먼저 실행 후 항상 `uv run --frozen`, CLI

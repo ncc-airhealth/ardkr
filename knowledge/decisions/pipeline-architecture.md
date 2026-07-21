@@ -165,20 +165,24 @@ knowledge/                     # OKF 지식
 .cache/
   uv/                       # uv wheel/venv 캐시 (UV_CACHE_DIR)
   duckdb/                   # duckdb extension·spill(temp_directory)
-  r2/                       # R2 객체 로컬 read-through 미러
+  s3/                       # S3 호환 오브젝트 스토리지(현재 Cloudflare R2) 객체 로컬 read-through 미러
   pipeline/<collection-id>/ # 스크립트별 중간산출물·스크래치
 ```
 
 - **불변식 — 캐시는 순수 가속 장치, 입력이 아니다**: `.cache/`를 통째로 지워도 재실행하면
-  **같은 결과**가 나와야 한다(느려질 뿐). `r2/`는 이미 R2에 박제되고 STAC `file:checksum`으로
+  **같은 결과**가 나와야 한다(느려질 뿐). `s3/`는 이미 스토리지에 박제되고 STAC `file:checksum`으로
   고정된 원본의 로컬 미러일 뿐 권위 있는 입력이 아니다([/decisions/reproducibility.md](/decisions/reproducibility.md)의
   3층 pin이 진짜 권위). `pipeline/<id>/`의 중간산출물도 스크립트가 처음부터 다시 만들어낼 수
   있어야 하며, "숨은 입력"이 되면 안 된다.
 - **경로 노출은 env var로**: 컨테이너 안 스크립트는 host 절대경로를 몰라도 되게, `run.py`가
-  `UV_CACHE_DIR`(uv가 직접 읽음), `GEOVARS_CACHE_ROOT`, `GEOVARS_R2_CACHE_DIR`,
+  `UV_CACHE_DIR`(uv가 직접 읽음), `GEOVARS_CACHE_ROOT`, `GEOVARS_S3_CACHE_DIR`,
   `GEOVARS_DUCKDB_CACHE_DIR`, `GEOVARS_SCRATCH_DIR`(collection별)를 주입하고,
-  `geovars.pipeline`이 이를 읽는 헬퍼(`cache_root()`/`r2_cache_dir()`/`duckdb_cache_dir()`/
-  `scratch_dir()`)를 제공한다.
+  `geovars.pipeline`이 이를 읽는 헬퍼(`cache_root()`/`s3_cache_dir()`/`duckdb_cache_dir()`/
+  `scratch_dir()`)를 제공한다. 변수명은 스토리지 벤더 중립(`S3`)으로 택함 — 오브젝트 스토리지
+  자체는 현재 Cloudflare R2([/decisions/infrastructure.md](/decisions/infrastructure.md))지만
+  자격증명·엔드포인트 구성이 S3 호환 API로 동일해, 후임자가 다른 S3 호환 스토리지로 갈아탈
+  가능성을 이름에서부터 열어둔다
+  ([/decisions/secrets-and-s3-client.md](/decisions/secrets-and-s3-client.md)).
 - **collection별 격리**: `pipeline/<collection-id>/`는 `run.py`가 이미 아는 `collection_id`로
   자동 분리되어 스크립트끼리 스크래치를 오염시키지 않는다.
 - `process/` 대신 `pipeline/`을 하위 이름으로 택함 — `pipeline/` 워크스페이스 소유라는 게

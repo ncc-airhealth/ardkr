@@ -16,7 +16,7 @@ dependencies = []
 # optional extras 엄격 분리 — 스크립트가 [pipeline]만 끌 때 대시보드·모델링 deps가 안 딸려오게.
 # 각 목록은 앵커 의존성만 둔 초기값. 기능 구현하며 확장(TODO).
 catalog = ["pystac>=1.10"]
-pipeline = ["pystac>=1.10"]
+pipeline = ["pystac>=1.10", "boto3>=1.35", "cloudpathlib[s3]>=0.20"]
 dashboard = ["marimo>=0.9", "pystac>=1.10"]
 modeling = ["numpy>=2.0", "pandas>=2.2"]
 # 편의 메타-extra: 전부.
@@ -25,6 +25,8 @@ all = [
   "marimo>=0.9",
   "numpy>=2.0",
   "pandas>=2.2",
+  "boto3>=1.35",
+  "cloudpathlib[s3]>=0.20",
 ]
 # 패키지 자체 개발용(uv). 처리 스크립트 실행 환경(Docker+pixi)과는 무관.
 dev = ["pytest>=8", "ruff>=0.6"]

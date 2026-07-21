@@ -25,3 +25,6 @@ grilling 세션(2026-07-20)에서 확정한 설계 결정 기록. 각 문서는 
 - [/decisions/ponytail-plugin.md](/decisions/ponytail-plugin.md) —
   Ponytail(코드 최소주의) Claude Code 플러그인을 프로젝트 스코프로 도입, pipeline/process
   flat 원칙과의 충돌 가능성은 미해결
+- [/decisions/secrets-and-s3-client.md](/decisions/secrets-and-s3-client.md) —
+  Cloudflare R2 연동 시크릿 관리: .env/.env.template 루트 위치, boto3+cloudpathlib[s3]
+  조합, GEOVARS_S3_* 벤더 중립 명명(실제 스토리지는 R2), sign() 헬퍼는 추후 과제

@@ -7,7 +7,7 @@ geovars 를 git commit 으로 pin 해 옛 스크립트 재현성을 지킨다.
 세부: knowledge/decisions/pipeline-architecture.md, reproducibility.md
 
 담을 것(TODO):
-- 원본 R2 스냅샷 입력 로딩 + file:checksum(Multihash) 검증
+- 원본 S3 호환 스토리지(현재 Cloudflare R2) 스냅샷 입력 로딩 + file:checksum(Multihash) 검증
 - STAC Item/Collection 생성 헬퍼(pystac) → stac-metadata/ 로 기록
 - 처리 provenance(생성 git commit + image 버전) 기록
 """
@@ -35,9 +35,9 @@ def cache_root() -> Path:
     return Path(os.environ.get("GEOVARS_CACHE_ROOT", "/cache"))
 
 
-def r2_cache_dir() -> Path:
-    """R2에서 받아온 객체의 로컬 read-through 미러 위치."""
-    return Path(os.environ.get("GEOVARS_R2_CACHE_DIR", str(cache_root() / "r2")))
+def s3_cache_dir() -> Path:
+    """S3 호환 오브젝트 스토리지(현재 Cloudflare R2)에서 받아온 객체의 로컬 read-through 미러 위치."""
+    return Path(os.environ.get("GEOVARS_S3_CACHE_DIR", str(cache_root() / "s3")))
 
 
 def duckdb_cache_dir() -> Path:

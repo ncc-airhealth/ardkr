@@ -177,7 +177,7 @@ def ensure_image(plan: RunPlan) -> str:
 def prepare_cache(root: Path, collection_id: str) -> CachePaths:
     """`.cache/` 서브디렉토리를 만든다(host 전용, git-ignored, 순수 가속 장치)."""
     cache_root = root / ".cache"
-    for sub in ("uv", "duckdb", "r2", f"pipeline/{collection_id}"):
+    for sub in ("uv", "duckdb", "s3", f"pipeline/{collection_id}"):
         (cache_root / sub).mkdir(parents=True, exist_ok=True)
     return CachePaths(root=cache_root, collection_id=collection_id)
 
@@ -195,7 +195,7 @@ def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[
         "-v", f"{cache.root}:{CONTAINER_CACHE_ROOT}",
         "-e", f"UV_CACHE_DIR={CONTAINER_CACHE_ROOT}/uv",
         "-e", f"GEOVARS_CACHE_ROOT={CONTAINER_CACHE_ROOT}",
-        "-e", f"GEOVARS_R2_CACHE_DIR={CONTAINER_CACHE_ROOT}/r2",
+        "-e", f"GEOVARS_S3_CACHE_DIR={CONTAINER_CACHE_ROOT}/s3",
         "-e", f"GEOVARS_DUCKDB_CACHE_DIR={CONTAINER_CACHE_ROOT}/duckdb",
         "-e", f"GEOVARS_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{cache.collection_id}",
         image_ref,
