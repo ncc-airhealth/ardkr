@@ -23,11 +23,12 @@ except ImportError as exc:  # pragma: no cover
 
 
 def register_collection_version(catalog_root: str | Path, collection: pystac.Collection, version: str) -> None:
-    """collection을 `<catalog_root>/<collection.id>/<version>/`에 self-contained로 저장하고,
-    루트 `catalog.json`의 child link를 이 버전으로 교체한다(과거 버전 파일은 지우지 않고 보존
-    — 루트는 최신만 노출, 레포는 전-버전 보관.
+    """collection을 `<catalog_root>/<collection.id>/version=<version>/`에 self-contained로
+    저장하고, 루트 `catalog.json`의 child link를 이 버전으로 교체한다(과거 버전 파일은 지우지
+    않고 보존 — 루트는 최신만 노출, 레포는 전-버전 보관.
     [/decisions/catalog-and-access.md](../../../knowledge/decisions/catalog-and-access.md)
-    "카탈로그 구조 vs 레포").
+    "카탈로그 구조 vs 레포"). 버전 디렉터리는 Hive 스타일 `version=<version>`으로 self-describing
+    하게 짓는다(S3 asset key도 동일 컨벤션).
 
     pystac 기본 직렬화(`ensure_ascii=True`)는 한국어를 `\\uXXXX`로 이스케이프해 diff 리뷰를
     막으므로, 저장된 모든 JSON을 `ensure_ascii=False`로 재직렬화한다
@@ -35,9 +36,10 @@ def register_collection_version(catalog_root: str | Path, collection: pystac.Col
     "root catalog.json 구현").
     """
     catalog_root = Path(catalog_root)
-    collection_dir = catalog_root / collection.id / version
-    # 끝에 "/"가 없으면 pystac이 버전 문자열(점 포함, 예: "0.1.0")을 파일명+확장자로 오인해
-    # 마지막 경로 조각을 통째로 잘라버린다 — 반드시 트레일링 슬래시로 디렉터리임을 명시한다.
+    version_segment = f"version={version}"
+    collection_dir = catalog_root / collection.id / version_segment
+    # 끝에 "/"가 없으면 pystac이 버전 문자열(점 포함)을 파일명+확장자로 오인해 마지막 경로
+    # 조각을 통째로 잘라버린다 — 반드시 트레일링 슬래시로 디렉터리임을 명시한다.
     collection.normalize_and_save(f"{collection_dir}/", catalog_type=pystac.CatalogType.SELF_CONTAINED)
 
     catalog_path = catalog_root / "catalog.json"
@@ -51,7 +53,7 @@ def register_collection_version(catalog_root: str | Path, collection: pystac.Col
     catalog_json["links"].append(
         {
             "rel": "child",
-            "href": f"{prefix}{version}/collection.json",
+            "href": f"{prefix}{version_segment}/collection.json",
             "type": "application/json",
             "title": collection.title or collection.id,
         }

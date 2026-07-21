@@ -66,13 +66,26 @@ def multihash_sha256(data: bytes) -> str:
     return "1220" + hashlib.sha256(data).hexdigest()
 
 
-def upload_asset(local_path: str | Path, key: str) -> str:
-    """로컬 파일을 S3 호환 버킷(GEOVARS_S3_*)에 업로드하고 file:checksum(Multihash)을 반환.
+def s3_cache_path(key: str) -> Path:
+    """`.cache/s3/<key>` — 실제 S3 오브젝트 key 구조를 그대로 반영한 로컬 미러 경로.
+
+    다운로드 read-through 미러와 업로드 전 스테이징 양쪽에 동일하게 쓰인다 — `.cache/s3/`가
+    버킷의 로컬 거울이라는 하나의 개념으로 통일. 처리 스크립트는 이 경로에 직접 산출물을
+    쓴 뒤 `upload_asset(key)`로 올린다.
+    """
+    path = s3_cache_dir() / key
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def upload_asset(key: str) -> str:
+    """`.cache/s3/<key>`에 이미 만들어진 로컬 파일을 S3 호환 버킷(GEOVARS_S3_*)에 업로드하고
+    file:checksum(Multihash)을 반환.
 
     같은 checksum을 객체 커스텀 메타데이터에도 넣어 HEAD 요청으로 1차 검증 가능하게 한다
     (knowledge/decisions/reproducibility.md 3층 pin의 "입력 collection 층").
     """
-    data = Path(local_path).read_bytes()
+    data = s3_cache_path(key).read_bytes()
     checksum = multihash_sha256(data)
     client = boto3.client(
         "s3",
