@@ -1,7 +1,7 @@
 .DS_Store
 .venv/
 .pixi/
-cache/
+.cache/
 dist/
 __pycache__/
 *.pyc

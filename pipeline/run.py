@@ -7,16 +7,27 @@
     ② lock 처리 (없으면 생성 / 있으면 frozen / --relock 로만 재생성)
     ③ 컨테이너 안에서 `uv run --script <script>`
 
-경로·image 해석과 lock 상태 판정은 여기서 실제로 수행한다. 컨테이너 진입·실행
-(docker run linux/amd64 …)은 문서상 아직 '미해결'이라 여기선 뼈대만 두고 TODO 로 남긴다.
+CLI: `python pipeline/run.py <collection-id> [--relock]`
+
+캐시(`.cache/`)는 순수 가속 장치다 — 지워도 스크립트는 처음부터 다시 돌아 같은 결과를
+내야 한다(재현성은 3층 pin이 보장, 세부는 knowledge/decisions/reproducibility.md).
 """
 
 from __future__ import annotations
 
+import subprocess
+import sys
 import tomllib
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+
+# 정규 arch(knowledge/decisions/pipeline-architecture.md "단일 정규 arch").
+CANONICAL_PLATFORM = "linux/arm64"
+
+# 컨테이너 안 경로 상수.
+CONTAINER_WORKSPACE = "/workspace"
+CONTAINER_CACHE_ROOT = "/cache"
 
 
 class LockAction(Enum):
@@ -28,11 +39,18 @@ class LockAction(Enum):
 @dataclass(frozen=True)
 class RunPlan:
     collection_id: str
+    root: Path          # 레포 루트
     script: Path        # pipeline/process/<collection-id>.py
     lock: Path          # pipeline/process/<collection-id>.py.lock
     image: str          # YYYY.MM.DD
     image_dir: Path     # pipeline/images/<image>/
     lock_action: LockAction
+
+
+@dataclass(frozen=True)
+class CachePaths:
+    root: Path  # <repo>/.cache/
+    collection_id: str
 
 
 def find_repo_root(start: Path | None = None) -> Path:
@@ -119,6 +137,7 @@ def plan_run(collection_id: str, *, relock: bool, repo_root: Path | None = None)
 
     return RunPlan(
         collection_id=collection_id,
+        root=root,
         script=script,
         lock=lock,
         image=image,
@@ -127,24 +146,95 @@ def plan_run(collection_id: str, *, relock: bool, repo_root: Path | None = None)
     )
 
 
+def image_tag(image: str) -> str:
+    return f"geovars-pipeline-image:{image}"
+
+
+def ensure_image(plan: RunPlan) -> str:
+    """이미지가 로컬에 있으면 그대로 쓰고, 없으면 빌드한다.
+
+    레지스트리 선택(GHCR/R2 등)은 아직 미해결(knowledge/decisions/pipeline-architecture.md)
+    이라, 정규 경로인 "보존된 이미지 pull"은 나중에 여기 추가한다. 지금은 로컬 빌드로
+    폴백한다 — 매 스크립트 실행마다가 아니라 이미지가 없을 때 딱 한 번만 든다.
+    """
+    tag = image_tag(plan.image)
+    inspect = subprocess.run(
+        ["docker", "image", "inspect", tag],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if inspect.returncode == 0:
+        return tag
+
+    print(f"[geovars] image {tag} 없음 — {plan.image_dir} 에서 빌드합니다.")
+    subprocess.run(
+        ["docker", "build", "--platform", CANONICAL_PLATFORM, "-t", tag, str(plan.image_dir)],
+        check=True,
+    )
+    return tag
+
+
+def prepare_cache(root: Path, collection_id: str) -> CachePaths:
+    """`.cache/` 서브디렉토리를 만든다(host 전용, git-ignored, 순수 가속 장치)."""
+    cache_root = root / ".cache"
+    for sub in ("uv", "duckdb", "r2", f"pipeline/{collection_id}"):
+        (cache_root / sub).mkdir(parents=True, exist_ok=True)
+    return CachePaths(root=cache_root, collection_id=collection_id)
+
+
+def _to_container_path(root: Path, path: Path) -> str:
+    return f"{CONTAINER_WORKSPACE}/{path.relative_to(root).as_posix()}"
+
+
+def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[str]) -> int:
+    argv = [
+        "docker", "run", "--rm",
+        "--platform", CANONICAL_PLATFORM,
+        "-v", f"{root}:{CONTAINER_WORKSPACE}",
+        "-w", CONTAINER_WORKSPACE,
+        "-v", f"{cache.root}:{CONTAINER_CACHE_ROOT}",
+        "-e", f"UV_CACHE_DIR={CONTAINER_CACHE_ROOT}/uv",
+        "-e", f"GEOVARS_CACHE_ROOT={CONTAINER_CACHE_ROOT}",
+        "-e", f"GEOVARS_R2_CACHE_DIR={CONTAINER_CACHE_ROOT}/r2",
+        "-e", f"GEOVARS_DUCKDB_CACHE_DIR={CONTAINER_CACHE_ROOT}/duckdb",
+        "-e", f"GEOVARS_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{cache.collection_id}",
+        image_ref,
+        *inner_argv,
+    ]
+    return subprocess.run(argv).returncode
+
+
 def run_collection(collection_id: str, *, relock: bool = False) -> int:
     plan = plan_run(collection_id, relock=relock)
     print(f"[geovars] collection : {plan.collection_id}")
     print(f"[geovars] script     : {plan.script}")
     print(f"[geovars] image      : {plan.image} ({plan.image_dir})")
-    print(f"[geovars] lock        : {plan.lock_action.value} ({plan.lock})")
+    print(f"[geovars] lock       : {plan.lock_action.value} ({plan.lock})")
 
-    # TODO(미해결): 컨테이너 진입·실행. 확정 알고리즘은 아래와 같다.
-    #   1) pipeline/images/<image>/ 로부터 linux/amd64 이미지를 확보(레지스트리 pull
-    #      또는 로컬 빌드). 보존된 OCI 이미지 pull 이 정규 경로.
-    #   2) 레포를 마운트해 컨테이너 진입(pixi 로 GDAL/GEOS/PROJ/uv 고정된 환경).
-    #   3) lock_action 에 따라:
-    #        GENERATE → `uv lock --script <script>` 후 커밋 대상으로 남김
-    #        FROZEN   → `uv run --frozen --script <script>`
-    #        RELOCK   → `uv lock --script <script>` (의존성 의도적 변경 = 새 버전 취급)
-    #   4) `uv run --script <script>` 로 처리 실행.
-    #   래퍼 세부 인자·구현은 pipeline-architecture.md '미해결' 참조.
-    raise NotImplementedError(
-        "컨테이너 실행은 아직 미구현입니다(설계상 '미해결'). "
-        "위 계획은 확정되었고, docker/uv 연동만 채우면 됩니다."
+    tag = ensure_image(plan)
+    cache = prepare_cache(plan.root, collection_id)
+    container_script = _to_container_path(plan.root, plan.script)
+
+    if plan.lock_action in (LockAction.GENERATE, LockAction.RELOCK):
+        rc = _docker_run(plan.root, tag, cache, ["uv", "lock", "--script", container_script])
+        if rc != 0:
+            return rc
+        print(f"[geovars] lock 생성/갱신됨 — 커밋하세요: {plan.lock}")
+
+    return _docker_run(plan.root, tag, cache, ["uv", "run", "--frozen", "--script", container_script])
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("collection_id", help="pipeline/process/<collection-id>.py 의 id")
+    parser.add_argument(
+        "--relock", action="store_true", help="lock을 의도적으로 재생성(새 버전 취급)"
     )
+    args = parser.parse_args(argv)
+    return run_collection(args.collection_id, relock=args.relock)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

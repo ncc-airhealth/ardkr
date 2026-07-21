@@ -135,6 +135,55 @@ knowledge/                     # OKF 지식
   게이트는 없다. 위반은 사후 발견에 의존한다
   ([/decisions/reproducibility.md](/decisions/reproducibility.md)).
 
+### CLI 계약과 컨테이너 실행 구현 (2026-07-21)
+
+위 "실행기 진입 방식·인자" 미해결을 실제로 구현하며 확정했다.
+
+- **CLI**: `python pipeline/run.py <collection-id> [--relock]`. `argparse` 기반, `--relock`
+  없으면 기존 lock을 그대로 쓰고 없으면 생성한다(위 lock 동작 규칙 그대로).
+- **컨테이너 진입**: 레포 전체를 `/workspace`로 bind mount(`-w /workspace`) — 스크립트를
+  이미지 안에 굽지 않으므로, `pipeline/process/<id>.py`를 고치고 다시 실행하면 **이미지
+  재빌드 없이** 바로 반영된다.
+- **이미지 확보**: `docker image inspect`로 로컬에 있는지 먼저 확인하고, 있으면 그대로
+  쓴다(매 실행마다 빌드/pull 안 함 — 이미지 빌드는 `pipeline/images/<날짜>/` 버전이 바뀔 때만
+  드물게 발생). 없으면 `pipeline/images/<image>/`에서 로컬 빌드로 폴백한다 — "보존된 이미지
+  pull"이 정규 경로지만 레지스트리 선택이 아직 미해결이라, 그게 정해지기 전까지의 임시
+  경로다.
+- **lock 처리는 별도 컨테이너 실행으로 분리**: GENERATE/RELOCK이면 먼저 `uv lock --script`를
+  한 번 실행(끝나면 커밋하라고 안내 출력)하고, 그 다음 항상 `uv run --frozen --script`로
+  실행한다. FROZEN(가장 흔한 반복 실행 경로)이면 컨테이너 실행이 한 번뿐이다.
+- **smoketest로 실제 실행 검증**: 임시 PEP 723 스크립트로 `python pipeline/run.py <id>` 전
+  경로(이미지 로컬 빌드 폴백 → lock 생성 → 실행, 그리고 재실행 시 FROZEN 경로)를 실제로
+  돌려 확인.
+
+### 캐시 — `.cache/` (2026-07-21)
+
+빠른 수정→재실행 반복 워크플로우의 병목을 없애기 위해 도구별 캐시를 레포 루트
+`.cache/`(git-ignored) 밑에 모으고, 컨테이너엔 통째로 `/cache`로 한 번만 mount한다.
+
+```
+.cache/
+  uv/                       # uv wheel/venv 캐시 (UV_CACHE_DIR)
+  duckdb/                   # duckdb extension·spill(temp_directory)
+  r2/                       # R2 객체 로컬 read-through 미러
+  pipeline/<collection-id>/ # 스크립트별 중간산출물·스크래치
+```
+
+- **불변식 — 캐시는 순수 가속 장치, 입력이 아니다**: `.cache/`를 통째로 지워도 재실행하면
+  **같은 결과**가 나와야 한다(느려질 뿐). `r2/`는 이미 R2에 박제되고 STAC `file:checksum`으로
+  고정된 원본의 로컬 미러일 뿐 권위 있는 입력이 아니다([/decisions/reproducibility.md](/decisions/reproducibility.md)의
+  3층 pin이 진짜 권위). `pipeline/<id>/`의 중간산출물도 스크립트가 처음부터 다시 만들어낼 수
+  있어야 하며, "숨은 입력"이 되면 안 된다.
+- **경로 노출은 env var로**: 컨테이너 안 스크립트는 host 절대경로를 몰라도 되게, `run.py`가
+  `UV_CACHE_DIR`(uv가 직접 읽음), `GEOVARS_CACHE_ROOT`, `GEOVARS_R2_CACHE_DIR`,
+  `GEOVARS_DUCKDB_CACHE_DIR`, `GEOVARS_SCRATCH_DIR`(collection별)를 주입하고,
+  `geovars.pipeline`이 이를 읽는 헬퍼(`cache_root()`/`r2_cache_dir()`/`duckdb_cache_dir()`/
+  `scratch_dir()`)를 제공한다.
+- **collection별 격리**: `pipeline/<collection-id>/`는 `run.py`가 이미 아는 `collection_id`로
+  자동 분리되어 스크립트끼리 스크래치를 오염시키지 않는다.
+- `process/` 대신 `pipeline/`을 하위 이름으로 택함 — `pipeline/` 워크스페이스 소유라는 게
+  이름에서 바로 드러남.
+
 ## 공용 유틸 — geovars 단일 패키지
 
 - 스크립트는 공용 유틸을 **버전 고정으로 소비**해야 옛 스크립트 재현성이 안 깨진다.
@@ -147,10 +196,9 @@ knowledge/                     # OKF 지식
 
 ## 미해결
 
-- 실행기(`pipeline/run.py`)의 진입 방식·인자. (현재 경로/`image`/lock 판정 로직만 구현.
-  컨테이너 진입·`uv`/`docker` 연동과 CLI 진입점은 미구현.) 정확한 CLI 계약은 실행기를
-  실제로 구현할 때 정하고 `capture-knowledge`로 사후 반영한다.
-- 이미지 레지스트리 선택(GHCR / R2 등)과 보존 운영.
+- 이미지 레지스트리 선택(GHCR / R2 등)과 보존 운영. 정해지기 전까지 `pipeline/run.py`는
+  로컬에 이미지가 없으면 `pipeline/images/<image>/`에서 직접 빌드하는 것으로 폴백한다(위
+  "CLI 계약과 컨테이너 실행 구현" 참고).
 - provenance schema(이미지 digest·lock·입출력 manifest)의 정확한 필드명, R2 업로드·STAC
   발행의 staging·복구 절차, 재현 원커맨드 — 구현 시점에 정하고 사후 포착.
 

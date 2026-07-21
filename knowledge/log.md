@@ -2,6 +2,18 @@
 
 ## 2026-07-21
 
+- Creation — `pipeline/run.py` 컨테이너 실행 구현: 레포 volume mount(스크립트 즉시 반영,
+  이미지 재빌드 불필요), `docker image inspect` 후 없으면 로컬 빌드 폴백, lock_action에 따라
+  GENERATE/RELOCK만 `uv lock` 먼저 실행 후 항상 `uv run --frozen`, CLI
+  `python pipeline/run.py <collection-id> [--relock]`. 임시 smoketest 스크립트로 전체 경로
+  (빌드 폴백→lock 생성→실행, 재실행 시 FROZEN) 검증 완료. 파이프라인 아키텍처의 "실행기
+  진입 방식·인자" 미해결 항목 해소. `.gitignore`도 `cache/`→`.cache/`로 정리.
+- Creation — `.cache/` 통합 캐시 레이아웃(`uv/`·`duckdb/`·`r2/`·`pipeline/<collection-id>/`),
+  컨테이너엔 `/cache`로 한 번만 mount + env var로 경로 노출. "캐시는 순수 가속 장치, 지워도
+  같은 결과가 나와야 한다"는 불변식 명시. `geovars.pipeline`에 `cache_root()`/
+  `r2_cache_dir()`/`duckdb_cache_dir()`/`scratch_dir()` 헬퍼 추가. 세부는
+  [pipeline-architecture](/decisions/pipeline-architecture.md) "CLI 계약과 컨테이너 실행 구현" ·
+  "캐시" 절.
 - Creation — `stac-metadata/catalog.json`: 빈 root STAC 카탈로그를 pystac
   `normalize_and_save(catalog_type=SELF_CONTAINED)`로 생성. `ABSOLUTE_PUBLISHED` 대신
   `SELF_CONTAINED`을 택한 이유와, 한국어 diff 리뷰를 위한 `ensure_ascii=False` 재직렬화 필요성을
