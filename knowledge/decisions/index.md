@@ -22,3 +22,6 @@ grilling 세션(2026-07-20)에서 확정한 설계 결정 기록. 각 문서는 
 - [/decisions/infrastructure.md](/decisions/infrastructure.md) —
   팀 소유 R2 버킷, 자격증명·세부설정만 암묵지 예외 / 버킷명·엔드포인트 등 비-비밀 포인터는
   레포에 기록
+- [/decisions/ponytail-plugin.md](/decisions/ponytail-plugin.md) —
+  Ponytail(코드 최소주의) Claude Code 플러그인을 프로젝트 스코프로 도입, pipeline/process
+  flat 원칙과의 충돌 가능성은 미해결

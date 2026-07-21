@@ -2,6 +2,10 @@
 
 ## 2026-07-21
 
+- Creation — [ponytail-plugin](/decisions/ponytail-plugin.md): Ponytail(코드 최소주의
+  Claude Code 플러그인)을 프로젝트 스코프(`.claude/settings.json`의
+  `extraKnownMarketplaces`+`enabledPlugins`)로 도입. pipeline/process/*.py의 flat/
+  self-contained 원칙과 "재사용 우선" 규칙 충돌 가능성은 미해결로 남김.
 - Creation — [pipeline-architecture](/decisions/pipeline-architecture.md): 모노레포 구조,
   자기완결 처리 스크립트(PEP723+스크립트별 lock), Docker+pixi 시스템 환경 고정(최대
   durability·이미지 보존), pipeline/ 실행기(`pipeline/run.py`), geovars 단일 패키지,
