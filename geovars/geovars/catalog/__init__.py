@@ -36,7 +36,9 @@ def register_collection_version(catalog_root: str | Path, collection: pystac.Col
     """
     catalog_root = Path(catalog_root)
     collection_dir = catalog_root / collection.id / version
-    collection.normalize_and_save(str(collection_dir), catalog_type=pystac.CatalogType.SELF_CONTAINED)
+    # 끝에 "/"가 없으면 pystac이 버전 문자열(점 포함, 예: "0.1.0")을 파일명+확장자로 오인해
+    # 마지막 경로 조각을 통째로 잘라버린다 — 반드시 트레일링 슬래시로 디렉터리임을 명시한다.
+    collection.normalize_and_save(f"{collection_dir}/", catalog_type=pystac.CatalogType.SELF_CONTAINED)
 
     catalog_path = catalog_root / "catalog.json"
     catalog_json = json.loads(catalog_path.read_text(encoding="utf-8"))
