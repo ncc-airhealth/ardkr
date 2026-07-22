@@ -5,7 +5,7 @@ grilling 세션(2026-07-20)에서 확정한 설계 결정 기록. 각 문서는 
 
 - [/decisions/knowledge-architecture.md](/decisions/knowledge-architecture.md) —
   STAC(데이터 사실) vs OKF(간접 지식) 경계, 우선순위 규칙, provenance 위치, description
-  한국어·caveat 3칸 권장 템플릿
+  한국어·주의사항 3칸 권장 템플릿
 - [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md) —
   해석-규정 필드 불변, 정정=새 버전(MAJOR.MINOR.PATCH 고정), deprecated/successor
   forward-pointer
@@ -18,10 +18,10 @@ grilling 세션(2026-07-20)에서 확정한 설계 결정 기록. 각 문서는 
 - [/decisions/governance-and-review.md](/decisions/governance-and-review.md) —
   self-review 수용, 사용자 피드백 루프, 처리 절차, 검증기준·오라클
 - [/decisions/knowledge-capture.md](/decisions/knowledge-capture.md) —
-  continuous 포착 2층(워크플로/상시 지침) — CI 미도입 결정으로 PR 냄새 게이트 제거
+  continuous 포착 2층(작업완료 절차/상시 지침) — CI 미도입 결정으로 PR 냄새 게이트 제거
 - [/decisions/infrastructure.md](/decisions/infrastructure.md) —
-  팀 소유 R2 버킷, 자격증명·세부설정만 암묵지 예외 / 버킷명·엔드포인트 등 비-비밀 포인터는
-  레포에 기록
+  팀 소유 R2 버킷, 자격증명·세부설정만 암묵지 예외 / 버킷명·엔드포인트 등 비밀이 아닌
+  포인터는 레포에 기록
 - [/decisions/ponytail-plugin.md](/decisions/ponytail-plugin.md) —
   Ponytail(코드 최소주의) Claude Code 플러그인을 프로젝트 스코프로 도입, pipeline/process
   flat 원칙과의 충돌 가능성은 미해결
