@@ -15,4 +15,4 @@
 - 데이터·메타데이터 삭제 금지 (deprecated는 냉동).
 - 데이터 해석을 바꾸는 정정은 in-place 금지, 새 version으로 발행.
 
-세부 결정·처리 절차·그 외 규칙 → knowledge/decisions/index.md
+세부 결정·처리 절차·그 외 규칙 → knowledge/decisions/ (`python3 .claude/skills/recall-knowledge/list_knowledge.py knowledge/decisions --type decision`로 조회)

@@ -47,6 +47,9 @@ timestamp: 2026-07-21
   - 비난이 아니라 증거 기반 중립 서술로 남긴다.
 - **진행 중 작업의 맥락**.
   - 반쯤 만든 collection, 미해결 피드백 같은 것이다.
+- **변경 이력은 `log.md`가 아니라 frontmatter `timestamp`·git 커밋 이력·조회 스크립트가 담당한다** (2026-07-22 결정 변경).
+  - 원래는 매 포착마다 `knowledge/log.md`에 날짜별 요약을 추가했으나, 이미 다른 곳에 있는 정보의 중복이라 폐지했다.
+  - 기존 내용은 `git log -p -- knowledge/log.md`로 복구 가능하므로 별도 아카이브 없이 삭제했다.
 
 이 모두 [/principles.md](/principles.md)의 agent-native 원칙, 즉 모든 지식은 레포 안에 둔다는 원칙의 실행이다.
 
@@ -54,12 +57,6 @@ timestamp: 2026-07-21
 
 이 메커니즘 중 무엇도 "적힌 지식이 참인가"는 검증하지 못한다.
 진위는 [/decisions/governance-and-review.md](/decisions/governance-and-review.md)의 사용자 피드백 루프가 사후에 책임진다.
-
-## 변경 이력 파일(log.md) 폐지 (2026-07-22)
-
-기존엔 매 포착마다 `knowledge/log.md`에 날짜별 한 줄 요약을 추가했다.
-항목이 계속 길어져 근거와 검증 과정까지 서술하게 되면서 유지 부담만 커졌고, 담아야 할 정보는 이미 다른 곳에 있었다. 언제 바뀌었는지는 문서 frontmatter의 `timestamp`가, 정확히 무엇이 바뀌었는지는 git 커밋 이력이, 무엇이 있는지는 `index.md`가 이미 담당한다.
-log.md는 이 셋의 중복 요약본에 불과해 **폐지**한다. 기존 내용은 git history(`git log -p -- knowledge/log.md`)로 복구할 수 있으므로 별도 아카이브 없이 삭제한다.
 
 ## 관련
 

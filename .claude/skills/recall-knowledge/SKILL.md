@@ -21,10 +21,14 @@ description: >-
 
 ## 절차
 
-1. **목차부터 훑는다.**
-   - `knowledge/index.md` — 번들 전체 구조
-   - `knowledge/decisions/index.md` — 확정된 설계·운영 결정 목록
-   - `knowledge/principles.md` — 상위 원칙. 여기에 어긋나는 작업이면 멈추고 논의한다.
+1. **frontmatter를 조회한다.** 문서 목록은 손으로 쓴 목록이 아니라 스크립트로 조회한다.
+
+   ```bash
+   python3 .claude/skills/recall-knowledge/list_knowledge.py knowledge/decisions --type decision
+   python3 .claude/skills/recall-knowledge/list_knowledge.py knowledge/ --tag <태그>
+   ```
+
+   `knowledge/principles.md`(상위 원칙)는 항상 직접 읽는다. 여기에 어긋나는 작업이면 멈추고 논의한다.
 
 2. **키워드·태그로 검색한다.**
    - 다루려는 기관명, 데이터셋명, 개념(예: `proj:code`, `deprecated`, `checksum`, `provenance`, 좌표계, 결측값)으로 `knowledge/` 전체를 grep한다.

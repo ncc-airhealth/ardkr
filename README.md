@@ -22,7 +22,7 @@
 | **catalog-in-repo** | 공간데이터 메타데이터를 STAC 1.1.0으로 관리하고, static STAC(JSON)을 git으로 직접 버전 관리합니다. |
 | **reproducibility** | 데이터 처리 과정이 완전히 재현 가능합니다 — 같은 입력으로 처리하면 같은 출력이 나옵니다. |
 
-배경과 상세 결정은 [`knowledge/`](knowledge/index.md)에 기록되어 있습니다.
+배경과 상세 결정은 `knowledge/`에 기록되어 있습니다. 내용은 에이전트에게 물어보세요.
 
 ## 저장소 구조
 
@@ -72,9 +72,9 @@ STAC asset의 `href`에는 R2 객체 key가 그대로 담겨 있어, 버킷/엔�
 ## 지식 베이스
 
 데이터에 관한 사실은 STAC 메타데이터가 SSOT이고, 그 외 지식(의사결정 기록, 참고연구,
-처리 방법, 기관 문의 이력 등)은 [`knowledge/`](knowledge/index.md)에
+처리 방법, 기관 문의 이력 등)은 `knowledge/`에
 [OKF](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
-형식으로 관리합니다.
+형식으로 관리합니다. 내용은 에이전트에게 물어보세요.
 
 ## 재현성
 
@@ -86,11 +86,10 @@ STAC asset의 `href`에는 R2 객체 key가 그대로 담겨 있어, 버킷/엔�
 
 ## 프로젝트 상태
 
-활발히 개발 중입니다. 설계 결정은 [`knowledge/decisions/`](knowledge/decisions/index.md)에서
-확인할 수 있습니다.
+활발히 개발 중입니다. 설계 결정은 `knowledge/decisions/`에 있습니다. 내용은 에이전트에게 물어보세요.
 
 ## 기여
 
 작업은 에이전트 하네스와의 대화로 수행하고, 변경은 PR 리뷰를 거쳐 반영합니다.
 새로 알게 된 지식(의사결정·기관 문의 결과·주의사항)은 작업을 마치기 전에
-[`knowledge/`](knowledge/index.md)에 함께 기록합니다.
+`knowledge/`에 함께 기록합니다.
