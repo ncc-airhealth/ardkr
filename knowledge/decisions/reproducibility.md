@@ -39,9 +39,8 @@ timestamp: 2026-07-21
 
 ### 보존 정책 (삭제 금지)
 
-- deprecated라고 해서 삭제해도 되는 것은 아니다.
-  - deprecated collection은 이미 나간 분석·산출물이 입력으로 참조하고 있는 바로 그 데이터인 경우가 많다.
 - **삭제 금지. deprecated는 R2 콜드 티어로 냉동**한다 — 비용은 낮추고 데이터는 보존한다.
+  - deprecated collection은 이미 나간 분석·산출물이 입력으로 참조하는 데이터인 경우가 많다.
   - 삭제는 재현성을 무너뜨린다.
 
 ## 왜
@@ -55,8 +54,7 @@ timestamp: 2026-07-21
   - 해석-규정 필드를 버전 내 불변으로 고정하여 해소.
 - **deprecated 데이터 주기적 삭제** — 과거 산출물의 재현을 파괴한다.
   - 냉동으로 대체.
-- **CI로 lock 커밋 강제** — 검토했으나 CI를 아예 도입하지 않기로 확정하면서 함께 기각.
-  - 자동 게이트 없이 정책·self-review에 의존하는 리스크를 감수하기로 함 ([/decisions/knowledge-capture.md](/decisions/knowledge-capture.md)).
+- **CI로 lock 커밋 강제** — CI를 아예 도입하지 않기로 확정하면서 함께 기각 ([/decisions/knowledge-capture.md](/decisions/knowledge-capture.md)).
 
 ## 관련
 

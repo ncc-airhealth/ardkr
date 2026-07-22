@@ -8,7 +8,7 @@ timestamp: 2026-07-21
 
 # 첫 실제 collection — geovars-references
 
-pipeline/의 인프라(parquet 변환, S3 연결, STAC 카탈로그 등록, geovars 공용 유틸 git-pin)가 맞물려 도는지 확인할 겸, 동시에 실사용 가치가 있는 첫 collection으로 geovars 프로젝트 관련 연구자료(논문) 서지를 골랐다.
+pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 유틸 git-pin) 전체 경로를 검증하는 동시에 실사용 가치가 있는 첫 collection으로 geovars 프로젝트 관련 연구자료(논문) 서지를 골랐다.
 
 ## 결정
 
@@ -22,22 +22,20 @@ pipeline/의 인프라(parquet 변환, S3 연결, STAC 카탈로그 등록, geov
 - STAC Scientific Citation extension은 pystac의 공식 extension 클래스로 적용한다.
   - `pystac.extensions.scientific.ScientificExtension.ext(item, add_if_missing=True).publications`에 `Publication(doi=..., citation=...)` 리스트를 대입하면 `sci:publications` 설정과 `stac_extensions` 등록, `cite-as` link 추가까지 한 번에 처리된다.
   - item이 여러 출판물을 아우르는 테이블이라 단수 필드인 `sci:doi`/`sci:citation`이 아니라 복수 필드인 `sci:publications`가 맞다.
-  - (https://github.com/stac-extensions/scientific)
 - 서지 데이터는 별도 CSV/YAML 파일 대신 스크립트 안에 하드코딩한 파이썬 리스트로 둔다.
   - `Processor` 클래스에서는 이 데이터를 `REFERENCES` 클래스 변수가 아니라 `references`라는 `@property`로 노출한다.
   - 클래스 변수는 `COLLECTION_ID`/`VERSION`/`TITLE`/`DESCRIPTION` 같은 collection 메타데이터만 담고, 데이터 본문은 프로퍼티로 분리해 설정과 데이터를 구분한다.
   - 논문을 추가할 때는 이 리스트를 고치고 `VERSION`을 올려 재실행한다.
 - 첫 논문은 DOI `10.11108/kagis.2024.27.3.060`, "환경의 건강 영향 연구를 위한 공간지리정보 데이터 파이프라인"(김원경 외, 한국지리정보학회지 27(3), 2024)이다.
   - geovars 프로젝트와 주제가 직접 맞닿아 있어 첫 항목으로 골랐다.
-- license는 `"proprietary"`를 임시값으로 넣는다.
-  - 레포 전체의 라이선스 정책이 아직 없어 임시값이며, 정책이 정해지면 교체가 필요하다(미해결 참고).
+- license는 레포 전체 정책이 아직 없어 `"proprietary"`를 임시값으로 넣는다(미해결 참고).
 - spatial extent는 전역 bbox `[-180,-90,180,90]`, temporal은 생성일부터 열린 구간으로 둔다.
   - 서지 데이터는 본질적으로 비공간적이지만 STAC이 extent를 요구하므로, 비공간 collection에서 흔한 관행인 전역 bbox를 따랐다.
 - `geovars` 공용 유틸은 git-commit pin으로 가져와 쓴다.
   - 이 메커니즘은 그동안 설계만 있었고 이번에 처음 검증했다.
   - 레포에 이미 `origin`(`github.com/ncc-airhealth/geovars`)이 있지만, 아직 push하지 않은 로컬 커밋도 pin할 수 있어야 개발 반복이 빨라지므로 GitHub URL 대신 `git+file:///workspace@<commit>#subdirectory=geovars`로 pin한다.
   - 컨테이너 안에서 레포 전체가 `/workspace`로 보이는 bind mount를 그대로 활용한 방식이다.
-  - 실제 GitHub 호스팅 pin은 push 이후 별도로 재검증해야 한다(미해결).
+  - 실제 GitHub 호스팅 pin은 push 이후 별도로 재검증해야 한다(미해결 참고).
 - uv가 `git+` 의존성을 resolve하려면 `git` 실행파일이 필요하므로 `pipeline/images/2026.07.21/Dockerfile`에 `git` 패키지를 추가했다.
 - `geovars.pipeline.upload_asset()`/`multihash_sha256()`, `geovars.catalog.register_collection_version()`을 이번에 처음 구현했고, 이 스크립트에서 처음 가져와 쓴다.
 - 버전 디렉터리 이름은 `<version>` 단독이 아니라 `version=<version>` 형태의 Hive 스타일로 짓는다.
@@ -46,7 +44,8 @@ pipeline/의 인프라(parquet 변환, S3 연결, STAC 카탈로그 등록, geov
   - `geovars.catalog.register_collection_version()`에 반영되어 있다.
 - S3 업로드 전 로컬 준비 경로는 `.cache/s3/<key 그대로>`로 통일한다.
   - `.cache/s3/`를 버킷의 로컬 미러로 두고, 다운로드 read-through와 업로드 전 준비 단계 양쪽에 같은 개념을 쓴다.
-  - `geovars.pipeline.s3_cache_path(key)`와 `upload_asset(key)`로 구현했고, 기존 `upload_asset(local_path, key)` 시그니처에서 `local_path`를 제거했다.
+  - `geovars.pipeline.s3_cache_path(key)`와 `upload_asset(key)`로 구현했다.
+  - 기존 `upload_asset(local_path, key)` 시그니처에서 `local_path`를 제거했다.
   - 호출자가 처음부터 `s3_cache_path(key)`에 쓰면 되기 때문이다.
 - lock 파일 위치는 스크립트 옆에 그대로 둔다.
   - `pipeline/process.lock/`으로 분리하는 안도 검토했지만, uv가 스크립트의 lock 경로를 바꿀 방법을 전혀 제공하지 않는다.
@@ -67,7 +66,7 @@ pipeline/의 인프라(parquet 변환, S3 연결, STAC 카탈로그 등록, geov
   - pandas든 duckdb든 uv가 스크립트 의존성으로 설치하는 방식은 같다.
 - `pystac.extensions.version.VersionExtension.ext(collection, add_if_missing=True).version = "0.1.0"`으로 collection에 버전을 기록한다.
   - 그동안 버전이 디렉터리명과 S3 key에만 있고 STAC 메타데이터 자체에는 기록되지 않는 빠진 부분이 있었는데, 이걸로 메꾼다.
-  - 이 extension은 `deprecated`/`predecessor`/`successor` 링크도 지원하므로, 다음 버전을 낼 때 [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)의 forward-pointer 요구사항도 같은 API로 구현할 수 있다(미해결 참고).
+  - 이 extension은 `deprecated`/`predecessor`/`successor` 링크도 지원한다(미해결 참고).
 - `pystac.extensions.file.FileExtension.ext(asset, add_if_missing=True).checksum = ...`으로 asset의 checksum을 기록한다.
   - asset이 이미 item에 붙어 owner가 있는 상태에서 호출해야 동작한다.
 
@@ -98,15 +97,18 @@ pipeline/의 인프라(parquet 변환, S3 연결, STAC 카탈로그 등록, geov
 
 ## 발견한 버그 (pystac)
 
-`pystac.Collection.normalize_and_save(root_href, ...)`에서 `root_href`의 마지막 경로 조각에 `.`이 있으면, 예를 들어 `MAJOR.MINOR.PATCH` 버전 문자열이면, pystac이 이를 파일명과 확장자로 오인해 그 조각을 통째로 잘라버린다(`/a/b/0.1.0`의 self href가 `/a/b/collection.json`이 되어 `0.1.0`이 사라진다).
-**root_href 끝에 `/`를 명시하면 회피된다.** `geovars.catalog.register_collection_version()`(`geovars/geovars/catalog/__init__.py`)에 이미 반영되어 있다. 버전 디렉터리를 다루는 코드를 새로 짤 때 반드시 주의한다.
+- `pystac.Collection.normalize_and_save(root_href, ...)`에서 `root_href`의 마지막 경로 조각에 `.`이 있으면(예: `MAJOR.MINOR.PATCH` 버전 문자열) pystac이 이를 파일명과 확장자로 오인해 그 조각을 통째로 잘라버린다.
+  - `/a/b/0.1.0`의 self href가 `/a/b/collection.json`이 되어 `0.1.0`이 사라진다.
+- root_href 끝에 `/`를 명시하면 회피된다.
+  - `geovars.catalog.register_collection_version()`(`geovars/geovars/catalog/__init__.py`)에 이미 반영되어 있다.
+  - 버전 디렉터리를 다루는 코드를 새로 짤 때 반드시 주의한다.
 
 ## 미해결
 
 - license 정책 — 레포와 데이터 전체의 라이선스가 정해지면 `"proprietary"` 임시값을 교체해야 한다.
-- `geovars` 패키지의 GitHub 커밋 pin — 지금은 `git+file:///workspace`로 로컬 pin했고, push 이후 실제 GitHub 호스팅 pin이 동작하는지 별도로 검증해야 한다.
+- `geovars` 패키지의 GitHub 호스팅 pin 검증 — push 이후 실제 GitHub 호스팅 pin이 동작하는지 별도로 확인해야 한다.
 - 서지 데이터가 늘어나 CSV/YAML 분리가 아쉬워지면 그때 재검토한다(YAGNI).
-- 다음 버전을 낼 때 [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)의 forward-pointer(`deprecated`/`predecessor`/`successor`)를 `VersionExtension` API로 구현하는 작업이 남아 있다.
+- 다음 버전을 낼 때 [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)의 forward-pointer(`deprecated`/`predecessor`/`successor`)를 위 `VersionExtension` API로 구현하는 작업이 남아 있다.
 
 ## 관련
 

@@ -26,18 +26,16 @@ timestamp: 2026-07-21
 }
 ```
 
-(`enabledPlugins`는 배열이 아니라 `"plugin-id@marketplace-id": true` 형태의 객체다.
-최초 작성 시 배열로 잘못 넣어 `Settings Error`가 났다.
-이후 바로잡았다.)
+`enabledPlugins`는 배열이 아니라 `"plugin-id@marketplace-id": true` 형태의 객체다 — 배열로 쓰면 `Settings Error`가 난다.
 
 ## 근거
 
-- 하네스가 **Claude Code 전용**으로 고정되어 있다([/principles.md](/principles.md)).
+- 하네스는 Claude Code 전용으로 고정되어 있다([/principles.md](/principles.md)).
   - Ponytail도 Claude Code 마켓플레이스를 경유하는 플러그인이라 하네스 원칙과 충돌하지 않는다.
 - 파이프라인 아키텍처가 이미 최소주의 방향이라 철학이 이질적이지 않다.
   - geovars 단일 패키지, optional extras 엄격 분리, 코어 지연 임포트가 그 예다.
-  - 자세한 내용은 [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)에 있다.
-- 검증/리뷰 커맨드(`/ponytail-review`, `/ponytail-audit`)는 CI가 아니라 에이전트가 대화 중 호출하는 방식이라 "CI 미도입" 결정([/decisions/reproducibility.md](/decisions/reproducibility.md))과 충돌하지 않는다.
+  - 자세한 내용은 [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md).
+- 검증·리뷰 커맨드(`/ponytail-review`, `/ponytail-audit`)는 CI가 아니라 에이전트가 대화 중 호출하는 방식이라 "CI 미도입" 결정([/decisions/reproducibility.md](/decisions/reproducibility.md))과 충돌하지 않는다.
   - 다만 이 커맨드는 "코드가 과설계됐나"만 보는 축이고, 데이터 해석 검증은 여전히 [/decisions/governance-and-review.md](/decisions/governance-and-review.md)의 외부 오라클·사용자 피드백 루프가 책임진다.
   - 두 축은 서로 대체 관계가 아니다.
 
@@ -60,7 +58,7 @@ agent-native 목표(동일 경험) 중 "합의된 도구 목록"은 달성하지
   - 파이프라인 아키텍처 결정은 처리 스크립트를 의도적으로 **자기완결·비-DRY**로 유지하기로 확정했다.
   - 기각한 대안은 editable 로컬 참조였다.
   - 옛 스크립트가 최신 유틸을 쓰면 재현성이 깨진다는 이유였다.
-  - 자세한 내용은 [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)에 있다.
+  - 자세한 내용은 [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md).
   - Ponytail의 "이미 있는 코드는 재사용하라"는 규칙을 에이전트가 무비판적으로 적용하면 새 collection 스크립트를 작성할 때 옛 스크립트의 유틸을 공유하려는 방향으로 끌릴 위험이 있다.
   - 아직 `pipeline/process/`용 명시적 예외 규칙은 정하지 않았다.
   - 실사용 중 마찰이 관찰되면 예외를 명문화하고 이 문서를 갱신한다.

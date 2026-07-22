@@ -8,8 +8,7 @@ timestamp: 2026-07-21
 
 # 파이프라인 아키텍처 — 처리 스크립트·환경·실행
 
-옛 refactoring-plan에서 처리 스크립트·의존성·Docker·공용 유틸 전반을 물려받았지만, 이 프로젝트에서 재합의된 적은 없었다.
-이를 백지에서 다시 논의해 확정한 기록이다.
+옛 refactoring-plan에서 물려받았으나 이 프로젝트에서 재합의된 적 없던 처리 스크립트·의존성·Docker·공용 유틸 방향을 백지에서 다시 논의해 확정한 기록이다.
 
 ## 모노레포 구조
 
@@ -33,41 +32,40 @@ knowledge/                     # OKF 지식
   - src-layout 대신 한 겹 중첩 구조를 쓴다.
   - 루트는 "레포=패키지"가 아니라 모노레포다.
 - **실행 소유권**: 처리 스크립트를 실행하는 책임은 `pipeline/` 워크스페이스에 있다.
-  - 실행기는 `pipeline/run.py`이다.
+  - 실행기는 `pipeline/run.py`다.
   - geovars 패키지의 콘솔 명령이 아니다.
 
 ## 처리 스크립트 모델
 
 - **자기완결 단일 파일**: 스크립트마다 PEP 723 인라인 의존성 선언과 스크립트별 lock을 갖고 `uv run --script`로 실행한다.
   - 옛 스크립트를 건드리지 않고 새 스크립트에서 최신 라이브러리를 채택할 수 있다.
-  - 기각한 대안은 단일 공용 환경과 editable 로컬 참조다.
-  - editable 로컬 참조는 옛 스크립트가 최신 유틸을 써서 재현성을 깨뜨린다.
+  - 단일 공용 환경과 editable 로컬 참조를 기각했다.
+    - editable 로컬 참조는 옛 스크립트가 최신 유틸을 써서 재현성을 깨뜨린다.
 - **flat 레이아웃**: `pipeline/process/<collection-id>.py`.
   - 파일명이 곧 collection id다.
-- 버전 차원은 스크립트가 아니라 `stac-metadata/`에 둔다.
+  - 버전 차원은 스크립트가 아니라 `stac-metadata/`에 둔다.
   - `pipeline/process/`는 flat 구조로 최신 스크립트만 담는다.
-- **버전 재현은 git commit 기반**이다.
+- **버전 재현은 git commit 기반이다.**
   - 각 발행 버전의 STAC provenance에 그 버전을 생성한 git commit과 `image` 버전을 기록한다.
-  - 재현은 그 commit을 checkout해 그때의 스크립트와 lock을 복원하고, 보존된 image를 pull해 실행하는 순서로 이뤄진다.
-  - 기각한 대안은 버전별 스크립트 디렉토리(`version=<v>/`)다.
+  - 재현은 그 commit을 checkout해 그때의 스크립트와 lock을 복원하고, 보존된 image를 pull해 실행하는 순서다.
+  - 버전별 스크립트 디렉토리(`version=<v>/`)를 기각했다.
     - 유틸과 image도 그 시점 것이어야 하므로 commit provenance는 어차피 필요하다.
-    - 그래서 스크립트 복사본을 따로 두는 건 중복이다.
+    - 스크립트 복사본을 따로 두는 건 중복이다.
     - flat 구조에 commit provenance를 더하는 쪽이 더 단순하다.
-  - 감수한 트레이드오프가 있다.
+  - 트레이드오프를 감수했다.
     - HEAD에서 모든 버전의 스크립트를 나란히 보는 편의는 포기한다.
     - 대신 단순성과, commit pin 하나로 재현 메커니즘을 통일하는 이점을 택했다.
 - **lock 파일은 스크립트와 같은 디렉터리에 둔다**(`<collection-id>.py.lock`).
-  - `pipeline/process.lock/`처럼 별도 경로로 분리하는 안도 검토했다.
-  - 하지만 uv가 스크립트 lock의 저장 위치를 전혀 지정할 수 없다는 점을 확인했다.
-  - `uv lock --script`와 `uv run --script` 모두 `<script>.lock`을 스크립트 바로 옆에 고정하고, 관련 플래그나 환경변수가 없다.
-  - `uv --version` 0.10.11 기준으로 확인했다.
+  - `pipeline/process.lock/`처럼 별도 경로로 분리하는 안도 검토했으나, uv가 스크립트 lock의 저장 위치를 전혀 지정할 수 없어 기각했다.
+    - `uv lock --script`와 `uv run --script` 모두 `<script>.lock`을 스크립트 바로 옆에 고정하고, 관련 플래그나 환경변수가 없다.
+    - `uv --version` 0.10.11 기준으로 확인했다.
   - `run.py`가 매번 복사·이동으로 흉내 내는 방법도 검토했지만, 복잡도 대비 이득이 낮아 기각했다.
   - 파일 트리가 번잡해 보이는 문제는 에디터의 File Nesting 설정으로 해결한다.
-  - 예를 들어 VSCode의 `explorer.fileNesting.patterns`로 `*.py.lock`을 같은 이름의 `.py` 아래로 접을 수 있다.
+    - 예를 들어 VSCode의 `explorer.fileNesting.patterns`로 `*.py.lock`을 같은 이름의 `.py` 아래로 접을 수 있다.
 
-`pipeline/process/<collection-id>.py`는 함수 나열이 아니라 `Processor` 클래스 하나로 쓰는 것을 공식 템플릿으로 확정했다.
-첫 실사용은 [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)다.
-사유는 향후 처리 단계 간 상태 공유와 가독성이다.
+`pipeline/process/<collection-id>.py`의 공식 템플릿은 함수 나열이 아니라 `Processor` 클래스 하나다.
+- 사유는 향후 처리 단계 간 상태 공유와 가독성이다.
+- 첫 실사용은 [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)다.
 
 ```python
 class Processor:
@@ -89,14 +87,13 @@ if __name__ == "__main__":
 ```
 
 - PEP723 의존성은 정확한 버전(`==`)으로 고정한다.
-  - 예를 들어 `duckdb==1.5.4`처럼 쓴다.
+  - 예: `duckdb==1.5.4`.
   - lock 파일이 전이 의존성까지 이미 고정하므로 정보로서는 중복이지만, 헤더만 봐도 재현 버전을 바로 알 수 있는 명시성을 우선한다.
   - 재현성을 보장하는 것은 lock이며, 이 사실은 앞으로도 변하지 않는다.
 
 ## 시스템 환경 — Docker + pixi (장기 보존)
 
-- 두 층으로 분리한다.
-  - Docker가 바깥 층으로 OS 층까지 고정하고, pixi가 안쪽 층으로 conda-forge에서 GDAL/GEOS/PROJ/uv를 `pixi.lock`으로 고정한다.
+- 두 층으로 분리한다. Docker가 바깥 층으로 OS 층까지 고정하고, pixi가 안쪽 층으로 conda-forge에서 GDAL/GEOS/PROJ/uv를 `pixi.lock`으로 고정한다.
   - "pixi로 만든 환경을 담은 Docker 컨테이너"인 셈이다.
 - **장기 보존을 위해 빌드된 이미지를 레지스트리에 보존한다.**
   - 냉동 상태로 두는 것으로, 데이터 삭제 금지 정책을 이미지에도 적용한 것이다.
@@ -120,14 +117,13 @@ if __name__ == "__main__":
   - [/decisions/reproducibility.md](/decisions/reproducibility.md)에서 말하는 시스템 층 pin이다.
 - **단일 정규 arch로 `linux/arm64`를 쓴다.**
   - 한 arch를 쓰면 결정론적 출력을 얻는다.
-  - 이 성질은 어떤 arch를 고르든 유지된다.
+    - 이 성질은 어떤 arch를 고르든 유지된다.
   - 팀이 주로 Apple Silicon Mac에서 작업하므로, 그 환경에서 에뮬레이션 없이 네이티브로 빌드·실행되는 쪽을 정규로 택했다.
-  - x86_64 호스트, 예를 들어 인텔 맥이나 클라우드 러너에서는 반대로 에뮬레이션이 필요해진다.
+    - x86_64 호스트, 예를 들어 인텔 맥이나 클라우드 러너에서는 반대로 에뮬레이션이 필요해진다.
   - CI를 안 쓰기로 확정했으므로 이 비용은 주로 사람이 드물게 x86_64에서 빌드·실행할 때만 발생한다.
   - 대량 처리 속도나 팀 구성이 바뀌면, 예를 들어 x86_64 비중이 늘어나면 재검토한다.
-  - 기각한 대안은 multi-arch, `linux/amd64` 유지, plain Dockerfile+apt, pixi-only 네 가지다.
-    - multi-arch는 cross-arch 부동소수점·SIMD 출력 차이 위험이 있다.
-    - 같은 스크립트가 arch에 따라 다른 결과를 낼 수 있다.
+  - multi-arch, `linux/amd64` 유지, plain Dockerfile+apt, pixi-only 네 대안을 기각했다.
+    - multi-arch는 cross-arch 부동소수점·SIMD 출력 차이 위험이 있다. 같은 스크립트가 arch에 따라 다른 결과를 낼 수 있다.
     - `linux/amd64` 유지는 팀이 쓰는 환경인 Apple Silicon과 안 맞아 매 빌드·실행에서 불필요한 에뮬레이션 비용을 부담한다.
     - plain Dockerfile+apt는 apt 미러가 옛 버전을 지워 rebuild가 불가능해진다.
     - pixi-only는 OS 층을 고정하지 못하고 pixi가 신생 도구라는 리스크를 안는다.
@@ -141,8 +137,8 @@ if __name__ == "__main__":
   - 에뮬레이션은 실제 `docker build`나 `docker run` 시점에, 그것도 실행 host arch와 이미지 arch가 다를 때만 필요하다.
 - `Dockerfile`은 2-stage로 구성한다.
   1. build 스테이지에서 공식 설치 스크립트(`curl -fsSL https://pixi.sh/install.sh | sh`)로 pixi 자체를 설치하고 `pixi install --locked`를 실행한다.
-     - 기각한 대안은 `ghcr.io/prefix-dev/pixi` 사전빌드 베이스 이미지다.
-     - 정확한 태그가 존재하고 유지되는지 확인 없이 고정하는 리스크를 피하려고 설치 스크립트 방식을 택했다.
+     - `ghcr.io/prefix-dev/pixi` 사전빌드 베이스 이미지를 기각했다.
+       - 정확한 태그가 존재하고 유지되는지 확인 없이 고정하는 리스크를 피하려고 설치 스크립트 방식을 택했다.
      - 설치 스크립트는 실행 중인 arch를 자동 감지해 맞는 pixi 바이너리를 받으므로 이 줄은 그대로 둔다.
   2. 최종 스테이지는 build 스테이지에서 만들어진 `.pixi/envs/default`만 복사해 런타임 이미지를 가볍게 유지한다.
      - pixi 자체와 빌드 캐시는 최종 이미지에 남지 않는다.
@@ -162,8 +158,7 @@ if __name__ == "__main__":
 - 처리 스크립트 실행은 **`pipeline/` 워크스페이스의 책임**이다.
   - 실행기 `pipeline/run.py`는 Python으로 짠 stdlib 부트스트랩이며, Windows·Mac·Linux에서 동일하게 실행된다.
   - `.sh`는 Windows에서 네이티브로 돌지 않아 기각했다.
-  - geovars 패키지의 콘솔 명령으로 두는 방식도 기각했다.
-  - 실행은 파이프라인 관심사지 라이브러리 관심사가 아니다.
+  - geovars 패키지의 콘솔 명령으로 두는 방식도 기각했다. 실행은 파이프라인 관심사지 라이브러리 관심사가 아니다.
   - 컨테이너 없이도 도는 얇은 부트스트랩으로 순환 의존 문제를 피한다.
 - 실행기는 한 번 실행에 세 단계를 거친다.
   - 스크립트 상단의 `image`를 읽어 그 컨테이너로 진입하고, lock을 처리한 뒤, `uv run --script`를 실행한다.
@@ -183,7 +178,7 @@ if __name__ == "__main__":
   - FROZEN이 가장 흔한 반복 실행 경로이며, 이 경우 컨테이너 실행이 한 번뿐이다.
 - **lock 동작 규칙**: 없으면 컨테이너 안에서 생성하고, 있으면 frozen 그대로 사용하고, 재-lock은 명시적 플래그(`--relock`)로만 한다.
   - 매 실행 자동 재생성은 금지한다.
-  - pin이 무효화되기 때문이다.
+    - pin이 무효화되기 때문이다.
   - 재-lock은 의존성을 의도적으로 바꾸는 것이므로, 산출물이 발행됐다면 새 버전으로 취급한다.
 - **smoketest로 실행 경로를 검증했다.**
   - 임시 PEP 723 스크립트로 `python pipeline/run.py <id>`의 전 경로를 돌려 확인했다.
@@ -206,10 +201,9 @@ if __name__ == "__main__":
 ```
 
 - **불변식 — 캐시는 순수 가속 장치이지 입력이 아니다.**
-  - `.cache/`를 통째로 지워도 재실행하면 같은 결과가 나와야 한다.
-  - 느려질 뿐이다.
+  - `.cache/`를 통째로 지워도 재실행하면 같은 결과가 나와야 한다. 느려질 뿐이다.
   - `s3/`는 이미 스토리지에 박제되고 STAC `file:checksum`으로 고정된 원본의 로컬 미러일 뿐, 권위 있는 입력이 아니다.
-  - 진짜 권위는 [/decisions/reproducibility.md](/decisions/reproducibility.md)에서 말하는 3층 pin이다.
+    - 진짜 권위는 [/decisions/reproducibility.md](/decisions/reproducibility.md)에서 말하는 3층 pin이다.
   - `pipeline/<id>/`의 중간산출물도 스크립트가 처음부터 다시 만들어낼 수 있어야 하며, "숨은 입력"이 되면 안 된다.
 - **`s3/`는 양방향 미러다.**
   - 다운로드 read-through 미러였던 원래 개념에 업로드 전 준비 단계도 같은 자리로 통합했다.
@@ -220,7 +214,7 @@ if __name__ == "__main__":
   - 컨테이너 안 스크립트는 host 절대경로를 몰라도 되도록, `run.py`가 `UV_CACHE_DIR`(uv가 직접 읽음), `GEOVARS_CACHE_ROOT`, `GEOVARS_S3_CACHE_DIR`, `GEOVARS_DUCKDB_CACHE_DIR`, `GEOVARS_SCRATCH_DIR`(collection별)를 주입한다.
   - `geovars.pipeline`이 이를 읽는 헬퍼(`cache_root()`/`s3_cache_dir()`/`duckdb_cache_dir()`/`scratch_dir()`)를 제공한다.
   - 변수명은 스토리지 벤더 중립(`S3`)으로 택했다.
-  - 오브젝트 스토리지 자체는 현재 Cloudflare R2이지만, 자격증명과 엔드포인트 구성이 S3 호환 API로 동일해 후임자가 다른 S3 호환 스토리지로 갈아탈 가능성을 이름에서부터 열어둔다.
+    - 오브젝트 스토리지 자체는 현재 Cloudflare R2이지만, 자격증명과 엔드포인트 구성이 S3 호환 API로 동일해 후임자가 다른 S3 호환 스토리지로 갈아탈 가능성을 이름에서부터 열어둔다.
   - Cloudflare R2 채택 근거는 [/decisions/infrastructure.md](/decisions/infrastructure.md)에 있고, 벤더 중립 네이밍 근거는 [/decisions/secrets-and-s3-client.md](/decisions/secrets-and-s3-client.md)에 있다.
 - **collection별로 격리한다.**
   - `pipeline/<collection-id>/`는 `run.py`가 이미 아는 `collection_id`로 자동 분리되어 스크립트끼리 스크래치를 오염시키지 않는다.
@@ -235,7 +229,7 @@ if __name__ == "__main__":
 - `geovars`는 단일 패키지에 optional extras를 엄격히 분리한 구조다.
   - marimo 기반 STAC 대시보드, 파이프라인 유틸, STAC 카탈로그 검색, 팀 변수 생성·모델링을 담는다.
   - 코어는 지연 임포트로 두고, 각 기능은 자기 extra만 갖는다.
-  - 스크립트가 `geovars[pipeline]`을 끌어올 때 대시보드나 모델링 의존성이 딸려오지 않게 하기 위해서다.
+    - 스크립트가 `geovars[pipeline]`을 끌어올 때 대시보드나 모델링 의존성이 딸려오지 않게 하기 위해서다.
   - 분리가 아프면 그때 안정 코어를 별 패키지로 떼어낸다.
 - 레포에 `origin`(`github.com/ncc-airhealth/geovars`)이 이미 있지만, 아직 push 안 한 로컬 커밋도 즉시 pin해 반복 개발할 수 있어야 해서 `geovars[pipeline,catalog] @ git+file:///workspace@<commit>#subdirectory=geovars`를 쓴다.
   - 컨테이너 bind mount로 이미 보이는 로컬 레포를 `git+file://`로 참조하는 것이다.
