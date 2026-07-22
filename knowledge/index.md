@@ -14,7 +14,3 @@
 ## 의사결정 기록
 
 - [/decisions/index.md](/decisions/index.md) — 결정 기록 목록
-
-## 변경 이력
-
-- [/log.md](/log.md)

@@ -54,6 +54,15 @@ timestamp: 2026-07-21
   [/decisions/governance-and-review.md](/decisions/governance-and-review.md)의 사용자
   피드백 루프가 사후에 책임진다.
 
+## 변경 이력 파일(log.md) 폐지 (2026-07-22)
+
+기존엔 매 포착마다 `knowledge/log.md`에 날짜별 한 줄 요약을 추가했다. 실제로는 항목이
+계속 길어져(근거·검증 과정까지 서술) 유지 부담만 커지고, 담아야 할 정보(언제·무엇이
+바뀌었나)는 이미 다른 곳에 있었다: 문서 frontmatter의 `timestamp`(언제), git 커밋
+이력(정확히 무엇이 바뀌었나), `index.md`(무엇이 있나). log.md는 이 셋의 중복 요약본에
+불과해 **폐지**한다. 기존 내용은 git history(`git log -p -- knowledge/log.md`)로 복구
+가능하므로 별도 아카이브 없이 삭제.
+
 ## 관련
 
 - [/decisions/governance-and-review.md](/decisions/governance-and-review.md)
