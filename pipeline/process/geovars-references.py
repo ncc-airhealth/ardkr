@@ -9,52 +9,159 @@
 # [tool.geovars]
 # image = "2026.07.21"
 # ///
-"""geovars-references — geovars 프로젝트 관련 연구자료(논문) 서지 collection.
-
-인프라 검증용 겸 실사용 collection: 하드코딩된 서지 데이터를 pandas DataFrame으로 만들어
-parquet으로 저장하고, S3 호환 스토리지(GEOVARS_S3_*)에 업로드한 뒤 STAC Collection/Item으로
-등록한다. STAC Scientific Citation / Version / File Info extension은 pystac의 공식
-extension 클래스로 적용한다.
-세부: knowledge/decisions/geovars-references-collection.md, pipeline-architecture.md
-"""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 import pystac
 from dotenv import load_dotenv
-from pystac.extensions.file import FileExtension
+from geovars.catalog import register_collection_version
+from geovars.pipeline import multihash_sha256, publish_asset, s3_path
 from pystac.extensions.scientific import Publication, ScientificExtension
 from pystac.extensions.version import VersionExtension
 
-from geovars.catalog import register_collection_version
-from geovars.pipeline import publish_asset
-
 load_dotenv()
+
+COLLECTION_ID = "geovars-references"
+VERSION = "0.1.0"
+EXPERIMENTAL = True
+DEPRECATED = False
+TITLE = "geovars 프로젝트 관련 연구자료"
+DESCRIPTION = """
+geovars 프로젝트와 관련된 연구자료(논문) 서지 정보. item의 asset은 pandas로
+만든 parquet 테이블(논문별 서지 메타데이터 행)이고, STAC Scientific Citation extension
+(sci:publications)으로 인용 정보를 기록한다.
+
+인프라 검증용 겸 실사용 collection이다 — S3 호환 스토리지(GEOVARS_S3_*) 업로드와 STAC
+Collection/Item 등록까지 pipeline 인프라 전체 경로를 이 collection으로 검증한다. STAC
+Scientific Citation/Version/File Info extension은 pystac의 공식 extension 클래스로 적용한다.
+세부: knowledge/decisions/geovars-references-collection.md, pipeline-architecture.md.
+"""
+GENERATED_AT = "2026-07-21T00:00:00+00:00"
+ASSET_KEY = f"{COLLECTION_ID}/version={VERSION}/references.parquet"
 
 
 class Processor:
-    """collection 하나 = 클래스 하나. 클래스 변수는 collection의 메타데이터만, 데이터
-    본문은 프로퍼티로 — 메서드가 처리 단계."""
+    """geovars-references collection 처리 오케스트레이터."""
 
-    COLLECTION_ID = "geovars-references"
-    VERSION = "0.1.0"
-    GENERATED_AT = datetime(2026, 7, 21, tzinfo=timezone.utc)
-    TITLE = "geovars 프로젝트 관련 연구자료"
-    DESCRIPTION = (
-        "geovars 프로젝트와 관련된 연구자료(논문) 서지 정보. item의 asset은 pandas로 만든 "
-        "parquet 테이블(논문별 서지 메타데이터 행)이고, STAC Scientific Citation extension"
-        "(sci:publications)으로 인용 정보를 기록한다. 동시에 pipeline 인프라(처리 → S3 업로드 "
-        "→ STAC 카탈로그 등록) 전체 경로를 검증하는 용도로도 쓰인다."
-    )
+    def run(self) -> None:
+        """단계 메서드를 순서대로 호출하는 오케스트레이터."""
+        self.build_item()
+        self.upload_asset()
+        self.evaluate_asset()
+        self.build_collection()
+        self.register()
+
+    def build_item(self) -> None:
+        """STAC Item을 구성하고 asset을 attach한다(아직 업로드 전).
+
+        Sets:
+            self.item: 구성된 pystac.Item.
+        """
+        item = pystac.Item(
+            id="references",
+            geometry=None,
+            bbox=None,
+            datetime=datetime.fromisoformat(GENERATED_AT),
+            properties={},
+        )
+
+        ScientificExtension.ext(item, add_if_missing=True).publications = [
+            Publication(doi=ref["doi"], citation=citation(ref))
+            for ref in self.references
+        ]
+
+        asset = pystac.Asset(
+            href=ASSET_KEY,  # R2/S3 key 그대로(self-describing) — 버킷명/엔드포인트는 env(GEOVARS_S3_*)
+            media_type="application/vnd.apache.parquet",
+            roles=["data"],
+        )
+        item.add_asset(
+            "references", asset
+        )  # upload_asset이 checksum을 채우려면 owner가 먼저 있어야 함
+
+        self.item = item
+
+    def upload_asset(self) -> None:
+        """geovars.pipeline.publish_asset()으로 asset을 업로드하고 checksum을 기록한다.
+
+        Sets:
+            self.checksum: 업로드된 파일의 Multihash(sha2-256).
+        """
+        asset = self.item.assets["references"]
+        self.checksum = publish_asset(
+            asset,
+            ASSET_KEY,
+            write=lambda f: pd.DataFrame(self.references).to_parquet(f),
+        )
+        print(
+            f"[{COLLECTION_ID}] 업로드 완료: key={ASSET_KEY} checksum={self.checksum}"
+        )
+
+    def evaluate_asset(self) -> None:
+        """업로드한 asset을 재검증한다. checksum이 다르거나 로컬 캐시를 재다운로드했으면 예외를 던진다."""
+        path = s3_path(ASSET_KEY)
+        cache_file = Path(path.fspath)
+        mtime_before = cache_file.stat().st_mtime if cache_file.exists() else None
+
+        data = path.read_bytes()
+        if multihash_sha256(data) != self.checksum:
+            raise ValueError(
+                f"재다운로드한 asset의 checksum이 기록값과 다릅니다: key={ASSET_KEY}"
+            )
+
+        mtime_after = cache_file.stat().st_mtime
+        if mtime_before != mtime_after:
+            raise ValueError(
+                f"asset을 로컬 캐시 대신 재다운로드했습니다: key={ASSET_KEY}"
+            )
+
+        print(f"[{COLLECTION_ID}] 재검증 완료: checksum 일치, 로컬 캐시 히트")
+
+    def build_collection(self) -> None:
+        """STAC Collection을 구성한다.
+
+        Sets:
+            self.collection: 구성된 pystac.Collection.
+        """
+        collection = pystac.Collection(
+            id=COLLECTION_ID,
+            title=TITLE,
+            description=DESCRIPTION,
+            extent=pystac.Extent(
+                spatial=pystac.SpatialExtent([[-180.0, -90.0, 180.0, 90.0]]),
+                temporal=pystac.TemporalExtent(
+                    [[datetime.fromisoformat(GENERATED_AT), None]]
+                ),
+            ),
+            license="proprietary",
+        )
+        version_ext = VersionExtension.ext(collection, add_if_missing=True)
+        version_ext.version = VERSION
+        version_ext.experimental = EXPERIMENTAL
+        version_ext.deprecated = DEPRECATED
+
+        self.collection = collection
+
+    def register(self) -> None:
+        """collection에 item을 붙이고 카탈로그에 등록한다."""
+        self.collection.add_item(self.item)
+        register_collection_version(
+            Path(__file__).resolve().parents[2] / "stac-metadata",
+            self.collection,
+            VERSION,
+        )
+        print(f"[{COLLECTION_ID}] STAC 등록 완료: version={VERSION}")
 
     @property
     def references(self) -> list[dict]:
-        """하드코딩된 서지 데이터(YAGNI) — 논문이 늘면 이 리스트에 항목을 추가하고
-        VERSION을 올려 재실행한다."""
+        """하드코딩된 서지 데이터.
+
+        논문이 늘면 이 리스트에 항목을 추가하고 VERSION을 올려 재실행한다.
+        """
         return [
             {
                 "title_ko": "환경의 건강 영향 연구를 위한 공간지리정보 데이터 파이프라인-자료활용의 제한점과 극복방안-",
@@ -72,68 +179,14 @@ class Processor:
             },
         ]
 
-    @property
-    def asset_key(self) -> str:
-        return f"{self.COLLECTION_ID}/version={self.VERSION}/references.parquet"
 
-    def citation(self, ref: dict) -> str:
-        authors = ref["authors"].replace("; ", ", ")
-        return (
-            f"{authors} ({ref['year']}). {ref['title_ko']}. "
-            f"{ref['venue']}, {ref['volume']}({ref['issue']}), {ref['pages']}. {ref['url']}"
-        )
-
-    def build_item(self) -> pystac.Item:
-        item = pystac.Item(
-            id="references", geometry=None, bbox=None, datetime=self.GENERATED_AT, properties={}
-        )
-
-        ScientificExtension.ext(item, add_if_missing=True).publications = [
-            Publication(doi=ref["doi"], citation=self.citation(ref)) for ref in self.references
-        ]
-
-        asset = pystac.Asset(
-            href=self.asset_key,  # R2/S3 key 그대로(self-describing) — 버킷명/엔드포인트는 env(GEOVARS_S3_*)
-            media_type="application/vnd.apache.parquet",
-            roles=["data"],
-        )
-        item.add_asset("references", asset)  # publish_asset이 checksum을 채우려면 owner가 먼저 있어야 함
-        publish_asset(
-            asset,
-            self.asset_key,
-            write=lambda f: pd.DataFrame(self.references).to_parquet(f),
-        )
-
-        return item
-
-    def build_collection(self) -> pystac.Collection:
-        collection = pystac.Collection(
-            id=self.COLLECTION_ID,
-            title=self.TITLE,
-            description=self.DESCRIPTION,
-            extent=pystac.Extent(
-                spatial=pystac.SpatialExtent([[-180.0, -90.0, 180.0, 90.0]]),
-                temporal=pystac.TemporalExtent([[self.GENERATED_AT, None]]),
-            ),
-            license="proprietary",
-        )
-        VersionExtension.ext(collection, add_if_missing=True).version = self.VERSION
-        return collection
-
-    def run(self) -> None:
-        item = self.build_item()
-        checksum = FileExtension.ext(item.assets["references"]).checksum
-        print(f"[{self.COLLECTION_ID}] 업로드 완료: key={self.asset_key} checksum={checksum}")
-
-        collection = self.build_collection()
-        collection.add_item(item)
-
-        register_collection_version(
-            Path(__file__).resolve().parents[2] / "stac-metadata",
-            collection,
-            self.VERSION,
-        )
-        print(f"[{self.COLLECTION_ID}] STAC 등록 완료: version={self.VERSION}")
+def citation(ref: dict) -> str:
+    """서지 데이터 한 행을 인용 문자열로 바꾼다."""
+    authors = ref["authors"].replace("; ", ", ")
+    return (
+        f"{authors} ({ref['year']}). {ref['title_ko']}. "
+        f"{ref['venue']}, {ref['volume']}({ref['issue']}), {ref['pages']}. {ref['url']}"
+    )
 
 
 if __name__ == "__main__":

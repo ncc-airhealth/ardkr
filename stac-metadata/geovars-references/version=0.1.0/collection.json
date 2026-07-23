@@ -2,7 +2,7 @@
   "type": "Collection",
   "id": "geovars-references",
   "stac_version": "1.1.0",
-  "description": "geovars 프로젝트와 관련된 연구자료(논문) 서지 정보. item의 asset은 pandas로 만든 parquet 테이블(논문별 서지 메타데이터 행)이고, STAC Scientific Citation extension(sci:publications)으로 인용 정보를 기록한다. 동시에 pipeline 인프라(처리 → S3 업로드 → STAC 카탈로그 등록) 전체 경로를 검증하는 용도로도 쓰인다.",
+  "description": "\ngeovars 프로젝트와 관련된 연구자료(논문) 서지 정보. item의 asset은 pandas로\n만든 parquet 테이블(논문별 서지 메타데이터 행)이고, STAC Scientific Citation extension\n(sci:publications)으로 인용 정보를 기록한다.\n\n인프라 검증용 겸 실사용 collection이다 — S3 호환 스토리지(GEOVARS_S3_*) 업로드와 STAC\nCollection/Item 등록까지 pipeline 인프라 전체 경로를 이 collection으로 검증한다. STAC\nScientific Citation/Version/File Info extension은 pystac의 공식 extension 클래스로 적용한다.\n세부: knowledge/decisions/geovars-references-collection.md, pipeline-architecture.md.\n",
   "links": [
     {
       "rel": "root",
@@ -20,6 +20,8 @@
     "https://stac-extensions.github.io/version/v1.2.0/schema.json"
   ],
   "version": "0.1.0",
+  "experimental": true,
+  "deprecated": false,
   "title": "geovars 프로젝트 관련 연구자료",
   "extent": {
     "spatial": {

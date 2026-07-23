@@ -1,9 +1,9 @@
 ---
 type: decision
 title: Ponytail 플러그인 도입 — 코드 최소주의 하네스 스킬
-description: Claude Code 마켓플레이스 플러그인 Ponytail을 프로젝트 스코프(.claude/settings.json)로 도입. pipeline/process/*.py의 flat·자기완결 원칙과 "재사용 우선" 규칙 충돌 가능성은 미해결.
+description: Claude Code 마켓플레이스 플러그인 Ponytail을 프로젝트 스코프(.claude/settings.json)로 도입. pipeline/process/*.py의 flat·자기완결 원칙과 "재사용 우선" 규칙의 충돌은 write-pipeline-script 스킬에 명시적 예외를 둬 해소.
 tags: [harness, plugin, ponytail, code-minimalism, claude-code, agent-native]
-timestamp: 2026-07-21
+timestamp: 2026-07-23
 ---
 
 # Ponytail 플러그인 도입 — 코드 최소주의 하네스 스킬
@@ -52,16 +52,17 @@ timestamp: 2026-07-21
 하지만 "로드돼 있는지"는 각자의 1회 승인에 의존한다.
 agent-native 목표(동일 경험) 중 "합의된 도구 목록"은 달성하지만 "완전 자동 적용"까지는 아니다.
 
-## 미해결
+## pipeline/process/*.py와 "재사용 우선" 규칙의 충돌 — 해소
 
-- **pipeline/process/*.py와 "재사용 우선" 규칙의 충돌 가능성.**
-  - 파이프라인 아키텍처 결정은 처리 스크립트를 의도적으로 **자기완결·비-DRY**로 유지하기로 확정했다.
-  - 기각한 대안은 editable 로컬 참조였다.
-  - 옛 스크립트가 최신 유틸을 쓰면 재현성이 깨진다는 이유였다.
-  - 자세한 내용은 [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md).
-  - Ponytail의 "이미 있는 코드는 재사용하라"는 규칙을 에이전트가 무비판적으로 적용하면 새 collection 스크립트를 작성할 때 옛 스크립트의 유틸을 공유하려는 방향으로 끌릴 위험이 있다.
-  - 아직 `pipeline/process/`용 명시적 예외 규칙은 정하지 않았다.
-  - 실사용 중 마찰이 관찰되면 예외를 명문화하고 이 문서를 갱신한다.
+파이프라인 아키텍처 결정은 처리 스크립트를 의도적으로 **자기완결·비-DRY**로 유지하기로
+확정했다(기각한 대안은 editable 로컬 참조 — 옛 스크립트가 최신 유틸을 쓰면 재현성이
+깨진다는 이유였다. 자세한 내용은
+[/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)).
+Ponytail의 "이미 있는 코드는 재사용하라"는 규칙을 무비판적으로 적용하면 새 collection
+스크립트를 작성할 때 옛 스크립트의 코드를 직접 가져오려는 방향으로 끌릴 위험이 있어,
+`.claude/skills/write-pipeline-script/SKILL.md`에 명시적 예외를 뒀다 — Ponytail의 재사용
+규칙은 같은 스크립트 안이나 `geovars` 패키지 유틸에는 그대로 적용하되, 다른
+`pipeline/process/<id>.py`의 코드를 가져오는 것에는 적용하지 않는다.
 
 ## 관련
 
@@ -69,3 +70,4 @@ agent-native 목표(동일 경험) 중 "합의된 도구 목록"은 달성하지
 - [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)
 - [/decisions/governance-and-review.md](/decisions/governance-and-review.md)
 - [/decisions/knowledge-capture.md](/decisions/knowledge-capture.md)
+- `.claude/skills/write-pipeline-script/SKILL.md`

@@ -51,9 +51,9 @@ pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 �
   - `run.py`가 매번 복사·이동을 대신하는 방법도 검토했지만 복잡도 대비 이득이 낮아 기각했다.
   - 에디터의 File Nesting 설정(예: VSCode `explorer.fileNesting.patterns`) 같은 도구 레벨 해법으로 대체할 수 있다.
 - `Processor` 클래스를 `pipeline/process/*.py` 전체의 공식 템플릿으로 확정한다.
-  - 클래스 변수(`COLLECTION_ID`/`VERSION`/`TITLE`/`DESCRIPTION`/데이터)와 인스턴스 메서드(처리 단계), `run()`, `if __name__ == "__main__": Processor().run()`으로 구성한다.
+  - 인스턴스 메서드(처리 단계)와 `run()`, `if __name__ == "__main__": Processor().run()`으로 구성한다.
   - 스크립트 간 상태 공유와 가독성을 위한 구조다.
-  - 세부 명세는 [pipeline-architecture](/decisions/pipeline-architecture.md) "Processor 템플릿"을 참고한다.
+  - 정확한 템플릿(모듈 상수 배치 등 세부는 이후 `.claude/skills/write-pipeline-script/SKILL.md`에서 갱신됨)은 그 스킬을 참고한다.
 - PEP723 의존성은 `>=` 대신 정확한 버전(`==`)으로 고정한다.
   - lock 파일이 이미 전이 의존성까지 고정하므로 정보상 중복이지만, 헤더만 봐도 재현 버전을 바로 알 수 있는 명시성을 우선했다.
   - `duckdb==1.5.4`, `python-dotenv==1.2.2`처럼 lock에서 resolve된 값을 그대로 쓴다.
@@ -106,7 +106,7 @@ pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 �
 - license 정책 — 레포와 데이터 전체의 라이선스가 정해지면 `"proprietary"` 임시값을 교체해야 한다.
 - `geovars` 패키지의 GitHub 호스팅 pin 검증 — push 이후 실제 GitHub 호스팅 pin이 동작하는지 별도로 확인해야 한다.
 - 서지 데이터가 늘어나 CSV/YAML 분리가 아쉬워지면 그때 재검토한다(YAGNI).
-- 다음 버전을 낼 때 [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)의 forward-pointer(`deprecated`/`predecessor`/`successor`)를 위 `VersionExtension` API로 구현하는 작업이 남아 있다.
+- `VERSION`/`EXPERIMENTAL`/`DEPRECATED` 모듈 상수를 필수화하는 작업은 `.claude/skills/write-pipeline-script/SKILL.md`에서 마무리했다. `predecessor`/`successor`(새 버전 발행 시 옛 버전에 forward-pointer를 붙이는 작업, [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md))는 실행 시점에 이전 버전을 참조해야 해서 여전히 미해결이다.
 
 ## 관련
 
@@ -115,6 +115,7 @@ pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 �
 - [/decisions/reproducibility.md](/decisions/reproducibility.md)
 - [/decisions/secrets-and-s3-client.md](/decisions/secrets-and-s3-client.md)
 - [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md)
+- `.claude/skills/write-pipeline-script/SKILL.md`
 
 # Citations
 

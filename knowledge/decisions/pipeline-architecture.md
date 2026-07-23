@@ -66,25 +66,7 @@ knowledge/                     # OKF 지식
 `pipeline/process/<collection-id>.py`의 공식 템플릿은 함수 나열이 아니라 `Processor` 클래스 하나다.
 - 사유는 향후 처리 단계 간 상태 공유와 가독성이다.
 - 첫 실사용은 [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)다.
-
-```python
-class Processor:
-    COLLECTION_ID = "..."   # = 파일명 = collection id
-    VERSION = "0.1.0"
-    TITLE = "..."
-    DESCRIPTION = "..."
-    # 그 외 collection 고유 설정·하드코딩 데이터도 클래스 변수로
-
-    def build_...(self) -> ...:
-        ...  # 처리 단계 하나당 메서드 하나
-
-    def run(self) -> None:
-        ...  # 단계 메서드들을 순서대로 호출하는 오케스트레이터
-
-
-if __name__ == "__main__":
-    Processor().run()
-```
+- 정확한 템플릿(모듈 상수 배치, `run()` 구조, docstring 컨벤션 등)은 `.claude/skills/write-pipeline-script/SKILL.md`에 있다. 여기서는 중복 서술하지 않는다.
 
 - PEP723 의존성은 정확한 버전(`==`)으로 고정한다.
   - 예: `duckdb==1.5.4`.
@@ -258,3 +240,4 @@ CI는 도입하지 않기로 확정했다. 근거는 [/decisions/reproducibility
 - [/decisions/catalog-and-access.md](/decisions/catalog-and-access.md)
 - [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)
 - [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md)
+- `.claude/skills/write-pipeline-script/SKILL.md` — 이 문서의 Processor 템플릿·PEP723·S3 규칙을 작업 절차로 정리한 스킬. 상수 배치, docstring, VERSION/EXPERIMENTAL/DEPRECATED, 검증 절차 등 세부는 여기서 확정했다.

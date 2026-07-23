@@ -1,0 +1,7 @@
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "UP"]
+# E501(줄 길이)은 무시한다 — 한국어 산문(docstring, DESCRIPTION, 서지 데이터)이 많아
+# 강제로 줄바꿈하면 오히려 가독성이 떨어진다. formatter가 코드 자체의 줄바꿈은 이미 처리한다.
+ignore = ["E501"]
