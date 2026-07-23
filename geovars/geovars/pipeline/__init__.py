@@ -15,6 +15,7 @@ secrets-and-s3-client.md
 from __future__ import annotations
 
 import hashlib
+import io
 import os
 from collections.abc import Callable
 from pathlib import Path
@@ -32,6 +33,13 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
         'geovars.pipeline 은 cloudpathlib[s3] 이 필요합니다: pip install "geovars[pipeline]"'
+    ) from exc
+
+try:
+    from botocore.exceptions import ClientError
+except ImportError as exc:  # pragma: no cover
+    raise ImportError(
+        'geovars.pipeline 은 botocore 가 필요합니다: pip install "geovars[pipeline]"'
     ) from exc
 
 from pystac.extensions.file import FileExtension
@@ -99,29 +107,69 @@ def s3_path(key: str) -> S3Path:
     return S3Path(f"s3://{bucket}/{key}", client=s3_client())
 
 
-def publish_asset(asset: pystac.Asset, key: str, write: Callable[[BinaryIO], None]) -> str:
-    """`write(파일객체)`로 내용을 채워 S3에 업로드하고, `asset`에 checksum까지 기록한다.
+def remote_checksum(key: str) -> str | None:
+    """R2 객체의 커스텀 메타데이터 `checksum`을 HEAD 요청만으로 읽는다(본문 다운로드 없음).
+
+    객체가 없으면 None. `publish_asset(mode="remote")`의 재업로드 스킵 판단과, 처리
+    스크립트의 `verify_uploaded` 단계가 공유하는 헬퍼다.
+    """
+    path = s3_path(key)
+    try:
+        obj = path.client.s3.Object(path.bucket, path.key)
+        return obj.metadata.get("checksum")  # .metadata 접근이 HEAD(load)를 트리거
+    except ClientError as exc:
+        if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+            return None
+        raise
+
+
+def publish_asset(
+    asset: pystac.Asset,
+    key: str,
+    write: Callable[[BinaryIO], None],
+    mode: str = "remote",
+) -> str:
+    """`write(파일객체)`로 내용을 채워 발행하고, `asset`에 checksum까지 기록한다.
 
     `asset`은 호출 전에 이미 `item.add_asset(...)`로 owner가 있는 상태여야 한다 —
     `FileExtension.ext(asset, add_if_missing=True)`가 owner 없는 Asset에는 스키마 URI를
     등록할 곳이 없어 실패한다.
 
-    실제 전송은 cloudpathlib(`S3Path.open`)이 1회만 수행한다. checksum은 업로드 직후 로컬
-    캐시 파일(재다운로드 없음)에서 계산해, S3 객체 커스텀 메타데이터(서버사이드 `copy_from` —
-    네트워크 재전송 없음)와 STAC File Info extension(`file:checksum`) 양쪽에 남긴다. 커스텀
-    메타데이터는 HEAD 요청만으로 하는 1차 검증용이고, 권위 있는 검증은 항상 실제 바이트
-    해시다 (knowledge/decisions/reproducibility.md 3층 pin의 "입력 collection 층").
-    """
-    path = s3_path(key)
-    with path.open("wb") as f:
-        write(f)
+    `write()`를 먼저 메모리 버퍼에 실행해 checksum을 계산한 뒤 `mode`에 따라 분기한다.
 
-    checksum = multihash_sha256(path.read_bytes())
-    path.client.s3.Object(path.bucket, path.key).copy_from(
-        CopySource={"Bucket": path.bucket, "Key": path.key},
-        Metadata={"checksum": checksum},
-        MetadataDirective="REPLACE",
-    )
+    - `mode="remote"`(기본): 원격에 같은 checksum이 이미 있으면(`remote_checksum`) 업로드를
+      생략하고, 아니면 R2에 올린 뒤 checksum을 서버사이드 메타데이터(`copy_from` — 네트워크
+      재전송 없음)로 반영한다.
+    - `mode="local"`: R2를 건드리지 않고 로컬 캐시(`.cache/s3/<bucket>/<key>`)에만 쓴다.
+      빠른 개발 반복용이며, 이 상태로 발행됐다고 볼 수 없다 — 처리 스크립트의
+      `verify_uploaded`가 이후 반드시 실패한다.
+
+    어느 mode든 asset의 `file:checksum`은 기록되고 checksum이 반환된다. 커스텀 메타데이터는
+    HEAD 요청만으로 하는 1차 검증용이고, 권위 있는 검증은 항상 실제 바이트 해시다
+    (knowledge/decisions/reproducibility.md 3층 pin의 "입력 collection 층").
+    """
+    buffer = io.BytesIO()
+    write(buffer)
+    data = buffer.getvalue()
+    checksum = multihash_sha256(data)
+
+    if mode == "local":
+        cache_file = s3_cache_dir() / os.environ["GEOVARS_S3_BUCKET_NAME"] / key
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        cache_file.write_bytes(data)
+    elif mode == "remote":
+        if remote_checksum(key) != checksum:
+            path = s3_path(key)
+            with path.open("wb") as f:
+                f.write(data)
+            path.client.s3.Object(path.bucket, path.key).copy_from(
+                CopySource={"Bucket": path.bucket, "Key": path.key},
+                Metadata={"checksum": checksum},
+                MetadataDirective="REPLACE",
+            )
+        # else: 원격에 같은 checksum이 이미 있음 → 업로드 생략
+    else:
+        raise ValueError(f"알 수 없는 publish mode: {mode!r} (local|remote)")
 
     FileExtension.ext(asset, add_if_missing=True).checksum = checksum
     return checksum
