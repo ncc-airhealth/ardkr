@@ -1,9 +1,8 @@
 ---
 name: write-pipeline-script
 description: >-
-  pipeline/process/<collection-id>.py 처리 스크립트를 새로 작성하거나 고칠 때 따르는
-  구조·docstring·S3 업로드/다운로드·STAC 등록·검증 규칙. 새 collection을 추가하거나
-  기존 처리 스크립트를 리팩터링할 때 사용한다.
+  Use when writing or editing pipeline/process/<collection-id>.py processing
+  scripts, adding a new collection, or refactoring an existing process script.
 ---
 
 # write-pipeline-script
