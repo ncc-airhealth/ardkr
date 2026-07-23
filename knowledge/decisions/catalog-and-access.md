@@ -37,7 +37,7 @@ catalog.normalize_and_save(
   - pystac 기본 `json.dump`는 `ensure_ascii=True`라 한국어가 `\uXXXX`로 이스케이프되어, 커밋된 JSON을 사람이 diff로 읽지 못한다.
   - `normalize_and_save` 이후 `json.load`로 다시 읽어 `json.dump(ensure_ascii=False, indent=2)`로 재저장한다.
     - Collection·Item JSON도 같다.
-  - `geovars.catalog.register_collection_version()`이 저장된 모든 JSON에 이 재직렬화를 기본으로 적용해 해소했다.
+  - `geovars.catalog.register_collection()`이 저장된 모든 JSON에 이 재직렬화를 기본으로 적용해 해소했다.
 
 ## 카탈로그 구조와 레포
 
@@ -52,7 +52,7 @@ catalog.normalize_and_save(
   - 버전 디렉터리는 Hive 스타일 `version=<version>`을 쓰고, S3 asset key도 같은 관행을 따른다.
   - 루트 `catalog.json`의 `rel: child` 링크는 그 collection id의 기존 링크를 지우고 새 버전 경로로 교체한다.
   - 과거 버전 디렉터리는 디스크에서 지우지 않는다. "루트는 최신만, 레포는 전-버전" 원칙 그대로다.
-  - `geovars.catalog.register_collection_version()`으로 구현했다.
+  - `geovars.catalog.register_collection()`으로 구현했다.
 - `Collection.normalize_and_save(root_href, ...)`에는 pystac 버그가 있다.
   - `root_href` 마지막 조각에 `.`이 있으면, 예컨대 `version=0.1.0`이면 pystac이 파일명과 확장자로 오인해 잘라낸다.
   - 그러므로 `root_href` 끝에 `/`를 반드시 붙인다 ([/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)의 "발견한 버그").

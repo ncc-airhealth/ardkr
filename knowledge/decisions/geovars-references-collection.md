@@ -37,11 +37,11 @@ pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 �
   - 컨테이너 안에서 레포 전체가 `/workspace`로 보이는 bind mount를 그대로 활용한 방식이다.
   - 실제 GitHub 호스팅 pin은 push 이후 별도로 재검증해야 한다(미해결 참고).
 - uv가 `git+` 의존성을 resolve하려면 `git` 실행파일이 필요하므로 `pipeline/images/2026.07.21/Dockerfile`에 `git` 패키지를 추가했다.
-- `geovars.pipeline.upload_asset()`/`multihash_sha256()`, `geovars.catalog.register_collection_version()`을 이번에 처음 구현했고, 이 스크립트에서 처음 가져와 쓴다.
+- `geovars.pipeline.upload_asset()`/`multihash_sha256()`, `geovars.catalog.register_collection()`을 이번에 처음 구현했고, 이 스크립트에서 처음 가져와 쓴다.
 - 버전 디렉터리 이름은 `<version>` 단독이 아니라 `version=<version>` 형태의 Hive 스타일로 짓는다.
   - 이름만 보고 버전을 알 수 있는 쪽이 낫기 때문이다.
   - S3 asset key와 stac-metadata 로컬 경로 양쪽에 동일하게 적용한다(`geovars-references/version=0.1.0/...`).
-  - `geovars.catalog.register_collection_version()`에 반영되어 있다.
+  - `geovars.catalog.register_collection()`에 반영되어 있다.
 - S3 업로드 전 로컬 준비 경로는 `.cache/s3/<key 그대로>`로 통일한다.
   - `.cache/s3/`를 버킷의 로컬 미러로 두고, 다운로드 read-through와 업로드 전 준비 단계 양쪽에 같은 개념을 쓴다.
   - 처음엔 `geovars.pipeline.s3_cache_path(key)`와 `upload_asset(key)`로 직접 구현했으나, cloudpathlib 도입([/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md))으로 `s3_path(key)`/`publish_asset(...)`가 이를 대체했다.
@@ -91,15 +91,29 @@ pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 �
   - 우회하려면 루트 Catalog에서부터 전체를 `normalize_and_save`해야 하는데, 이는 이 프로젝트가 택한 증분 등록 모델과 정면으로 충돌한다.
   - 증분 등록은 한 collection의 서브트리만 쓰고 다른 collection은 건드리지 않는 방식이다([catalog-and-access.md](/decisions/catalog-and-access.md) "카탈로그 유지 절차").
   - 전체 재저장은 발행할 때마다 카탈로그 전체를 로드하고 다른 모든 collection 파일까지 재저장하게 만든다.
-  - 그래서 커스텀 `register_collection_version()`을 그대로 유지한다.
+  - 그래서 커스텀 `register_collection()`을 그대로 유지한다.
 
 ## 발견한 버그 (pystac)
 
 - `pystac.Collection.normalize_and_save(root_href, ...)`에서 `root_href`의 마지막 경로 조각에 `.`이 있으면(예: `MAJOR.MINOR.PATCH` 버전 문자열) pystac이 이를 파일명과 확장자로 오인해 그 조각을 통째로 잘라버린다.
   - `/a/b/0.1.0`의 self href가 `/a/b/collection.json`이 되어 `0.1.0`이 사라진다.
 - root_href 끝에 `/`를 명시하면 회피된다.
-  - `geovars.catalog.register_collection_version()`(`geovars/geovars/catalog/__init__.py`)에 이미 반영되어 있다.
+  - `geovars.catalog.register_collection()`(`geovars/geovars/catalog/__init__.py`)에 이미 반영되어 있다.
   - 버전 디렉터리를 다루는 코드를 새로 짤 때 반드시 주의한다.
+- `normalize_and_save(root_href, ...)`에 **상대경로** `root_href`를 넘기면, 버전 세그먼트가
+  빠진 flat 경로(예: `<collection-id>/collection.json`)에 collection·item이 중복 생성된다
+  (내용은 정상 위치의 것과 동일). 루트 `catalog.json`의 child link는 정상 경로를 가리켜 카탈로그
+  자체는 깨지지 않지만, 커밋되지 않아야 할 stray 파일이 남는다.
+  - `register_collection()`은 인자로 받은 `catalog_root`를 함수 안에서 `Path(...).resolve()`로
+    절대경로화해 회피한다.
+
+## 캐시 관련 주의사항
+
+- `geovars` 패키지 소스(`geovars/geovars/`)를 고치고 로컬 pin(`file:///workspace/geovars`)으로
+  재검증할 때, `.cache/uv/environments-v2/<script>-*`만 지우면 uv가 이전에 빌드해 둔 wheel
+  캐시(`.cache/uv/wheels-v6` 등)를 그대로 재사용해 수정 전 코드로 계속 실행될 수 있다. 로그에
+  `Building geovars @ file:///workspace/geovars` 줄이 없으면 재빌드가 안 된 것이다 — 이 경우
+  `.cache/uv` 전체를 지우고 다시 실행한다.
 
 ## 미해결
 

@@ -18,7 +18,7 @@ from pathlib import Path
 import pandas as pd
 import pystac
 from dotenv import load_dotenv
-from geovars.catalog import register_collection_version
+from geovars.catalog import register_collection
 from geovars.pipeline import multihash_sha256, publish_asset, s3_path
 from pystac.extensions.scientific import Publication, ScientificExtension
 from pystac.extensions.version import VersionExtension
@@ -149,11 +149,7 @@ class Processor:
     def register(self) -> None:
         """collection에 item을 붙이고 카탈로그에 등록한다."""
         self.collection.add_item(self.item)
-        register_collection_version(
-            Path(__file__).resolve().parents[2] / "stac-metadata",
-            self.collection,
-            VERSION,
-        )
+        register_collection(self.collection, VERSION)
         print(f"[{COLLECTION_ID}] STAC 등록 완료: version={VERSION}")
 
     @property

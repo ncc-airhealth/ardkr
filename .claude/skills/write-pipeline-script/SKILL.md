@@ -40,9 +40,24 @@ description: >-
   - `geovars`는 git commit pin으로 가져온다: `geovars[<extras>] @ git+file:///workspace@<commit>#subdirectory=geovars`.
     필요한 extra만 선택한다(S3면 `pipeline`, STAC 카탈로그 등록이면 `catalog`).
   - `[tool.geovars] image = "YYYY.MM.DD"`로 시스템 이미지를 pin한다.
-- 헤더 바로 아래부터 모듈 최상단 상수, 그다음 `Processor` 클래스, 그다음(있다면) 순수 헬퍼
-  함수, 마지막에 `if __name__ == "__main__":` 순서로 둔다. 별도 모듈 docstring은 두지 않는다
-  — `DESCRIPTION`이 그 역할을 겸한다(아래 참고).
+
+  ```python
+  # /// script
+  # dependencies = [
+  #   "python-dotenv==1.2.2",
+  #   "geovars[<extras>] @ git+file:///workspace@<commit>#subdirectory=geovars",
+  # ]
+  #
+  # [tool.geovars]
+  # image = "YYYY.MM.DD"
+  # ///
+  ```
+
+  `<commit>`/`<extras>`/버전 값은 자리표시자다 — collection마다 실제 값으로 채운다.
+- 헤더 다음은 `from __future__ import annotations`로 시작하는 import 블록, 그다음
+  `load_dotenv()` 호출, 그다음 모듈 최상단 상수, 그다음 `Processor` 클래스, 그다음(있다면)
+  순수 헬퍼 함수, 마지막에 `if __name__ == "__main__":` 순서로 둔다. 별도 모듈 docstring은
+  두지 않는다 — `DESCRIPTION`이 그 역할을 겸한다(아래 참고).
 
 ## 모듈 상수
 
@@ -256,8 +271,12 @@ Python은 모듈 함수의 정의 순서를 신경 쓰지 않는다 — `run()`�
   add_if_missing=True).필드 = ...`. 원본 dict/JSON을 직접 조작하지 않는다.
 - `VersionExtension.ext(collection, add_if_missing=True)`에 `version`/`experimental`/
   `deprecated`를 위 모듈 상수 그대로 대입한다.
-- 카탈로그 등록은 `geovars.catalog.register_collection_version(stac_metadata_dir, collection,
-  version)`로 한다. 커스텀 `normalize_and_save` 호출을 다시 짜지 않는다.
+- 카탈로그 등록은 `geovars.catalog.register_collection(self.collection, VERSION)`로 한다.
+  커스텀 `normalize_and_save` 호출을 다시 짜지 않는다.
+  - `catalog_root` 인자는 기본값이 cwd 기준 상대경로 `"stac-metadata"`라 생략해도 된다.
+    `pipeline/run.py`가 Docker 컨테이너의 cwd를 항상 레포 루트로 고정하기 때문이다(`-w
+    /workspace`). `pipeline/run.py`를 거치지 않고 다른 위치에서 직접 실행할 때만 명시적으로
+    넘긴다.
 
 ## 스크립트 간 재사용 금지
 
@@ -284,12 +303,18 @@ Python은 모듈 함수의 정의 순서를 신경 쓰지 않는다 — `run()`�
     메타데이터가 실제로 반영되는지 확인한다. `evaluate_asset()`이 매 실행마다 이 확인의
     상당 부분을 자동으로 한다.
 - `--relock`은 의존성을 의도적으로 바꿀 때만 쓴다. lock이 바뀌면 커밋이 필수다.
+- 데이터 본문(`@property`로 둔 하드코딩 데이터 등)을 고쳤다면 `VERSION`을 올린다. `ASSET_KEY`가
+  `f"...version={VERSION}/..."` 패턴이라 자동으로 새 key가 된다. 근거:
+  [/decisions/versioning-and-corrections.md](../../../knowledge/decisions/versioning-and-corrections.md).
 - 스크립트를 고치면 `uvx ruff format <path>`와 `uvx ruff check --fix <path>`를 돌린다.
   설정은 레포 루트 `ruff.toml`. 버전은 pin하지 않는다 — 재현성 3층 pin의 대상이 아니라
   커밋 전 스타일 정리 도구일 뿐이다.
 
 ## 마칠 때
 
+- 스크립트를 다 쓴 뒤, 처음부터 끝까지 다시 읽으며 이 스킬의 규칙과 하나씩 대조한다(상수
+  배치·순서, `run()`이 조건·반복 없이 호출만 나열하는지, `EXPERIMENTAL` 승인 여부,
+  `evaluate_asset()` 존재 여부 등). 방금 쓴 사람이 아니라 처음 보는 사람 입장에서 읽는다.
 - `capture-knowledge`로 이번 작업에서 생긴 새 결정·주의사항을 남긴다.
 - `geovars` 쪽 코드를 고쳤다면, 커밋 후 PEP723 헤더의 pin 커밋 해시를 그 커밋으로 갱신하고
   `--relock`한다.
