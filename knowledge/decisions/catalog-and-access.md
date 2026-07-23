@@ -53,6 +53,7 @@ catalog.normalize_and_save(
   - 루트 `catalog.json`의 `rel: child` 링크는 그 collection id의 기존 링크를 지우고 새 버전 경로로 교체한다.
   - 과거 버전 디렉터리는 디스크에서 지우지 않는다. "루트는 최신만, 레포는 전-버전" 원칙 그대로다.
   - `geovars.catalog.register_collection()`으로 구현했다.
+- 등록 전에 원본 데이터의 라이선스를 확인한다. 확인 없이 임시값으로 등록하지 않는다([/decisions/license-review.md](/decisions/license-review.md)).
 - `Collection.normalize_and_save(root_href, ...)`에는 pystac 버그가 있다.
   - `root_href` 마지막 조각에 `.`이 있으면, 예컨대 `version=0.1.0`이면 pystac이 파일명과 확장자로 오인해 잘라낸다.
   - 그러므로 `root_href` 끝에 `/`를 반드시 붙인다 ([/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)의 "발견한 버그").

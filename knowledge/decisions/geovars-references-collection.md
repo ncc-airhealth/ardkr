@@ -117,7 +117,7 @@ pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 �
 
 ## 미해결
 
-- license 정책 — 레포와 데이터 전체의 라이선스가 정해지면 `"proprietary"` 임시값을 교체해야 한다.
+- license 정책 — 레포와 데이터 전체의 라이선스가 정해지면 `"proprietary"` 임시값을 교체해야 한다. collection별 개별 확인 규칙은 [/decisions/license-review.md](/decisions/license-review.md)에 있다.
 - `geovars` 패키지의 GitHub 호스팅 pin 검증 — push 이후 실제 GitHub 호스팅 pin이 동작하는지 별도로 확인해야 한다.
 - 서지 데이터가 늘어나 CSV/YAML 분리가 아쉬워지면 그때 재검토한다(YAGNI).
 - `VERSION`/`EXPERIMENTAL`/`DEPRECATED` 모듈 상수를 필수화하는 작업은 `.claude/skills/write-pipeline-script/SKILL.md`에서 마무리했다. `predecessor`/`successor`(새 버전 발행 시 옛 버전에 forward-pointer를 붙이는 작업, [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md))는 실행 시점에 이전 버전을 참조해야 해서 여전히 미해결이다.
