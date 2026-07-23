@@ -68,14 +68,15 @@ timestamp: 2026-07-21
   - 어느 `geovars` extra에 둘지.
   - presigned URL 만료 시간을 얼마로 할지.
   - `pipeline/`과 `geovars.catalog` 양쪽에서 어떻게 재사용할지.
-- `geovars.pipeline.s3_cache_dir()`를 실제 `cloudpathlib.S3Client(local_cache_dir=...)` 기반으로 구현하는 작업이 남아 있다.
-  - 지금은 스텁만 있고 실제 처리 스크립트에서 아직 쓰지 않는다.
+
+`geovars.pipeline.s3_cache_dir()`를 실제 `cloudpathlib.S3Client(local_cache_dir=...)` 기반으로 구현하는 작업은 [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md)에서 마무리했다.
 
 ## 관련
 
 - [/decisions/infrastructure.md](/decisions/infrastructure.md)
 - [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)
 - [/decisions/catalog-and-access.md](/decisions/catalog-and-access.md)
+- [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md)
 
 # Citations
 

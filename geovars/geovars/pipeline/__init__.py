@@ -4,7 +4,8 @@ extra: [pipeline]  (pip install "geovars[pipeline]")
 
 처리 스크립트(pipeline/process/<collection-id>.py)가 소비하는 유틸. 스크립트는
 geovars 를 git commit 으로 pin 해 옛 스크립트 재현성을 지킨다.
-세부: knowledge/decisions/pipeline-architecture.md, reproducibility.md
+세부: knowledge/decisions/pipeline-architecture.md, reproducibility.md,
+secrets-and-s3-client.md
 
 담을 것(TODO):
 - 원본 S3 호환 스토리지(현재 Cloudflare R2) 스냅샷 입력 로딩 + file:checksum(Multihash) 검증
@@ -15,21 +16,25 @@ from __future__ import annotations
 
 import hashlib
 import os
+from collections.abc import Callable
 from pathlib import Path
+from typing import BinaryIO
 
 try:
-    import pystac  # noqa: F401
+    import pystac
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
         'geovars.pipeline 은 pystac 이 필요합니다: pip install "geovars[pipeline]"'
     ) from exc
 
 try:
-    import boto3
+    from cloudpathlib import S3Client, S3Path
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        'geovars.pipeline 은 boto3 가 필요합니다: pip install "geovars[pipeline]"'
+        'geovars.pipeline 은 cloudpathlib[s3] 이 필요합니다: pip install "geovars[pipeline]"'
     ) from exc
+
+from pystac.extensions.file import FileExtension
 
 
 # 캐시(pipeline/run.py 가 컨테이너에 마운트하는 `.cache/`)는 순수 가속 장치다 — 지워도
@@ -43,7 +48,11 @@ def cache_root() -> Path:
 
 
 def s3_cache_dir() -> Path:
-    """S3 호환 오브젝트 스토리지(현재 Cloudflare R2)에서 받아온 객체의 로컬 read-through 미러 위치."""
+    """S3 호환 오브젝트 스토리지(현재 Cloudflare R2)의 로컬 read-through 미러 위치.
+
+    `s3_client()`의 `local_cache_dir`로 그대로 넘어간다 — 실제 파일 경로는
+    cloudpathlib 관례(`<이 경로>/<bucket>/<key>`)를 따른다.
+    """
     return Path(os.environ.get("GEOVARS_S3_CACHE_DIR", str(cache_root() / "s3")))
 
 
@@ -66,37 +75,53 @@ def multihash_sha256(data: bytes) -> str:
     return "1220" + hashlib.sha256(data).hexdigest()
 
 
-def s3_cache_path(key: str) -> Path:
-    """`.cache/s3/<key>` — 실제 S3 오브젝트 key 구조를 그대로 반영한 로컬 미러 경로.
+def s3_client() -> S3Client:
+    """GEOVARS_S3_* 환경변수로 인증하고 `s3_cache_dir()`를 로컬 read-through 캐시로 쓰는 클라이언트.
 
-    다운로드 read-through 미러와 업로드 전 스테이징 양쪽에 동일하게 쓰인다 — `.cache/s3/`가
-    버킷의 로컬 거울이라는 하나의 개념으로 통일. 처리 스크립트는 이 경로에 직접 산출물을
-    쓴 뒤 `upload_asset(key)`로 올린다.
+    호출마다 새로 만든다 — 캐시는 client 인스턴스가 아니라 디스크(local_cache_dir)에 있으므로
+    재사용해도 얻는 게 없다.
     """
-    path = s3_cache_dir() / key
-    path.parent.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def upload_asset(key: str) -> str:
-    """`.cache/s3/<key>`에 이미 만들어진 로컬 파일을 S3 호환 버킷(GEOVARS_S3_*)에 업로드하고
-    file:checksum(Multihash)을 반환.
-
-    같은 checksum을 객체 커스텀 메타데이터에도 넣어 HEAD 요청으로 1차 검증 가능하게 한다
-    (knowledge/decisions/reproducibility.md 3층 pin의 "입력 collection 층").
-    """
-    data = s3_cache_path(key).read_bytes()
-    checksum = multihash_sha256(data)
-    client = boto3.client(
-        "s3",
+    return S3Client(
         endpoint_url=os.environ["GEOVARS_S3_ENDPOINT_URL"],
         aws_access_key_id=os.environ["GEOVARS_S3_ACCESS_KEY_ID"],
         aws_secret_access_key=os.environ["GEOVARS_S3_SECRET_ACCESS_KEY"],
+        local_cache_dir=s3_cache_dir(),
     )
-    client.put_object(
-        Bucket=os.environ["GEOVARS_S3_BUCKET_NAME"],
-        Key=key,
-        Body=data,
+
+
+def s3_path(key: str) -> S3Path:
+    """`s3://<GEOVARS_S3_BUCKET_NAME>/<key>` — 로컬 read-through 캐시가 붙은 cloudpathlib 경로.
+
+    다운로드는 이 객체의 `.open()`/`.read_bytes()`/`.download_to()`를 그대로 쓴다 — 필요한 것만
+    받아오는 캐시 판단은 cloudpathlib이 로컬/클라우드 mtime을 비교해 알아서 한다.
+    """
+    bucket = os.environ["GEOVARS_S3_BUCKET_NAME"]
+    return S3Path(f"s3://{bucket}/{key}", client=s3_client())
+
+
+def publish_asset(asset: pystac.Asset, key: str, write: Callable[[BinaryIO], None]) -> str:
+    """`write(파일객체)`로 내용을 채워 S3에 업로드하고, `asset`에 checksum까지 기록한다.
+
+    `asset`은 호출 전에 이미 `item.add_asset(...)`로 owner가 있는 상태여야 한다 —
+    `FileExtension.ext(asset, add_if_missing=True)`가 owner 없는 Asset에는 스키마 URI를
+    등록할 곳이 없어 실패한다.
+
+    실제 전송은 cloudpathlib(`S3Path.open`)이 1회만 수행한다. checksum은 업로드 직후 로컬
+    캐시 파일(재다운로드 없음)에서 계산해, S3 객체 커스텀 메타데이터(서버사이드 `copy_from` —
+    네트워크 재전송 없음)와 STAC File Info extension(`file:checksum`) 양쪽에 남긴다. 커스텀
+    메타데이터는 HEAD 요청만으로 하는 1차 검증용이고, 권위 있는 검증은 항상 실제 바이트
+    해시다 (knowledge/decisions/reproducibility.md 3층 pin의 "입력 collection 층").
+    """
+    path = s3_path(key)
+    with path.open("wb") as f:
+        write(f)
+
+    checksum = multihash_sha256(path.read_bytes())
+    path.client.s3.Object(path.bucket, path.key).copy_from(
+        CopySource={"Bucket": path.bucket, "Key": path.key},
         Metadata={"checksum": checksum},
+        MetadataDirective="REPLACE",
     )
+
+    FileExtension.ext(asset, add_if_missing=True).checksum = checksum
     return checksum

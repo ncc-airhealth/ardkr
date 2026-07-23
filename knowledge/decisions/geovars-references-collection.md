@@ -44,9 +44,7 @@ pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 �
   - `geovars.catalog.register_collection_version()`에 반영되어 있다.
 - S3 업로드 전 로컬 준비 경로는 `.cache/s3/<key 그대로>`로 통일한다.
   - `.cache/s3/`를 버킷의 로컬 미러로 두고, 다운로드 read-through와 업로드 전 준비 단계 양쪽에 같은 개념을 쓴다.
-  - `geovars.pipeline.s3_cache_path(key)`와 `upload_asset(key)`로 구현했다.
-  - 기존 `upload_asset(local_path, key)` 시그니처에서 `local_path`를 제거했다.
-  - 호출자가 처음부터 `s3_cache_path(key)`에 쓰면 되기 때문이다.
+  - 처음엔 `geovars.pipeline.s3_cache_path(key)`와 `upload_asset(key)`로 직접 구현했으나, cloudpathlib 도입([/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md))으로 `s3_path(key)`/`publish_asset(...)`가 이를 대체했다.
 - lock 파일 위치는 스크립트 옆에 그대로 둔다.
   - `pipeline/process.lock/`으로 분리하는 안도 검토했지만, uv가 스크립트의 lock 경로를 바꿀 방법을 전혀 제공하지 않는다.
   - `uv lock --script`와 `uv run --script` 모두 `<script>.lock`을 스크립트 바로 옆에 고정하고 관련 플래그나 환경 변수가 없다는 사실을 uv 0.10.11에서 확인했다.
@@ -116,6 +114,7 @@ pipeline/ 인프라(parquet 변환, S3 업로드, STAC 등록, geovars 공용 �
 - [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)
 - [/decisions/reproducibility.md](/decisions/reproducibility.md)
 - [/decisions/secrets-and-s3-client.md](/decisions/secrets-and-s3-client.md)
+- [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md)
 
 # Citations
 

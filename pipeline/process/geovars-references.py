@@ -31,7 +31,7 @@ from pystac.extensions.scientific import Publication, ScientificExtension
 from pystac.extensions.version import VersionExtension
 
 from geovars.catalog import register_collection_version
-from geovars.pipeline import s3_cache_path, upload_asset
+from geovars.pipeline import publish_asset
 
 load_dotenv()
 
@@ -83,12 +83,7 @@ class Processor:
             f"{ref['venue']}, {ref['volume']}({ref['issue']}), {ref['pages']}. {ref['url']}"
         )
 
-    def build_parquet(self) -> Path:
-        out_path = s3_cache_path(self.asset_key)
-        pd.DataFrame(self.references).to_parquet(out_path)
-        return out_path
-
-    def build_item(self, checksum: str) -> pystac.Item:
+    def build_item(self) -> pystac.Item:
         item = pystac.Item(
             id="references", geometry=None, bbox=None, datetime=self.GENERATED_AT, properties={}
         )
@@ -102,8 +97,12 @@ class Processor:
             media_type="application/vnd.apache.parquet",
             roles=["data"],
         )
-        item.add_asset("references", asset)
-        FileExtension.ext(item.assets["references"], add_if_missing=True).checksum = checksum
+        item.add_asset("references", asset)  # publish_asset이 checksum을 채우려면 owner가 먼저 있어야 함
+        publish_asset(
+            asset,
+            self.asset_key,
+            write=lambda f: pd.DataFrame(self.references).to_parquet(f),
+        )
 
         return item
 
@@ -122,11 +121,10 @@ class Processor:
         return collection
 
     def run(self) -> None:
-        self.build_parquet()
-        checksum = upload_asset(self.asset_key)
+        item = self.build_item()
+        checksum = FileExtension.ext(item.assets["references"]).checksum
         print(f"[{self.COLLECTION_ID}] 업로드 완료: key={self.asset_key} checksum={checksum}")
 
-        item = self.build_item(checksum)
         collection = self.build_collection()
         collection.add_item(item)
 

@@ -207,9 +207,9 @@ if __name__ == "__main__":
   - `pipeline/<id>/`의 중간산출물도 스크립트가 처음부터 다시 만들어낼 수 있어야 하며, "숨은 입력"이 되면 안 된다.
 - **`s3/`는 양방향 미러다.**
   - 다운로드 read-through 미러였던 원래 개념에 업로드 전 준비 단계도 같은 자리로 통합했다.
-  - 처리 스크립트가 산출물을 실제 S3 key와 동일한 상대경로(`.cache/s3/<key>`)에 직접 쓰고, 그 파일을 그대로 업로드한다(`geovars.pipeline.s3_cache_path(key)`/`upload_asset(key)`).
-  - `.cache/s3/`가 버킷 네임스페이스를 그대로 반영하는 로컬 미러라는 하나의 개념으로 통일해, 별도 `pipeline/<id>/` 스크래치 경로와 실제 버킷 key 사이의 매핑을 스크립트가 따로 관리할 필요를 없앴다.
-  - 첫 실사용은 [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)다.
+  - 실제 구현은 cloudpathlib(`S3Path`)에 맡긴다. 처리 스크립트는 `geovars.pipeline.s3_path(key)`로 얻은 `S3Path`를 직접 읽고 쓰며, 업로드는 `geovars.pipeline.publish_asset(asset, key, write)`가 담당한다.
+  - 로컬 미러 경로는 cloudpathlib 관례(`.cache/s3/<bucket>/<key>`)를 따른다. 버킷 네임스페이스까지 포함해, 별도 `pipeline/<id>/` 스크래치 경로와 실제 버킷 key 사이의 매핑을 스크립트가 따로 관리할 필요를 없앴다.
+  - 세부는 [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md), 첫 실사용은 [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)다.
 - **경로 노출은 환경변수로 한다.**
   - 컨테이너 안 스크립트는 host 절대경로를 몰라도 되도록, `run.py`가 `UV_CACHE_DIR`(uv가 직접 읽음), `GEOVARS_CACHE_ROOT`, `GEOVARS_S3_CACHE_DIR`, `GEOVARS_DUCKDB_CACHE_DIR`, `GEOVARS_SCRATCH_DIR`(collection별)를 주입한다.
   - `geovars.pipeline`이 이를 읽는 헬퍼(`cache_root()`/`s3_cache_dir()`/`duckdb_cache_dir()`/`scratch_dir()`)를 제공한다.
@@ -257,3 +257,4 @@ CI는 도입하지 않기로 확정했다. 근거는 [/decisions/reproducibility
 - [/decisions/reproducibility.md](/decisions/reproducibility.md)
 - [/decisions/catalog-and-access.md](/decisions/catalog-and-access.md)
 - [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)
+- [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md)
