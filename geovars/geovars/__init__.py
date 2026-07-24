@@ -8,7 +8,7 @@ optional extra로만 딸려오며, 코어에서 지연 임포트한다.
 - geovars.dashboard  : [dashboard] marimo 기반 STAC 대시보드
 - geovars.modeling   : [modeling]  팀 변수생성·모델링
 
-세부 설계: knowledge/decisions/pipeline-architecture.md
+세부 설계: .agents/skills/pipeline-script-shape/SKILL.md
 """
 
 from __future__ import annotations

@@ -4,7 +4,7 @@ extra: [catalog]  (pip install "geovars[catalog]")
 
 stac-metadata/ 의 파일 기반 STAC 카탈로그를 pystac 으로 로드하고, 상대경로를
 해석해 collection/item 을 검색한다. 카탈로그 갱신은 load-mutate-save 방식.
-세부: knowledge/decisions/catalog-and-access.md
+세부: .agents/skills/pipeline-publish-verify/SKILL.md
 """
 
 from __future__ import annotations
@@ -26,11 +26,12 @@ def register_collection(
     collection: pystac.Collection, version: str, catalog_root: str | Path = "stac-metadata"
 ) -> None:
     """collection을 `<catalog_root>/<collection.id>/version=<version>/`에 self-contained로
-    저장하고, 루트 `catalog.json`의 child link를 이 버전으로 교체한다(과거 버전 파일은 지우지
-    않고 보존 — 루트는 최신만 노출, 레포는 전-버전 보관.
-    [/decisions/catalog-and-access.md](../../../knowledge/decisions/catalog-and-access.md)
-    "카탈로그 구조 vs 레포"). 버전 디렉터리는 Hive 스타일 `version=<version>`으로 self-describing
-    하게 짓는다(S3 asset key도 동일 컨벤션).
+    저장하고, 루트 `catalog.json`의 child link를 이 버전으로 교체한다. 과거 버전 파일은
+    지우지 않고 보존한다 — 루트는 최신만 노출, 레포는 전-버전 보관. 버전 디렉터리는 Hive
+    스타일 `version=<version>`으로 self-describing하게 짓는다(S3 asset key도 동일
+    컨벤션). `pystac.layout.TemplateLayoutStrategy`는 쓰지 않는다 — 대상이 트리 root일 때
+    템플릿을 무시하고 `BestPracticesLayoutStrategy`로 폴백해, 이 collection 서브트리만
+    증분 등록하는 방식과 맞지 않는다.
 
     `catalog_root` 기본값은 cwd 기준 상대경로다 — `pipeline/run.py`가 Docker 컨테이너의 cwd를
     항상 레포 루트로 고정하므로(`-w /workspace`), 처리 스크립트는 이 인자를 생략해도 된다.
@@ -39,9 +40,7 @@ def register_collection(
     넘기면 버전 세그먼트 없는 flat 경로에 collection.json/item이 중복 생성되는 버그가 있다.
 
     pystac 기본 직렬화(`ensure_ascii=True`)는 한국어를 `\\uXXXX`로 이스케이프해 diff 리뷰를
-    막으므로, 저장된 모든 JSON을 `ensure_ascii=False`로 재직렬화한다
-    ([/decisions/catalog-and-access.md](../../../knowledge/decisions/catalog-and-access.md)
-    "root catalog.json 구현").
+    막으므로, 저장된 모든 JSON을 `ensure_ascii=False`로 재직렬화한다.
     """
     catalog_root = Path(catalog_root).resolve()
     version_segment = f"version={version}"

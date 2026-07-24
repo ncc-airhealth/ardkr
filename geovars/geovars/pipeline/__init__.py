@@ -4,8 +4,7 @@ extra: [pipeline]  (pip install "geovars[pipeline]")
 
 처리 스크립트(pipeline/process/<collection-id>.py)가 소비하는 유틸. 스크립트는
 geovars 를 git commit 으로 pin 해 옛 스크립트 재현성을 지킨다.
-세부: knowledge/decisions/pipeline-architecture.md, reproducibility.md,
-secrets-and-s3-client.md
+세부: .agents/skills/pipeline-script-shape/SKILL.md, .agents/skills/pipeline-publish-verify/SKILL.md
 
 담을 것(TODO):
 - 원본 S3 호환 스토리지(현재 Cloudflare R2) 스냅샷 입력 로딩 + file:checksum(Multihash) 검증
@@ -46,8 +45,8 @@ from pystac.extensions.file import FileExtension
 
 
 # 캐시(pipeline/run.py 가 컨테이너에 마운트하는 `.cache/`)는 순수 가속 장치다 — 지워도
-# 스크립트는 처음부터 다시 돌아 같은 결과를 내야 한다. 재현성은 3층 pin이 보장한다
-# (knowledge/decisions/reproducibility.md). 여기 함수들은 그 캐시 경로를 읽기만 한다.
+# 스크립트는 처음부터 다시 돌아 같은 결과를 내야 한다. 재현성은 3층 pin(이미지+geovars
+# commit+PEP723 lock)이 보장한다. 여기 함수들은 그 캐시 경로를 읽기만 한다.
 
 
 def cache_root() -> Path:
@@ -145,8 +144,7 @@ def publish_asset(
       `verify_uploaded`가 이후 반드시 실패한다.
 
     어느 mode든 asset의 `file:checksum`은 기록되고 checksum이 반환된다. 커스텀 메타데이터는
-    HEAD 요청만으로 하는 1차 검증용이고, 권위 있는 검증은 항상 실제 바이트 해시다
-    (knowledge/decisions/reproducibility.md 3층 pin의 "입력 collection 층").
+    HEAD 요청만으로 하는 1차 검증용이고, 권위 있는 검증은 항상 실제 바이트 해시다.
     """
     buffer = io.BytesIO()
     write(buffer)

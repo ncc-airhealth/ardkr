@@ -440,9 +440,8 @@ Scope는 **Item**이다.
 ## 관련
 
 - [/stac/concepts.md](/stac/concepts.md)
-- [/decisions/knowledge-architecture.md](/decisions/knowledge-architecture.md) — 구조화 가능하면 extension 우선
-- [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md) — 이 저장소의 버전·deprecated 운영
-- [/decisions/reproducibility.md](/decisions/reproducibility.md) — `file:checksum` 등 재현 층
+- [AGENTS.md](../../AGENTS.md) — 구조화 가능하면 extension 우선
+- [pipeline-publish-verify](../../.agents/skills/pipeline-publish-verify/SKILL.md) — 이 저장소의 버전·deprecated 운영, `file:checksum` 등 재현 층
 
 # Citations
 

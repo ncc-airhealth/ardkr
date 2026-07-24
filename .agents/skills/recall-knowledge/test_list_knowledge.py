@@ -1,15 +1,15 @@
 """list_knowledge.py의 frontmatter 파싱 로직에 대한 최소 self-check.
 
-python3 .claude/skills/recall-knowledge/test_list_knowledge.py 로 실행한다.
+python3 .agents/skills/recall-knowledge/test_list_knowledge.py 로 실행한다.
 """
 
 from list_knowledge import parse_frontmatter, parse_tags
 
 
 def test_parse_frontmatter() -> None:
-    text = "---\ntype: decision\ntitle: 제목\ntags: [a, b, c]\n---\n\n# 본문\n"
+    text = "---\ntype: heuristic\ntitle: 제목\ntags: [a, b, c]\n---\n\n# 본문\n"
     fields = parse_frontmatter(text)
-    assert fields == {"type": "decision", "title": "제목", "tags": "[a, b, c]"}
+    assert fields == {"type": "heuristic", "title": "제목", "tags": "[a, b, c]"}
 
 
 def test_parse_frontmatter_no_dashes() -> None:

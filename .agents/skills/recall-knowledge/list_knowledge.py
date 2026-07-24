@@ -8,8 +8,8 @@ frontmatter 문법은 일반 YAML이 아니라 이 레포가 정한 제약된 �
 
 의존성 없이 시스템 python3로 바로 실행한다. 한 줄에 문서 하나씩 JSON을 찍는다(JSONL).
 
-  python3 .claude/skills/recall-knowledge/list_knowledge.py knowledge/decisions --type decision
-  python3 .claude/skills/recall-knowledge/list_knowledge.py knowledge/ --tag stac
+  python3 .agents/skills/recall-knowledge/list_knowledge.py knowledge/ --tag stac
+  python3 .agents/skills/recall-knowledge/list_knowledge.py knowledge/ --type heuristic
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ def parse_tags(raw: str) -> list[str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("root", type=Path, help="예: knowledge/ 또는 knowledge/decisions")
+    parser.add_argument("root", type=Path, help="예: knowledge/ 또는 knowledge/stac")
     parser.add_argument("--type", dest="type_", help="frontmatter type으로 필터")
     parser.add_argument("--tag", help="tags에 포함된 태그로 필터")
     args = parser.parse_args()
