@@ -2,8 +2,8 @@
 type: decision
 title: 카탈로그와 접근
 description: static STAC을 JSON으로 git 커밋, stac-browser로 탐색. 카탈로그는 최신 버전만, 레포는 전-버전. 카탈로그 public, 데이터는 자격증명 게이트.
-tags: [stac, catalog, static-stac, access, r2, stac-browser]
-timestamp: 2026-07-21
+tags: [stac, catalog, static-stac, access, r2, stac-browser, asset-key]
+timestamp: 2026-07-23
 ---
 
 # 카탈로그와 접근
@@ -50,6 +50,9 @@ catalog.normalize_and_save(
 - 경로 규칙은 첫 collection `geovars-references`([/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md))를 구현하며 정했다.
   - collection은 `stac-metadata/<collection-id>/version=<version>/`에 self-contained로 저장하고, `collection.json`과 `<item-id>/<item-id>.json`으로 구성한다.
   - 버전 디렉터리는 Hive 스타일 `version=<version>`을 쓰고, S3 asset key도 같은 관행을 따른다.
+  - **item이 여러 개인 collection은 item 단위로 asset 경로(key)를 묶는다** — `<collection-id>/version=<version>/<item-id>/<filename>`. item 하나에 asset이 여러 개(예: 시도/시군구/읍면동 zip 3개) 붙어도 같은 item 디렉터리 밑에 모인다.
+    - item이 하나뿐인 collection은 item 세그먼트를 생략해도 된다(`<collection-id>/version=<version>/<filename>` — `geovars-references`).
+    - 실사용 예시: `pipeline/process/sgis-adm-boundary.py`(여러 item, item 단위 경로), `pipeline/process/geovars-references.py`(단일 item, item 세그먼트 생략).
   - 루트 `catalog.json`의 `rel: child` 링크는 그 collection id의 기존 링크를 지우고 새 버전 경로로 교체한다.
   - 과거 버전 디렉터리는 디스크에서 지우지 않는다. "루트는 최신만, 레포는 전-버전" 원칙 그대로다.
   - `geovars.catalog.register_collection()`으로 구현했다.
@@ -99,6 +102,7 @@ catalog.normalize_and_save(
 
 - [/decisions/reproducibility.md](/decisions/reproducibility.md)
 - [/decisions/infrastructure.md](/decisions/infrastructure.md)
+- [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)
 
 # Citations
 

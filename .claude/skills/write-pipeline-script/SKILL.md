@@ -68,9 +68,10 @@ COLLECTION_ID = "..."   # = 파일명 = collection id
 VERSION = "0.1.0"
 EXPERIMENTAL = True
 DEPRECATED = False
+PUBLISH_MODE = "local"  # 아직 미발행 — 실제 R2 발행 시 사람이 "remote"로 flip하고 승인 주석 추가
 TITLE = "..."
 DESCRIPTION = """..."""
-ASSET_KEY = f"{COLLECTION_ID}/version={VERSION}/....parquet"
+ASSET_FILENAME = f"{COLLECTION_ID}/version={VERSION}/....parquet"
 GENERATED_AT = "2026-07-21T00:00:00+00:00"  # ISO 8601 문자열. datetime 객체가 필요하면 datetime.fromisoformat(GENERATED_AT)
 ```
 
@@ -110,6 +111,16 @@ GENERATED_AT = "2026-07-21T00:00:00+00:00"  # ISO 8601 문자열. datetime 객�
   - `predecessor`/`successor`(새 버전 발행 시 옛 버전에 forward-pointer를 붙이는 것)는 정적
     상수가 아니라 "이전 버전을 참조"하는 실행 시점 로직이 필요해 이 규칙 밖이다. 미해결로
     남는다([/decisions/geovars-references-collection.md](../../../knowledge/decisions/geovars-references-collection.md) 참고).
+- **`PUBLISH_MODE`도 필수다.** `geovars.pipeline.publish_asset()`에 넘기는 값이자, "이
+  collection이 실제로 R2에 발행됐는가"의 상태 표시다. `EXPERIMENTAL`과 같은 승인 패턴을 따른다.
+  - **기본값은 `"local"`이다**(아직 미발행). 새 collection이나 아직 R2에 올릴 준비가 안 된
+    collection은 이 값으로 시작한다 — R2를 건드리지 않고 `.cache/s3/<bucket>/<key>`에만 쓰므로
+    "업로드→검증→개선" 반복이 빠르다.
+  - `"remote"`로 바꾸는 것은 실제 R2 발행을 **사람이 명시적으로 승인**하는 행위다. 승인 사실을
+    코드에 남긴다: `PUBLISH_MODE = "remote"  # 발행 승인: YYYY-MM-DD`.
+    - 승인 기록이 없는 `PUBLISH_MODE = "remote"`는 무효다 — 근거 없이 `"local"`로 되돌린다.
+  - CLI 인자나 환경변수가 아니라 **모듈 상수**다. 발행 여부는 이 스크립트 자체에 박제된
+    상태여야 하고, 실행할 때마다(run.py 인자·환경변수로) 흔들리면 안 된다.
 - **날짜/시각 상수(`GENERATED_AT` 등)는 ISO 8601 문자열로 정의한다.** `datetime(...)` 생성자
   호출은 코드처럼 읽혀 상수 블록의 "데이터를 보고 파악한다"는 목표와 어긋난다. `datetime`
   객체가 필요한 자리에서 `datetime.fromisoformat(GENERATED_AT)`로 그때그때 변환한다.
@@ -122,10 +133,14 @@ GENERATED_AT = "2026-07-21T00:00:00+00:00"  # ISO 8601 문자열. datetime 객�
   - 한국어로 쓴다(`description`의 기존 관행).
   - 여는 `"""` 바로 뒤에 내용을 붙이지 않고 줄바꿈한다(`"""\n내용...\n"""` 형태). 첫 줄부터
     내용이 시작되면 여는 따옴표와 텍스트가 붙어 읽기 불편하다.
-- **`ASSET_KEY`는 기본적으로 완성된 값**(f-string)이다. item을 여러 개 만드는 collection처럼
-  파일명 부분만 갈아끼워야 하면, `ASSET_KEY_TEMPLATE = "{collection_id}/version={version}/{filename}"`
-  같은 템플릿을 두고 각 item 처리 단계에서 `.format(...)`으로 채우는 패턴을 권장한다(강제 아님
-  — item이 하나뿐인 collection에 템플릿화는 과하다).
+- **`ASSET_FILENAME`은 기본적으로 완성된 값**(f-string)이다. item을 여러 개 만드는 collection처럼
+  파일명 부분만 갈아끼워야 하면,
+  `ASSET_FILENAME_TEMPLATE = "{collection_id}/version={version}/{item_id}/{filename}"` 같은
+  템플릿을 두고 각 item 처리 단계에서 `.format(...)`으로 채우는 패턴을 권장한다(강제 아님 —
+  item이 하나뿐인 collection에 템플릿화는 과하다).
+  - **item이 여러 개인 collection은 반드시 `{item_id}` 세그먼트로 asset을 item 단위로 묶는다.**
+    asset은 collection이 아니라 item 하나에 속하는 파일 묶음이라는 관습이고, 이 세그먼트가
+    없으면 서로 다른 item의 동명 파일(예: 두 시점의 `bnd_sido_00.zip`)이 같은 key로 충돌한다.
 
 ## Google-style docstring
 
@@ -149,6 +164,7 @@ class Processor:
         self.evaluate_asset()
         self.build_collection()
         self.register()
+        self.verify_uploaded()
 
     def build_item(self) -> None:
         """STAC Item을 구성하고 asset을 attach한다(아직 업로드 전).
@@ -167,7 +183,11 @@ class Processor:
         ...
 
     def evaluate_asset(self) -> None:
-        """업로드한 asset을 재검증한다. 실패하면 예외를 던진다."""
+        """업로드한 asset을 재검증한다(로컬 캐시가 read-through로 동작하는지 증명). 실패하면
+        예외를 던진다.
+
+        local 모드는 원격을 건드리지 않아 재검증할 실체가 없다 — 스킵한다.
+        """
         ...
 
     def build_collection(self) -> None:
@@ -180,6 +200,14 @@ class Processor:
 
     def register(self) -> None:
         """collection에 item을 붙이고 카탈로그에 등록한다."""
+        ...
+
+    def verify_uploaded(self) -> None:
+        """asset이 실제로 R2에 발행돼 있는지 mode와 무관하게 항상 강제 확인한다.
+
+        HEAD로 원격 checksum 메타데이터를 읽어 기록값과 비교한다. local 모드로 돌렸다면
+        R2에 아무것도 없으므로 여기서 반드시 실패한다 — 버그가 아니라 의도된 안전장치다.
+        """
         ...
 
     @property
@@ -205,24 +233,30 @@ if __name__ == "__main__":
 - `self` 상태를 전혀 안 쓰는 순수 로직(예: 한 행을 인용 문자열로 바꾸는 변환)은 인스턴스
   메서드로 두지 않는다. 아래 "순수 헬퍼 함수"를 본다.
 
-### `evaluate_asset()` — 업로드 재검증
+### `evaluate_asset()` — 업로드 재검증(로컬 캐시 read-through 증명)
 
 CI가 없으므로, 업로드가 실제로 성공했고 로컬 캐시가 read-through로 동작하는지 스크립트 스스로
-확인한다.
+확인한다. `PUBLISH_MODE == "local"`이면 원격을 건드리지 않았으므로 재검증할 실체가 없다 —
+가드로 스킵한다(이 가드는 메서드 안에 두고, `run()`은 여전히 조건 없이 `self.evaluate_asset()`만
+호출한다).
 
 ```python
 def evaluate_asset(self) -> None:
-    path = s3_path(ASSET_KEY)
+    if PUBLISH_MODE == "local":
+        print(f"[{COLLECTION_ID}] local 모드 — 재검증 스킵(원격 미접촉)")
+        return
+
+    path = s3_path(ASSET_FILENAME)
     cache_file = Path(path.fspath)
     mtime_before = cache_file.stat().st_mtime if cache_file.exists() else None
 
     data = path.read_bytes()
     if multihash_sha256(data) != self.checksum:
-        raise ValueError(f"재다운로드한 asset의 checksum이 기록값과 다릅니다: key={ASSET_KEY}")
+        raise ValueError(f"재다운로드한 asset의 checksum이 기록값과 다릅니다: key={ASSET_FILENAME}")
 
     mtime_after = cache_file.stat().st_mtime
     if mtime_before != mtime_after:
-        raise ValueError(f"asset을 로컬 캐시 대신 재다운로드했습니다: key={ASSET_KEY}")
+        raise ValueError(f"asset을 로컬 캐시 대신 재다운로드했습니다: key={ASSET_FILENAME}")
 ```
 
 - **재읽기+checksum 일치**: `s3_path(...)`로 다시 읽은 바이트의 Multihash가 업로드 때 기록한
@@ -231,6 +265,34 @@ def evaluate_asset(self) -> None:
 - **캐시 히트 확인**: 읽기 전후로 로컬 캐시 파일의 mtime이 그대로인지 본다. 바뀌었으면
   재다운로드가 일어난 것이라 `.cache/s3/`가 read-through로 동작하지 않는다는 신호다.
 - 둘 중 하나라도 실패하면 예외를 던져 실행 자체를 실패시킨다.
+
+### `verify_uploaded()` — 실제 R2 발행 확인
+
+`evaluate_asset()`이 "이번 실행에서 로컬 캐시가 제대로 동작했는가"를 증명하는 것과 달리,
+`verify_uploaded()`는 "이 asset이 실제로 R2에 존재하는가" 자체를 확인한다 — `PUBLISH_MODE`와
+무관하게 파이프라인 마지막에 항상 실행한다.
+
+```python
+def verify_uploaded(self) -> None:
+    actual = remote_checksum(ASSET_FILENAME)
+    if actual != self.checksum:
+        raise ValueError(
+            f"[{COLLECTION_ID}] asset이 R2에 발행되지 않았거나 checksum이 다릅니다"
+            f"(mode={PUBLISH_MODE}): key={ASSET_FILENAME} "
+            f"expected={self.checksum} actual={actual}"
+        )
+```
+
+- `geovars.pipeline.remote_checksum(key) -> str | None`으로 HEAD 요청만 보내 원격 커스텀
+  메타데이터의 checksum을 읽는다(본문 다운로드 없음). 객체가 없으면 `None`.
+- **`PUBLISH_MODE == "local"`로 돌렸다면 여기서 반드시 실패한다.** R2에 아무것도 안 올라가
+  있으니 `remote_checksum`이 `None`을 반환하고 `self.checksum`과 불일치한다 — 버그가 아니라
+  "이 collection은 아직 발행되지 않았다"는 사실을 강제로 드러내는 안전장치다. local 모드로
+  개발하다가 이 단계에서 실패하는 건 정상이고, 실제 발행하려면 `PUBLISH_MODE`를 `"remote"`로
+  flip하고 승인 주석을 남긴 뒤 다시 실행한다.
+- item을 여러 개 만드는 collection은 모든 item의 모든 asset을 순회하며 문제를 모아 하나의
+  예외로 던진다(문제 하나에서 멈추지 않고 전체 현황을 한 번에 보여준다) —
+  `pipeline/process/sgis-adm-boundary.py`의 `verify_uploaded()` 참고.
 
 ## 순수 헬퍼 함수
 
@@ -254,15 +316,22 @@ Python은 모듈 함수의 정의 순서를 신경 쓰지 않는다 — `run()`�
 - 다운로드: `geovars.pipeline.s3_path(key) -> S3Path`를 그대로 써서 `.open()`/`.read_bytes()`/
   `.download_to()`를 호출한다. 별도 캐시 판단 로직을 만들지 않는다 — cloudpathlib이 로컬/
   클라우드 mtime 비교로 알아서 한다.
-- 업로드: `geovars.pipeline.publish_asset(asset, key, write)`. 호출 순서가 고정되어 있다.
+- 업로드: `geovars.pipeline.publish_asset(asset, key, write, mode=PUBLISH_MODE)`. 호출 순서가
+  고정되어 있다.
   1. `pystac.Asset(...)` 생성.
   2. `item.add_asset("<name>", asset)`로 owner를 먼저 확보한다.
      - 이 순서를 어기면 `FileExtension.ext(asset, add_if_missing=True)`가
        `pystac.STACError`를 낸다.
-  3. `publish_asset(asset, key, write=lambda f: ...)`를 호출한다.
+  3. `publish_asset(asset, key, write=lambda f: ..., mode=PUBLISH_MODE)`를 호출한다.
   - 이 함수를 감싸는 Processor 단계 메서드는 `publish_asset`이 아니라 `upload_asset`처럼
     다른 이름을 쓴다 — 임포트한 함수 이름과 겹치면 "업로드(스토리지 계층)"와 "게시(STAC
     카탈로그 계층)"가 헷갈린다.
+  - `mode`는 항상 모듈 상수 `PUBLISH_MODE`를 그대로 넘긴다. `mode="local"`이면 R2를 건드리지
+    않고 `.cache/s3/<bucket>/<key>`에만 쓰고, `mode="remote"`(기본)면 원격에 같은 checksum이
+    이미 있으면(HEAD로 확인) 재업로드를 생략하고 아니면 실제로 올린다.
+- 원격 checksum만 확인(다운로드 없이): `geovars.pipeline.remote_checksum(key) -> str | None`.
+  HEAD 요청만으로 R2 객체의 checksum 메타데이터를 읽는다. 객체가 없으면 `None`.
+  `verify_uploaded()`가 이 헬퍼로 실제 발행 여부를 확인한다(아래 "`verify_uploaded()`" 참고).
 
 ## STAC 등록
 
@@ -298,11 +367,12 @@ Python은 모듈 함수의 정의 순서를 신경 쓰지 않는다 — `run()`�
   - `python pipeline/run.py <collection-id> [--relock]`로 실행한다.
   - 재실행 결과를 `git diff --stat stac-metadata/`로 확인한다. 입력이 그대로면 diff가 없어야
     한다.
-  - 새 S3 코드 경로를 건드렸다면 실제 R2에 대고 최소 한 번은 돌려, 업로드와 checksum
-    메타데이터가 실제로 반영되는지 확인한다. `evaluate_asset()`이 매 실행마다 이 확인의
-    상당 부분을 자동으로 한다.
+  - `PUBLISH_MODE = "local"`로 반복 개발하는 동안은 `verify_uploaded()`가 항상 실패한다 —
+    R2에 아무것도 없으니 정상이다. 실제 R2 발행을 검증하려면 `PUBLISH_MODE`를 `"remote"`로
+    flip하고(승인 주석 포함) 최소 한 번 돌려 `verify_uploaded()`까지 통과하는지 확인한다.
+    `evaluate_asset()`/`verify_uploaded()`가 매 실행마다 이 확인의 상당 부분을 자동으로 한다.
 - `--relock`은 의존성을 의도적으로 바꿀 때만 쓴다. lock이 바뀌면 커밋이 필수다.
-- 데이터 본문(`@property`로 둔 하드코딩 데이터 등)을 고쳤다면 `VERSION`을 올린다. `ASSET_KEY`가
+- 데이터 본문(`@property`로 둔 하드코딩 데이터 등)을 고쳤다면 `VERSION`을 올린다. `ASSET_FILENAME`이
   `f"...version={VERSION}/..."` 패턴이라 자동으로 새 key가 된다. 근거:
   [/decisions/versioning-and-corrections.md](../../../knowledge/decisions/versioning-and-corrections.md).
 - 스크립트를 고치면 `uvx ruff format <path>`와 `uvx ruff check --fix <path>`를 돌린다.
@@ -313,7 +383,8 @@ Python은 모듈 함수의 정의 순서를 신경 쓰지 않는다 — `run()`�
 
 - 스크립트를 다 쓴 뒤, 처음부터 끝까지 다시 읽으며 이 스킬의 규칙과 하나씩 대조한다(상수
   배치·순서, `run()`이 조건·반복 없이 호출만 나열하는지, `EXPERIMENTAL` 승인 여부,
-  `evaluate_asset()` 존재 여부 등). 방금 쓴 사람이 아니라 처음 보는 사람 입장에서 읽는다.
+  `PUBLISH_MODE` 설정 여부(승인 없이 `"remote"`로 되어 있지 않은지), `evaluate_asset()`/
+  `verify_uploaded()` 존재 여부 등). 방금 쓴 사람이 아니라 처음 보는 사람 입장에서 읽는다.
 - `capture-knowledge`로 이번 작업에서 생긴 새 결정·주의사항을 남긴다.
 - `geovars` 쪽 코드를 고쳤다면, 커밋 후 PEP723 헤더의 pin 커밋 해시를 그 커밋으로 갱신하고
   `--relock`한다.

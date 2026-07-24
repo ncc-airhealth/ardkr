@@ -3,7 +3,7 @@
 #   "pandas==3.0.3",
 #   "pyarrow==25.0.0",
 #   "python-dotenv==1.2.2",
-#   "geovars[pipeline,catalog] @ git+file:///workspace@2ccf5e217cd339caf0885c0ad93fb3b69b27590a#subdirectory=geovars",
+#   "geovars[pipeline,catalog] @ git+file:///workspace@95f5254a4aea65eb78a52c6095ba1bb59da4640d#subdirectory=geovars",
 # ]
 #
 # [tool.geovars]
@@ -19,7 +19,12 @@ import pandas as pd
 import pystac
 from dotenv import load_dotenv
 from geovars.catalog import register_collection
-from geovars.pipeline import multihash_sha256, publish_asset, s3_path
+from geovars.pipeline import (
+    multihash_sha256,
+    publish_asset,
+    remote_checksum,
+    s3_path,
+)
 from pystac.extensions.scientific import Publication, ScientificExtension
 from pystac.extensions.version import VersionExtension
 
@@ -29,6 +34,7 @@ COLLECTION_ID = "geovars-references"
 VERSION = "0.1.0"
 EXPERIMENTAL = True
 DEPRECATED = False
+PUBLISH_MODE = "remote"  # 발행 승인: 2026-07-23
 TITLE = "geovars 프로젝트 관련 연구자료"
 DESCRIPTION = """
 geovars 프로젝트와 관련된 연구자료(논문) 서지 정보. item의 asset은 pandas로
@@ -41,7 +47,7 @@ Scientific Citation/Version/File Info extension은 pystac의 공식 extension �
 세부: knowledge/decisions/geovars-references-collection.md, pipeline-architecture.md.
 """
 GENERATED_AT = "2026-07-21T00:00:00+00:00"
-ASSET_KEY = f"{COLLECTION_ID}/version={VERSION}/references.parquet"
+ASSET_FILENAME = f"{COLLECTION_ID}/version={VERSION}/references.parquet"
 
 
 class Processor:
@@ -54,6 +60,7 @@ class Processor:
         self.evaluate_asset()
         self.build_collection()
         self.register()
+        self.verify_uploaded()
 
     def build_item(self) -> None:
         """STAC Item을 구성하고 asset을 attach한다(아직 업로드 전).
@@ -75,7 +82,7 @@ class Processor:
         ]
 
         asset = pystac.Asset(
-            href=ASSET_KEY,  # R2/S3 key 그대로(self-describing) — 버킷명/엔드포인트는 env(GEOVARS_S3_*)
+            href=ASSET_FILENAME,  # R2/S3 key 그대로(self-describing) — 버킷명/엔드포인트는 env(GEOVARS_S3_*)
             media_type="application/vnd.apache.parquet",
             roles=["data"],
         )
@@ -94,29 +101,39 @@ class Processor:
         asset = self.item.assets["references"]
         self.checksum = publish_asset(
             asset,
-            ASSET_KEY,
+            ASSET_FILENAME,
             write=lambda f: pd.DataFrame(self.references).to_parquet(f),
+            mode=PUBLISH_MODE,
         )
         print(
-            f"[{COLLECTION_ID}] 업로드 완료: key={ASSET_KEY} checksum={self.checksum}"
+            f"[{COLLECTION_ID}] 업로드 완료(mode={PUBLISH_MODE}): "
+            f"key={ASSET_FILENAME} checksum={self.checksum}"
         )
 
     def evaluate_asset(self) -> None:
-        """업로드한 asset을 재검증한다. checksum이 다르거나 로컬 캐시를 재다운로드했으면 예외를 던진다."""
-        path = s3_path(ASSET_KEY)
+        """업로드한 asset을 재검증한다. checksum이 다르거나 로컬 캐시를 재다운로드했으면 예외를 던진다.
+
+        local 모드는 R2를 건드리지 않으므로 재검증할 원격 실체가 없다 — 스킵한다.
+        발행 여부의 진실은 항상 `verify_uploaded()`가 마지막에 강제한다.
+        """
+        if PUBLISH_MODE == "local":
+            print(f"[{COLLECTION_ID}] local 모드 — 재검증 스킵(원격 미접촉)")
+            return
+
+        path = s3_path(ASSET_FILENAME)
         cache_file = Path(path.fspath)
         mtime_before = cache_file.stat().st_mtime if cache_file.exists() else None
 
         data = path.read_bytes()
         if multihash_sha256(data) != self.checksum:
             raise ValueError(
-                f"재다운로드한 asset의 checksum이 기록값과 다릅니다: key={ASSET_KEY}"
+                f"재다운로드한 asset의 checksum이 기록값과 다릅니다: key={ASSET_FILENAME}"
             )
 
         mtime_after = cache_file.stat().st_mtime
         if mtime_before != mtime_after:
             raise ValueError(
-                f"asset을 로컬 캐시 대신 재다운로드했습니다: key={ASSET_KEY}"
+                f"asset을 로컬 캐시 대신 재다운로드했습니다: key={ASSET_FILENAME}"
             )
 
         print(f"[{COLLECTION_ID}] 재검증 완료: checksum 일치, 로컬 캐시 히트")
@@ -151,6 +168,21 @@ class Processor:
         self.collection.add_item(self.item)
         register_collection(self.collection, VERSION)
         print(f"[{COLLECTION_ID}] STAC 등록 완료: version={VERSION}")
+
+    def verify_uploaded(self) -> None:
+        """asset이 실제로 R2에 발행돼 있는지 mode와 무관하게 항상 강제 확인한다.
+
+        HEAD로 원격 checksum 메타데이터를 읽어 기록값과 비교한다. local 모드로 돌렸다면
+        R2에 아무것도 안 올라가 있으므로 여기서 반드시 실패한다(의도된 안전장치).
+        """
+        actual = remote_checksum(ASSET_FILENAME)
+        if actual != self.checksum:
+            raise ValueError(
+                f"[{COLLECTION_ID}] asset이 R2에 발행되지 않았거나 checksum이 다릅니다"
+                f"(mode={PUBLISH_MODE}): key={ASSET_FILENAME} "
+                f"expected={self.checksum} actual={actual}"
+            )
+        print(f"[{COLLECTION_ID}] 발행 검증 완료: checksum 일치")
 
     @property
     def references(self) -> list[dict]:

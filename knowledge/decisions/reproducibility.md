@@ -2,8 +2,8 @@
 type: decision
 title: 재현성 — 처리 과정의 완전한 재현
 description: 재현성은 처리 과정 기준. 원본·입력·코드 세 층을 pin하고, 원본·코드북을 박제하며 lock을 필수화한다. 데이터는 삭제하지 않고 냉동한다.
-tags: [reproducibility, provenance, lock, r2, lineage]
-timestamp: 2026-07-21
+tags: [reproducibility, provenance, lock, r2, lineage, publish-asset]
+timestamp: 2026-07-23
 ---
 
 # 재현성 — 처리 과정의 완전한 재현
@@ -24,6 +24,8 @@ timestamp: 2026-07-21
    - R2 업로드 시 **같은 checksum을 객체 커스텀 메타데이터**(`x-amz-meta-*`)에도 넣어, **HEAD 요청**(다운로드 없이)으로 빠른 1차 검증이 가능하게 한다.
       - 단 이는 우발적 드리프트만 잡는다 — 권위·정밀 검증은 STAC `file:checksum` 대 **실제 바이트 해시**로 한다.
       - (ETag는 멀티파트에서 단순 해시가 아니므로 checksum으로 쓰지 않는다.)
+      - `geovars.pipeline.publish_asset(mode="remote")`의 재업로드 스킵 판단과, 처리 스크립트의 `verify_uploaded` 단계(mode 무관 항상 실행)도 같은 HEAD 메타데이터 checksum(`remote_checksum()`)을 쓴다 — 이 둘은 위 규정과 어긋나지 않는다. **권위 있는 검증은 여전히 `mode="remote"`에서 도는 `evaluate_asset`이 실제로 재다운로드한 바이트를 재해시**한 결과이고, `publish_asset`의 스킵 판단과 `verify_uploaded`의 HEAD 비교는 "다시 올려야 하나"/"올라가긴 했나"를 빠르게 묻는 성능·존재확인 게이트일 뿐 정밀 검증을 대체하지 않는다(세부는 [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md), [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)).
+      - 재배포 불가라 아래 "재현 불가 구간" 예외로 checksum+URL+취득일만 기록하는 원본은 애초에 `publish_asset`을 타지 않으므로 `verify_uploaded`의 검증 범위 밖이다.
 3. **코드 층** — 처리 스크립트(`pipeline/process/<collection-id>.py`)는 PEP 723 인라인 의존성을 선언하고 **스크립트별 lock을 필수로 커밋**한다.
    - 공용 유틸(`geovars`)은 git commit으로 pin한다.
    - 시스템 의존성(GDAL/GEOS/PROJ/uv)은 스크립트가 pin하는 **Docker+pixi 이미지 버전**으로 고정하고, 빌드된 이미지를 레지스트리에 보존한다.
@@ -60,3 +62,5 @@ timestamp: 2026-07-21
 
 - [/decisions/versioning-and-corrections.md](/decisions/versioning-and-corrections.md)
 - [/decisions/catalog-and-access.md](/decisions/catalog-and-access.md)
+- [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md)
+- [/decisions/pipeline-architecture.md](/decisions/pipeline-architecture.md)

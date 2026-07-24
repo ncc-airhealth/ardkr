@@ -2,8 +2,8 @@
 type: decision
 title: 파이프라인 아키텍처 — 처리 스크립트·환경·실행
 description: 모노레포 구조, 자기완결 처리 스크립트(PEP723+lock), Docker+pixi로 시스템 환경 고정, Python 래퍼 실행, geovars 단일 패키지. 버전 재현은 flat 스크립트 + git commit provenance.
-tags: [pipeline, monorepo, pixi, docker, pep723, uv, reproducibility, geovars]
-timestamp: 2026-07-21
+tags: [pipeline, monorepo, pixi, docker, pep723, uv, reproducibility, geovars, publish-asset]
+timestamp: 2026-07-23
 ---
 
 # 파이프라인 아키텍처 — 처리 스크립트·환경·실행
@@ -189,9 +189,16 @@ knowledge/                     # OKF 지식
   - `pipeline/<id>/`의 중간산출물도 스크립트가 처음부터 다시 만들어낼 수 있어야 하며, "숨은 입력"이 되면 안 된다.
 - **`s3/`는 양방향 미러다.**
   - 다운로드 read-through 미러였던 원래 개념에 업로드 전 준비 단계도 같은 자리로 통합했다.
-  - 실제 구현은 cloudpathlib(`S3Path`)에 맡긴다. 처리 스크립트는 `geovars.pipeline.s3_path(key)`로 얻은 `S3Path`를 직접 읽고 쓰며, 업로드는 `geovars.pipeline.publish_asset(asset, key, write)`가 담당한다.
+  - 실제 구현은 cloudpathlib(`S3Path`)에 맡긴다. 처리 스크립트는 `geovars.pipeline.s3_path(key)`로 얻은 `S3Path`를 직접 읽고 쓰며, 업로드는 `geovars.pipeline.publish_asset(asset, key, write, mode=...)`가 담당한다.
   - 로컬 미러 경로는 cloudpathlib 관례(`.cache/s3/<bucket>/<key>`)를 따른다. 버킷 네임스페이스까지 포함해, 별도 `pipeline/<id>/` 스크래치 경로와 실제 버킷 key 사이의 매핑을 스크립트가 따로 관리할 필요를 없앴다.
   - 세부는 [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md), 첫 실사용은 [/decisions/geovars-references-collection.md](/decisions/geovars-references-collection.md)다.
+- **`publish_asset`의 `mode`는 collection이 실제로 R2에 발행됐는지를 나타내는 상태다.**
+  - 처리 스크립트는 이를 모듈 상수 `PUBLISH_MODE`로 정한다(`run.py` 인자나 환경변수가 아니다) — "발행 여부"는 실행마다 바뀌는 선택이 아니라 collection의 상태이므로, git diff·커밋 이력에 남는 스크립트 상수로 관리한다.
+  - 새 collection의 기본값은 `"local"`(미발행, R2 미접촉, `.cache/s3/`에만 씀)이다. 실제 발행은 사람이 `"remote"`로 flip하고 `# 발행 승인: YYYY-MM-DD` 주석을 남긴다.
+  - 처리 스크립트는 mode와 무관하게 마지막 단계에서 항상 `verify_uploaded()`를 실행해 HEAD로 원격 checksum을 읽어 기록값과 비교한다. `"local"`로 돌렸다면 R2에 아무것도 없어 여기서 **반드시 실패**한다 — collection이 "발행됨"을 주장하려면 `"remote"`로 flip해야 한다는 의도된 안전장치다.
+  - 로컬 read-through 캐시 히트를 증명하는 `evaluate_asset`(들)은 `"local"` mode에서 스킵한다(검증할 원격 실체가 없으므로). local/remote 구분과 무관하게 권위 있는 검증은 여전히 `"remote"` mode `evaluate_asset`의 실제 바이트 재해시이고, `verify_uploaded`/스킵 판단의 HEAD-checksum은 성능·존재확인용 1차 게이트일 뿐이다([/decisions/reproducibility.md](/decisions/reproducibility.md)).
+  - 실사용 예시: `pipeline/process/sgis-adm-boundary.py`(여러 item, `PUBLISH_MODE="local"` — 아직 미발행), `pipeline/process/geovars-references.py`(단일 item, `PUBLISH_MODE="remote"`, 발행 승인 주석 포함).
+  - 정확한 절차는 `.claude/skills/write-pipeline-script/SKILL.md`에 있다.
 - **경로 노출은 환경변수로 한다.**
   - 컨테이너 안 스크립트는 host 절대경로를 몰라도 되도록, `run.py`가 `UV_CACHE_DIR`(uv가 직접 읽음), `GEOVARS_CACHE_ROOT`, `GEOVARS_S3_CACHE_DIR`, `GEOVARS_DUCKDB_CACHE_DIR`, `GEOVARS_SCRATCH_DIR`(collection별)를 주입한다.
   - `geovars.pipeline`이 이를 읽는 헬퍼(`cache_root()`/`s3_cache_dir()`/`duckdb_cache_dir()`/`scratch_dir()`)를 제공한다.
@@ -225,7 +232,8 @@ knowledge/                     # OKF 지식
 - 이미지 레지스트리 선택(GHCR나 R2 등)과 보존 운영이 아직 안 정해졌다.
   - 정해지기 전까지 `pipeline/run.py`는 로컬에 이미지가 없으면 `pipeline/images/<image>/`에서 직접 빌드하는 것으로 폴백한다.
   - 위 "실행" 섹션을 참고한다.
-- provenance schema, 즉 이미지 digest·lock·입출력 manifest의 정확한 필드명, R2 업로드와 STAC 발행의 준비 단계·복구 절차, 재현 원커맨드는 구현 시점에 정하고 사후 포착한다.
+- provenance schema, 즉 이미지 digest·lock·입출력 manifest의 정확한 필드명과 재현 원커맨드는 아직 구현 시점에 정하지 않아 사후 포착 대상으로 남아 있다.
+- **R2 업로드와 STAC 발행의 준비 단계·복구 절차는 `geovars.pipeline.publish_asset(mode=...)` + 처리 스크립트의 `verify_uploaded()` 강제 단계로 닫혔다.** 세부는 아래 "캐시 — `.cache/`" 절과 [/decisions/cloudpathlib-cache-pattern.md](/decisions/cloudpathlib-cache-pattern.md)를 참고한다.
 - `geovars`를 실제 GitHub 호스팅 커밋(`git+https://github.com/ncc-airhealth/geovars.git@<commit>`)으로 pin하는 경로는 아직 미검증이다.
   - 지금은 `git+file:///workspace@<commit>`, 즉 로컬 pin만 확인됐다.
   - 위 "공용 유틸 — geovars 단일 패키지" 섹션을 참고한다.
