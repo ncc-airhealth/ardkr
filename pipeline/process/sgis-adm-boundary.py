@@ -36,7 +36,7 @@ from pystac.extensions.version import VersionExtension
 load_dotenv()
 
 COLLECTION_ID = "sgis-adm-boundary"
-VERSION = "0.1.0"
+VERSION = "3.0.1"
 EXPERIMENTAL = True
 DEPRECATED = False
 PUBLISH_MODE = (
@@ -70,15 +70,14 @@ sido/sigungu/dong 원본 zip 3개가 asset으로 붙는다. 안내: https://sgis
 실제로 부착돼 있는지, 공개 재배포가 허용되는지는 자료신청 동의문·담당부서 확인 전까지
 미확정이다 — 확인 전에는 공개 재배포를 가정하지 않는다. 그래서 `license`는 SPDX 식별자
 대신 `proprietary`를 쓰고, 근거 문서는 `links`(rel=license)로 남긴다. 이 collection의
-asset은 geovars 저장소의 자격증명 게이트 뒤에 있어(공개 카탈로그일 뿐 데이터는 비공개 —
-knowledge/decisions/catalog-and-access.md) 공개 재배포는 아니지만, 확인 전 상태이므로
-팀 외부 공유는 보류한다. 문의(자료제공): 042-481-2246, 2517.
+asset은 geovars 저장소의 자격증명 게이트 뒤에 있어(공개 카탈로그일 뿐 데이터는 비공개)
+공개 재배포는 아니지만, 확인 전 상태이므로 팀 외부 공유는 보류한다. 문의(자료제공):
+042-481-2246, 2517.
 
 인프라 전제조건: 원본 zip은 사전에 `.cache/pipeline/sgis-adm-boundary/raw/`에 준비돼
 있어야 한다 — SGIS 사이트에서 수동으로 내려받아 이 위치에 복사해두는 단계는 자동화돼 있지
 않다. S3 호환 스토리지 업로드와 STAC 등록은 geovars 공용 유틸로 처리한다. 세부:
-knowledge/decisions/geovars-references-collection.md,
-knowledge/decisions/pipeline-architecture.md.
+.agents/skills/pipeline-script-shape/SKILL.md, .agents/skills/pipeline-publish-verify/SKILL.md.
 """
 LEVELS = ("sido", "sigungu", "dong")
 LEVEL_LABELS = {"sido": "시도", "sigungu": "시군구", "dong": "읍면동"}

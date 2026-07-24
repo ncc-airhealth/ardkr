@@ -31,7 +31,7 @@ from pystac.extensions.version import VersionExtension
 load_dotenv()
 
 COLLECTION_ID = "geovars-references"
-VERSION = "0.1.0"
+VERSION = "3.0.1"
 EXPERIMENTAL = True
 DEPRECATED = False
 PUBLISH_MODE = "remote"  # 발행 승인: 2026-07-23
@@ -44,7 +44,7 @@ geovars 프로젝트와 관련된 연구자료(논문) 서지 정보. item의 as
 인프라 검증용 겸 실사용 collection이다 — S3 호환 스토리지(GEOVARS_S3_*) 업로드와 STAC
 Collection/Item 등록까지 pipeline 인프라 전체 경로를 이 collection으로 검증한다. STAC
 Scientific Citation/Version/File Info extension은 pystac의 공식 extension 클래스로 적용한다.
-세부: knowledge/decisions/geovars-references-collection.md, pipeline-architecture.md.
+세부: .agents/skills/pipeline-script-shape/SKILL.md, .agents/skills/pipeline-publish-verify/SKILL.md.
 """
 GENERATED_AT = "2026-07-21T00:00:00+00:00"
 ASSET_FILENAME = f"{COLLECTION_ID}/version={VERSION}/references.parquet"

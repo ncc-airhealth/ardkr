@@ -1,7 +1,7 @@
 # 시스템 환경(빌드 정의): GDAL/GEOS/PROJ/uv 버전은 이 디렉토리의 pixi.lock에 고정된다.
 # 정규 arch는 linux/arm64 — 팀이 주로 Apple Silicon Mac에서 작업해 네이티브 실행을 우선함.
 # x86_64 호스트(인텔 맥·클라우드 러너 등)에서 빌드/실행할 땐 에뮬레이션으로 이 arch를 강제한다.
-# 세부: ../../../knowledge/decisions/pipeline-architecture.md
+# 세부: ../../../.agents/skills/pipeline-script-shape/SKILL.md
 
 FROM --platform=linux/arm64 ubuntu:24.04 AS build
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \

@@ -1,16 +1,14 @@
 """처리 스크립트 실행 부트스트랩.
 
-확정된 알고리즘(knowledge/decisions/pipeline-architecture.md):
-
   래퍼 한 번 실행 =
     ① 스크립트 상단 PEP 723 `[tool.geovars] image` 읽기 → 그 컨테이너 진입
     ② lock 처리 (없으면 생성 / 있으면 frozen / --relock 로만 재생성)
     ③ 컨테이너 안에서 `uv run --script <script>`
 
-CLI: `python pipeline/run.py <collection-id> [--relock]`
+CLI: `python pipeline/run.py <collection-id> [--relock]`. 세부: .agents/skills/run-pipeline/SKILL.md.
 
 캐시(`.cache/`)는 순수 가속 장치다 — 지워도 스크립트는 처음부터 다시 돌아 같은 결과를
-내야 한다(재현성은 3층 pin이 보장, 세부는 knowledge/decisions/reproducibility.md).
+내야 한다(재현성은 3층 pin이 보장).
 """
 
 from __future__ import annotations
@@ -22,7 +20,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-# 정규 arch(knowledge/decisions/pipeline-architecture.md "단일 정규 arch").
+# 정규 arch. 세부: pipeline/images/README.md.
 CANONICAL_PLATFORM = "linux/arm64"
 
 # 컨테이너 안 경로 상수.
@@ -54,13 +52,13 @@ class CachePaths:
 
 
 def find_repo_root(start: Path | None = None) -> Path:
-    """CLAUDE.md + pipeline/ 를 가진 레포 루트를 위로 탐색."""
+    """.git + pipeline/ 를 가진 레포 루트를 위로 탐색."""
     here = (start or Path.cwd()).resolve()
     for candidate in (here, *here.parents):
-        if (candidate / "CLAUDE.md").is_file() and (candidate / "pipeline").is_dir():
+        if (candidate / ".git").exists() and (candidate / "pipeline").is_dir():
             return candidate
     raise FileNotFoundError(
-        "레포 루트를 찾지 못했습니다(CLAUDE.md + pipeline/ 이 있는 디렉토리). "
+        "레포 루트를 찾지 못했습니다(.git + pipeline/ 이 있는 디렉토리). "
         "레포 안에서 실행하세요."
     )
 
@@ -153,9 +151,9 @@ def image_tag(image: str) -> str:
 def ensure_image(plan: RunPlan) -> str:
     """이미지가 로컬에 있으면 그대로 쓰고, 없으면 빌드한다.
 
-    레지스트리 선택(GHCR/R2 등)은 아직 미해결(knowledge/decisions/pipeline-architecture.md)
-    이라, 정규 경로인 "보존된 이미지 pull"은 나중에 여기 추가한다. 지금은 로컬 빌드로
-    폴백한다 — 매 스크립트 실행마다가 아니라 이미지가 없을 때 딱 한 번만 든다.
+    레지스트리 선택(GHCR/R2 등)은 아직 미정이라, 정규 경로인 "보존된 이미지 pull"은
+    나중에 여기 추가한다. 지금은 로컬 빌드로 폴백한다 — 매 스크립트 실행마다가 아니라
+    이미지가 없을 때 딱 한 번만 든다.
     """
     tag = image_tag(plan.image)
     inspect = subprocess.run(
