@@ -5,7 +5,7 @@
     ② lock 처리 (없으면 생성 / 있으면 frozen / --relock 로만 재생성)
     ③ 컨테이너 안에서 `uv run --script <script>`
 
-CLI: `python pipeline/run.py <collection-id> [--relock]`. 세부: .agents/skills/run-pipeline/SKILL.md.
+CLI: `python3 pipeline/run.py <collection-id>`
 
 캐시(`.cache/`)는 순수 가속 장치다 — 지워도 스크립트는 처음부터 다시 돌아 같은 결과를
 내야 한다(재현성은 3층 pin이 보장).
@@ -164,7 +164,6 @@ def ensure_image(plan: RunPlan) -> str:
     if inspect.returncode == 0:
         return tag
 
-    print(f"[ardkr] image {tag} 없음 — {plan.image_dir} 에서 빌드합니다.")
     subprocess.run(
         ["docker", "build", "--platform", CANONICAL_PLATFORM, "-t", tag, str(plan.image_dir)],
         check=True,
@@ -204,10 +203,6 @@ def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[
 
 def run_collection(collection_id: str, *, relock: bool = False) -> int:
     plan = plan_run(collection_id, relock=relock)
-    print(f"[ardkr] collection : {plan.collection_id}")
-    print(f"[ardkr] script     : {plan.script}")
-    print(f"[ardkr] image      : {plan.image} ({plan.image_dir})")
-    print(f"[ardkr] lock       : {plan.lock_action.value} ({plan.lock})")
 
     tag = ensure_image(plan)
     cache = prepare_cache(plan.root, collection_id)
@@ -217,7 +212,6 @@ def run_collection(collection_id: str, *, relock: bool = False) -> int:
         rc = _docker_run(plan.root, tag, cache, ["uv", "lock", "--script", container_script])
         if rc != 0:
             return rc
-        print(f"[ardkr] lock 생성/갱신됨 — 커밋하세요: {plan.lock}")
 
     return _docker_run(plan.root, tag, cache, ["uv", "run", "--frozen", "--script", container_script])
 
