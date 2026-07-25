@@ -42,6 +42,24 @@ except ImportError as exc:  # pragma: no cover
     ) from exc
 
 from pystac.extensions.file import FileExtension
+from pystac import Collection
+
+
+class BaseCollection(Collection):
+    def __init__(self):
+        super().__init__(
+            id=cls.id, 
+            description=cls.description, 
+            extent=cls.extent, 
+            title=cls.title, 
+            extra_fields=cls.extra_fields, 
+            license=cls.license, 
+            keywords=cls.keywords, 
+            providers=cls.providers, 
+            summaries=cls.summaries, 
+        )
+        self.ext.add("file")
+        self.ext.add("version")
 
 
 # 캐시(pipeline/run.py 가 컨테이너에 마운트하는 `.cache/`)는 순수 가속 장치다 — 지워도
