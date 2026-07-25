@@ -48,15 +48,15 @@ from pystac import Collection
 class BaseCollection(Collection):
     def __init__(self):
         super().__init__(
-            id=cls.id, 
-            description=cls.description, 
-            extent=cls.extent, 
-            title=cls.title, 
-            extra_fields=cls.extra_fields, 
-            license=cls.license, 
-            keywords=cls.keywords, 
-            providers=cls.providers, 
-            summaries=cls.summaries, 
+            id=self.id, 
+            description=self.description, 
+            extent=self.extent, 
+            title=self.title, 
+            extra_fields=self.extra_fields, 
+            license=self.license, 
+            keywords=self.keywords, 
+            providers=self.providers, 
+            summaries=self.summaries, 
         )
         self.ext.add("file")
         self.ext.add("version")
