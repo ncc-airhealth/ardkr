@@ -3,10 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "geovars"
+name = "ardkr"
 version = "0.0.0"
 description = "연구팀 공간데이터 파이프라인·STAC 카탈로그 유틸 (agent-native)"
-# readme: 저장소 루트 README.md 참조. geovars는 모노레포의 한 컴포넌트라 여기선 생략.
+# readme: 저장소 루트 README.md 참조. ardkr는 모노레포의 한 컴포넌트라 여기선 생략.
 requires-python = ">=3.12"
 # 코어는 의존성 없이 얇게 유지한다. 기능은 아래 extras로만 딸려온다.
 # (처리 스크립트 실행기는 이 패키지가 아니라 pipeline/ 워크스페이스가 소유 → pipeline/run.py)
@@ -30,12 +30,12 @@ all = [
 # 패키지 자체 개발용(uv). 처리 스크립트 실행 환경(Docker+pixi)과는 무관.
 dev = ["pytest>=8", "ruff>=0.6"]
 
-# TODO: 안정화 후 git 태그로 전환하기 전까지 처리 스크립트는 geovars를 git commit으로 pin한다.
-#   예) dependencies = ["geovars[pipeline] @ git+<repo-url>@<commit>"]
+# TODO: 안정화 후 git 태그로 전환하기 전까지 처리 스크립트는 ardkr를 git commit으로 pin한다.
+#   예) dependencies = ["ardkr[pipeline] @ git+<repo-url>@<commit>"]
 # [project.urls] 의 repo-url 은 원격 저장소 확정 시 채운다.
 
 [tool.hatch.build.targets.wheel]
-packages = ["geovars"]
+packages = ["ardkr"]
 
 [tool.ruff]
 target-version = "py312"

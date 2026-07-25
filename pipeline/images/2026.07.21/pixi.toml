@@ -1,5 +1,5 @@
 [workspace]
-name = "geovars-pipeline-image-2026.07.21"
+name = "ardkr-pipeline-image-2026.07.21"
 channels = ["conda-forge"]
 platforms = ["linux-aarch64"]
 version = "0.1.0"

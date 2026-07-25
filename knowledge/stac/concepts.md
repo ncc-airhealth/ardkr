@@ -192,7 +192,7 @@ Collection `summaries`나 `item_assets`에 extension 필드를 요약하면 Coll
 ## 이 저장소와의 관계
 
 이 문서는 STAC 일반 지식이다.
-geovars가 static STAC을 git의 `stac-metadata/`에 두는 운영 규칙은
+ardkr가 static STAC을 git의 `stac-metadata/`에 두는 운영 규칙은
 [pipeline-publish-verify](../../.agents/skills/pipeline-publish-verify/SKILL.md)에 있다.
 데이터 사실은 STAC JSON에, 절차는 `.agents/skills/`에, 그 외 간접 지식은 knowledge/에 둔다는
 경계는 [AGENTS.md](../../AGENTS.md)에 있다.

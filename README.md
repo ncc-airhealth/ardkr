@@ -1,9 +1,9 @@
-# geovars
+# ardkr
 
 > 연구팀을 위한 **agent-native 공간데이터 카탈로그 & 처리 파이프라인**.
 > 주로 대한민국 공공 공간데이터를 재현 가능하게 가공하고, STAC으로 카탈로그화하며, 지리변수(geovariable) 계산을 지원합니다.
 
-`geovars`는 두 가지를 하나의 레포에서 관리합니다.
+`ardkr`는 두 가지를 하나의 레포에서 관리합니다.
 
 - **데이터 카탈로그** — 공공데이터 원본을 수집·가공해 STAC Collection/Item으로 메타데이터화하고, 데이터 자산은 오브젝트 스토리지(Cloudflare R2)에 둡니다.
 - **지리변수 계산** — 카탈로그의 참조 데이터에 대해 포인트 데이터셋의 공간변수를 계산하는 Python 라이브러리.
@@ -26,7 +26,7 @@
 ## 저장소 구조
 
 ```
-geovars/          # Python 패키지 (STAC 대시보드·파이프라인 유틸·카탈로그 검색·모델링)
+ardkr/          # Python 패키지 (STAC 대시보드·파이프라인 유틸·카탈로그 검색·모델링)
 pipeline/
   images/         # 시스템 환경 정의 (pixi + Dockerfile), 날짜 버전별
   process/        # 처리 스크립트 (collection id별 flat 파일)
@@ -69,7 +69,7 @@ Python 의존성은 PEP 723으로 스크립트마다 독립 선언하고 lock으
 
 ## 재현성
 
-처리 환경 재현은 3층 pin(이미지+geovars commit+PEP723 lock, 세부는 `pipeline/run.py`)이, 원본 데이터 재현은 아래 스냅샷 보존이 각각 담당합니다.
+처리 환경 재현은 3층 pin(이미지+ardkr commit+PEP723 lock, 세부는 `pipeline/run.py`)이, 원본 데이터 재현은 아래 스냅샷 보존이 각각 담당합니다.
 
 - 공공데이터 원본과 코드북은 취득 시점에 스냅샷으로 박제해 `source` collection으로 등록합니다.
 - 데이터·메타데이터는 삭제하지 않습니다. 오래된 버전은 deprecated로 표시하고 콜드 스토리지로 냉동합니다.

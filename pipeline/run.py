@@ -1,7 +1,7 @@
 """처리 스크립트 실행 부트스트랩.
 
   래퍼 한 번 실행 =
-    ① 스크립트 상단 PEP 723 `[tool.geovars] image` 읽기 → 그 컨테이너 진입
+    ① 스크립트 상단 PEP 723 `[tool.ardkr] image` 읽기 → 그 컨테이너 진입
     ② lock 처리 (없으면 생성 / 있으면 frozen / --relock 로만 재생성)
     ③ 컨테이너 안에서 `uv run --script <script>`
 
@@ -64,17 +64,17 @@ def find_repo_root(start: Path | None = None) -> Path:
 
 
 def _read_image(script: Path) -> str:
-    """PEP 723 인라인 메타데이터에서 [tool.geovars] image 를 읽는다."""
+    """PEP 723 인라인 메타데이터에서 [tool.ardkr] image 를 읽는다."""
     text = script.read_text(encoding="utf-8")
     block = _extract_pep723(text)
     if block is None:
         raise ValueError(f"{script} 에 PEP 723 스크립트 블록(`# /// script`)이 없습니다.")
     meta = tomllib.loads(block)
     try:
-        image = meta["tool"]["geovars"]["image"]
+        image = meta["tool"]["ardkr"]["image"]
     except KeyError as exc:
         raise ValueError(
-            f"{script} 의 PEP 723 블록에 [tool.geovars] image 가 없습니다."
+            f"{script} 의 PEP 723 블록에 [tool.ardkr] image 가 없습니다."
         ) from exc
     if not isinstance(image, str) or not image:
         raise ValueError(f"{script} 의 image 값이 비었거나 문자열이 아닙니다: {image!r}")
@@ -145,7 +145,7 @@ def plan_run(collection_id: str, *, relock: bool, repo_root: Path | None = None)
 
 
 def image_tag(image: str) -> str:
-    return f"geovars-pipeline-image:{image}"
+    return f"ardkr-pipeline-image:{image}"
 
 
 def ensure_image(plan: RunPlan) -> str:
@@ -164,7 +164,7 @@ def ensure_image(plan: RunPlan) -> str:
     if inspect.returncode == 0:
         return tag
 
-    print(f"[geovars] image {tag} 없음 — {plan.image_dir} 에서 빌드합니다.")
+    print(f"[ardkr] image {tag} 없음 — {plan.image_dir} 에서 빌드합니다.")
     subprocess.run(
         ["docker", "build", "--platform", CANONICAL_PLATFORM, "-t", tag, str(plan.image_dir)],
         check=True,
@@ -192,10 +192,10 @@ def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[
         "-w", CONTAINER_WORKSPACE,
         "-v", f"{cache.root}:{CONTAINER_CACHE_ROOT}",
         "-e", f"UV_CACHE_DIR={CONTAINER_CACHE_ROOT}/uv",
-        "-e", f"GEOVARS_CACHE_ROOT={CONTAINER_CACHE_ROOT}",
-        "-e", f"GEOVARS_S3_CACHE_DIR={CONTAINER_CACHE_ROOT}/s3",
-        "-e", f"GEOVARS_DUCKDB_CACHE_DIR={CONTAINER_CACHE_ROOT}/duckdb",
-        "-e", f"GEOVARS_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{cache.collection_id}",
+        "-e", f"ARDKR_CACHE_ROOT={CONTAINER_CACHE_ROOT}",
+        "-e", f"ARDKR_S3_CACHE_DIR={CONTAINER_CACHE_ROOT}/s3",
+        "-e", f"ARDKR_DUCKDB_CACHE_DIR={CONTAINER_CACHE_ROOT}/duckdb",
+        "-e", f"ARDKR_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{cache.collection_id}",
         image_ref,
         *inner_argv,
     ]
@@ -204,10 +204,10 @@ def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[
 
 def run_collection(collection_id: str, *, relock: bool = False) -> int:
     plan = plan_run(collection_id, relock=relock)
-    print(f"[geovars] collection : {plan.collection_id}")
-    print(f"[geovars] script     : {plan.script}")
-    print(f"[geovars] image      : {plan.image} ({plan.image_dir})")
-    print(f"[geovars] lock       : {plan.lock_action.value} ({plan.lock})")
+    print(f"[ardkr] collection : {plan.collection_id}")
+    print(f"[ardkr] script     : {plan.script}")
+    print(f"[ardkr] image      : {plan.image} ({plan.image_dir})")
+    print(f"[ardkr] lock       : {plan.lock_action.value} ({plan.lock})")
 
     tag = ensure_image(plan)
     cache = prepare_cache(plan.root, collection_id)
@@ -217,7 +217,7 @@ def run_collection(collection_id: str, *, relock: bool = False) -> int:
         rc = _docker_run(plan.root, tag, cache, ["uv", "lock", "--script", container_script])
         if rc != 0:
             return rc
-        print(f"[geovars] lock 생성/갱신됨 — 커밋하세요: {plan.lock}")
+        print(f"[ardkr] lock 생성/갱신됨 — 커밋하세요: {plan.lock}")
 
     return _docker_run(plan.root, tag, cache, ["uv", "run", "--frozen", "--script", container_script])
 

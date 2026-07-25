@@ -14,7 +14,7 @@ description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새
 
 - `pipeline/process/*.py`끼리 import·코드 공유 금지
 - 의존성은 lock과 commit-pin으로 고정
-- 공용 로직이 필요하면 `geovars` 패키지로 올려 commit-pin으로 활용
+- 공용 로직이 필요하면 `ardkr` 패키지로 올려 commit-pin으로 활용
 
 ## PySTAC
 

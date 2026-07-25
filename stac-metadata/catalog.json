@@ -1,6 +1,6 @@
 {
   "type": "Catalog",
-  "id": "geovars",
+  "id": "ardkr",
   "stac_version": "1.1.0",
   "description": "연구팀 공공 공간데이터 STAC 카탈로그. collection은 재현 가능한 처리 스크립트(pipeline/process/<collection-id>.py)로 생성된다. 이 root 카탈로그에는 collection당 최신 버전만 child로 노출되며, 과거 버전 메타데이터는 이 레포에 전부 보관되어 버전 pin으로 항상 resolve 가능하다. 세부: .agents/skills/pipeline-publish-verify/SKILL.md",
   "links": [
@@ -8,8 +8,8 @@
       "rel": "root",
       "href": "./catalog.json",
       "type": "application/json",
-      "title": "geovars 공간데이터 카탈로그"
+      "title": "ardkr 공간데이터 카탈로그"
     }
   ],
-  "title": "geovars 공간데이터 카탈로그"
+  "title": "ardkr 공간데이터 카탈로그"
 }

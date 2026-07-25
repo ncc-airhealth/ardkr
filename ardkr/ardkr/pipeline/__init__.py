@@ -1,9 +1,9 @@
-"""geovars.pipeline — 처리 스크립트용 공용 유틸.
+"""ardkr.pipeline — 처리 스크립트용 공용 유틸.
 
-extra: [pipeline]  (pip install "geovars[pipeline]")
+extra: [pipeline]  (pip install "ardkr[pipeline]")
 
 처리 스크립트(pipeline/process/<collection-id>.py)가 소비하는 유틸. 스크립트는
-geovars 를 git commit 으로 pin 해 옛 스크립트 재현성을 지킨다.
+ardkr 를 git commit 으로 pin 해 옛 스크립트 재현성을 지킨다.
 세부: .agents/skills/pipeline-script-shape/SKILL.md, .agents/skills/pipeline-publish-verify/SKILL.md
 
 담을 것(TODO):
@@ -24,34 +24,34 @@ try:
     import pystac
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        'geovars.pipeline 은 pystac 이 필요합니다: pip install "geovars[pipeline]"'
+        'ardkr.pipeline 은 pystac 이 필요합니다: pip install "ardkr[pipeline]"'
     ) from exc
 
 try:
     from cloudpathlib import S3Client, S3Path
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        'geovars.pipeline 은 cloudpathlib[s3] 이 필요합니다: pip install "geovars[pipeline]"'
+        'ardkr.pipeline 은 cloudpathlib[s3] 이 필요합니다: pip install "ardkr[pipeline]"'
     ) from exc
 
 try:
     from botocore.exceptions import ClientError
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        'geovars.pipeline 은 botocore 가 필요합니다: pip install "geovars[pipeline]"'
+        'ardkr.pipeline 은 botocore 가 필요합니다: pip install "ardkr[pipeline]"'
     ) from exc
 
 from pystac.extensions.file import FileExtension
 
 
 # 캐시(pipeline/run.py 가 컨테이너에 마운트하는 `.cache/`)는 순수 가속 장치다 — 지워도
-# 스크립트는 처음부터 다시 돌아 같은 결과를 내야 한다. 재현성은 3층 pin(이미지+geovars
+# 스크립트는 처음부터 다시 돌아 같은 결과를 내야 한다. 재현성은 3층 pin(이미지+ardkr
 # commit+PEP723 lock)이 보장한다. 여기 함수들은 그 캐시 경로를 읽기만 한다.
 
 
 def cache_root() -> Path:
     """`.cache/`가 마운트된 위치(컨테이너 안에서는 보통 `/cache`)."""
-    return Path(os.environ.get("GEOVARS_CACHE_ROOT", "/cache"))
+    return Path(os.environ.get("ARDKR_CACHE_ROOT", "/cache"))
 
 
 def s3_cache_dir() -> Path:
@@ -60,17 +60,17 @@ def s3_cache_dir() -> Path:
     `s3_client()`의 `local_cache_dir`로 그대로 넘어간다 — 실제 파일 경로는
     cloudpathlib 관례(`<이 경로>/<bucket>/<key>`)를 따른다.
     """
-    return Path(os.environ.get("GEOVARS_S3_CACHE_DIR", str(cache_root() / "s3")))
+    return Path(os.environ.get("ARDKR_S3_CACHE_DIR", str(cache_root() / "s3")))
 
 
 def duckdb_cache_dir() -> Path:
     """duckdb extension·spill(temp_directory) 위치."""
-    return Path(os.environ.get("GEOVARS_DUCKDB_CACHE_DIR", str(cache_root() / "duckdb")))
+    return Path(os.environ.get("ARDKR_DUCKDB_CACHE_DIR", str(cache_root() / "duckdb")))
 
 
 def scratch_dir() -> Path:
     """현재 처리 스크립트(collection)의 중간산출물 스크래치 디렉토리."""
-    return Path(os.environ.get("GEOVARS_SCRATCH_DIR", str(cache_root() / "pipeline")))
+    return Path(os.environ.get("ARDKR_SCRATCH_DIR", str(cache_root() / "pipeline")))
 
 
 def multihash_sha256(data: bytes) -> str:
@@ -83,26 +83,26 @@ def multihash_sha256(data: bytes) -> str:
 
 
 def s3_client() -> S3Client:
-    """GEOVARS_S3_* 환경변수로 인증하고 `s3_cache_dir()`를 로컬 read-through 캐시로 쓰는 클라이언트.
+    """ARDKR_S3_* 환경변수로 인증하고 `s3_cache_dir()`를 로컬 read-through 캐시로 쓰는 클라이언트.
 
     호출마다 새로 만든다 — 캐시는 client 인스턴스가 아니라 디스크(local_cache_dir)에 있으므로
     재사용해도 얻는 게 없다.
     """
     return S3Client(
-        endpoint_url=os.environ["GEOVARS_S3_ENDPOINT_URL"],
-        aws_access_key_id=os.environ["GEOVARS_S3_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["GEOVARS_S3_SECRET_ACCESS_KEY"],
+        endpoint_url=os.environ["ARDKR_S3_ENDPOINT_URL"],
+        aws_access_key_id=os.environ["ARDKR_S3_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["ARDKR_S3_SECRET_ACCESS_KEY"],
         local_cache_dir=s3_cache_dir(),
     )
 
 
 def s3_path(key: str) -> S3Path:
-    """`s3://<GEOVARS_S3_BUCKET_NAME>/<key>` — 로컬 read-through 캐시가 붙은 cloudpathlib 경로.
+    """`s3://<ARDKR_S3_BUCKET_NAME>/<key>` — 로컬 read-through 캐시가 붙은 cloudpathlib 경로.
 
     다운로드는 이 객체의 `.open()`/`.read_bytes()`/`.download_to()`를 그대로 쓴다 — 필요한 것만
     받아오는 캐시 판단은 cloudpathlib이 로컬/클라우드 mtime을 비교해 알아서 한다.
     """
-    bucket = os.environ["GEOVARS_S3_BUCKET_NAME"]
+    bucket = os.environ["ARDKR_S3_BUCKET_NAME"]
     return S3Path(f"s3://{bucket}/{key}", client=s3_client())
 
 
@@ -152,7 +152,7 @@ def publish_asset(
     checksum = multihash_sha256(data)
 
     if mode == "local":
-        cache_file = s3_cache_dir() / os.environ["GEOVARS_S3_BUCKET_NAME"] / key
+        cache_file = s3_cache_dir() / os.environ["ARDKR_S3_BUCKET_NAME"] / key
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         cache_file.write_bytes(data)
     elif mode == "remote":
