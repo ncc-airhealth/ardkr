@@ -16,6 +16,10 @@ description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새
 - 의존성은 lock과 commit-pin으로 고정
 - 공용 로직이 필요하면 `geovars` 패키지로 올려 commit-pin으로 활용
 
+## PySTAC
+
+처리 스크립트에서 PySTAC 객체·extension을 생성하거나 수정할 때는 `../use-pystac/SKILL.md`를 따른다.
+
 ## 추후 작성
 
 이 skill은 파이프라인 스크립트 작성 워크플로우를 엮는 형태로 완성 예정이다.

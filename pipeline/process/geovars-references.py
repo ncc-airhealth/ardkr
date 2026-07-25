@@ -25,8 +25,7 @@ from geovars.pipeline import (
     remote_checksum,
     s3_path,
 )
-from pystac.extensions.scientific import Publication, ScientificExtension
-from pystac.extensions.version import VersionExtension
+from pystac.extensions.scientific import Publication
 
 load_dotenv()
 
@@ -76,10 +75,13 @@ class Processor:
             properties={},
         )
 
-        ScientificExtension.ext(item, add_if_missing=True).publications = [
-            Publication(doi=ref["doi"], citation=citation(ref))
-            for ref in self.references
-        ]
+        item.ext.add("sci")
+        item.ext.sci.apply(
+            publications=[
+                Publication(doi=ref["doi"], citation=citation(ref))
+                for ref in self.references
+            ]
+        )
 
         asset = pystac.Asset(
             href=ASSET_FILENAME,  # R2/S3 key 그대로(self-describing) — 버킷명/엔드포인트는 env(GEOVARS_S3_*)
@@ -156,10 +158,12 @@ class Processor:
             ),
             license="proprietary",
         )
-        version_ext = VersionExtension.ext(collection, add_if_missing=True)
-        version_ext.version = VERSION
-        version_ext.experimental = EXPERIMENTAL
-        version_ext.deprecated = DEPRECATED
+        collection.ext.add("version")
+        collection.ext.version.apply(
+            version=VERSION,
+            experimental=EXPERIMENTAL,
+            deprecated=DEPRECATED,
+        )
 
         self.collection = collection
 
