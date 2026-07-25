@@ -4,6 +4,7 @@
 optional extra로만 딸려오며, 코어에서 지연 임포트한다.
 
 - ardkr.pipeline   : [pipeline]  처리 스크립트용 유틸
+- ardkr.storage    : [storage]   R2/S3 객체 경로 계산
 - ardkr.catalog    : [catalog]   STAC 카탈로그 로딩·검색 (pystac)
 - ardkr.dashboard  : [dashboard] marimo 기반 STAC 대시보드
 - ardkr.modeling   : [modeling]  팀 변수생성·모델링
@@ -17,7 +18,7 @@ __version__ = "0.0.0"
 
 # 지연 임포트 게이트: `ardkr.catalog` 등을 접근하면 그때 임포트하고,
 # extra 미설치로 실패하면 어떤 extra를 깔아야 하는지 명확히 알린다.
-_FEATURE_MODULES = ("pipeline", "catalog", "dashboard", "modeling")
+_FEATURE_MODULES = ("pipeline", "storage", "catalog", "dashboard", "modeling")
 
 
 def __getattr__(name: str):
