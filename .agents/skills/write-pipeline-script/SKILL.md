@@ -6,7 +6,7 @@ description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새
 # write-pipeline-script
 
 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 쓸 때 따르는 규약.
-일반 파이썬 규칙은 base인 `.agents/skills/write-python/SKILL.md`를 따르고, 여기서는 파이프라인 전용 규칙만 더한다.
+일반 파이썬 규칙은 `../write-python/SKILL.md`를 따르고, 여기서는 파이프라인 전용 규칙만 더한다.
 
 ## 재사용과 재현성
 

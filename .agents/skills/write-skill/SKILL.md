@@ -25,7 +25,7 @@ description: skill을 새로 만들거나 기존 skill을 고칠 때 따르는 �
 
     - 한글로 작성
     - 코드 식별자 등 원문 유지가 필요한 경우는 예외
-    - 문체·품질은 `.agents/skills/write-korean/SKILL.md`를 따름
+    - 문체·품질은 `../write-korean/SKILL.md`를 따름
 
 4. **저장 위치**
 
@@ -38,8 +38,9 @@ description: skill을 새로 만들거나 기존 skill을 고칠 때 따르는 �
 
 6. **참조**
 
-    - skill은 다른 skill을 참조해 작업 메뉴얼(워크플로우)을 엮을 수 있음
-    - 참조는 `.agents/skills/<name>/SKILL.md` 전체 경로로 함
+    - skill은 다른 skill을 참조해 작업 절차를 엮을 수 있음
+    - 참조 경로는 해당 `SKILL.md`가 있는 디렉터리를 기준으로 작성
+    - 형제 skill은 `../<name>/SKILL.md`로 참조
     - skill 간 `순환참조` 금지
 
 7. **지침 반복 금지**
