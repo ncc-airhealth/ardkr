@@ -15,4 +15,4 @@
 
 ## 진입점
 
-세션의 첫 사용자 질문에서, 또는 진행 중이던 작업과 다른 성격의 새 요청이 들어왔을 때 `.agents/skills/skill-router/SKILL.md`를 먼저 읽고 지시를 따른다.
+세션의 첫 사용자 질문에서, 또는 진행 중이던 작업과 다른 성격의 새 요청이 들어왔을 때 `.agents/skills/route-task/SKILL.md`를 먼저 읽고 지시를 따른다.

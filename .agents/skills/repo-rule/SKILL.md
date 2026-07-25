@@ -29,17 +29,10 @@ description: AGENTS.md가 지정한 절대규칙 진입점. 세션의 첫 사용
     - 데이터 저장소(R2) 객체 삭제
     - 데이터 저장소(R2) 객체 업로드가 포함된 스크립트 실행
 
-4. **스크립트의 재현성 유지**
-
-    모든 코드는 재현 가능해야 한다.
-    - `pipeline/process/*.py`끼리 import·코드 공유 금지
-    - 의존성은 lock과 commit-pin으로 고정
-    - 공용 로직이 필요하면 `geovars` 패키지로 올려 commit-pin으로 활용
-
-5. **zero-tacit-knowledge**
+4. **zero-tacit-knowledge**
 
     새로 생긴 지식·결정을 대화에만 두고 끝내지 않는다.
-    — 데이터 관련 정보는 STAC metadata에 기록
+    - 데이터 관련 정보는 STAC metadata에 기록
     - 작업 절차는 `.agents/skills/`에 기록
     - 구현 근거는 코드 주석
     - 그 외 순수 지식은 `knowledge/`에 기록
