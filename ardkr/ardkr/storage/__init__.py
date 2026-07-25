@@ -5,9 +5,12 @@ extra: [storage]  (pip install "ardkr[storage]")
 
 from __future__ import annotations
 
+import hashlib
 import os
 from dataclasses import dataclass
 from pathlib import Path
+
+CHUNK_SIZE = 8 * 1024 * 1024
 
 try:
     from pystac import Collection, Item
@@ -30,12 +33,52 @@ def s3_cache_dir() -> Path:
     return Path(os.environ.get("ARDKR_S3_CACHE_DIR", str(_cache_root() / "s3")))
 
 
+def multihash_sha256(data: bytes) -> str:
+    """바이트열의 STAC ``file:checksum`` (Multihash, sha2-256)을 반환한다.
+
+    소량 데이터용이다. 큰 파일은 :func:`file_digest`를 쓴다.
+    """
+    return "1220" + hashlib.sha256(data).hexdigest()
+
+
+def file_digest(path: Path) -> tuple[int, str]:
+    """파일을 chunk로 읽으며 ``(size, file:checksum)``을 계산한다.
+
+    ``size``는 읽은 바이트 누적값이고, ``checksum``은 같은 읽기에서 계산한 Multihash다.
+
+    Args:
+        path: digest할 로컬 파일 경로.
+
+    Returns:
+        ``(size, checksum)`` 튜플.
+
+    Raises:
+        FileNotFoundError: 파일이 없을 때.
+    """
+    if not path.is_file():
+        raise FileNotFoundError(f"파일이 없습니다: {path}")
+
+    hasher = hashlib.sha256()
+    size = 0
+    with path.open("rb") as f:
+        while chunk := f.read(CHUNK_SIZE):
+            hasher.update(chunk)
+            size += len(chunk)
+    return size, "1220" + hasher.hexdigest()
+
+
 @dataclass(frozen=True, slots=True)
 class ObjectPath:
     """R2/S3 객체의 key와 로컬 미러 경로."""
 
     s3_key: str
     cache_path: Path
+
+    @property
+    def file_ext_props(self) -> dict[str, int | str]:
+        """``asset.ext.file.apply(**...)``에 넘길 ``checksum``·``size`` kwargs."""
+        size, checksum = file_digest(self.cache_path)
+        return {"checksum": checksum, "size": size}
 
 
 def object_path(
