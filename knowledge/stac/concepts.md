@@ -68,6 +68,19 @@ GeoJSON Feature에 다음을 더한다.
 | `stac_extensions` | 이 Item이 쓰는 extension 스키마 URL 목록 |
 | `collection` | 소속 Collection id |
 
+### geometry와 bbox
+
+`bbox`는 `geometry`가 `null`이 아니면 **필수**, `null`이면 **금지**다.
+범위를 알면 둘 다 채우고, 모르면 둘 다 비운다.
+좌표는 WGS84 경위도다.
+
+### 시각 표기
+
+- 모든 시각은 **UTC**만 쓴다. `Z` 또는 `+00:00`으로 끝낸다. 다른 offset은 스키마 검증에서 실패한다.
+- 형식은 RFC 3339다.
+- `datetime`이 `null`이면 `start_datetime`·`end_datetime`이 필요하다.
+- 대표 시각이 없는 기간 데이터는 `null`과 구간을 함께 쓴다.
+
 **Spatiotemporal asset**이란, 어떤 공간·시점에 대한 지구 정보를 담은 파일을 말한다.
 위성·항공 영상, SAR, 포인트 클라우드, 데이터 큐브, 파생 산출물 등이 해당한다.
 GeoJSON 본문은 그 파일의 인덱스가 아니라, **파일로 가는 메타데이터**다.
@@ -107,11 +120,18 @@ Collection이 더 요구하는 대표 필드:
 
 | 필드 | 의미 |
 |------|------|
-| `license` | SPDX 식별자, SPDX 표현식, 또는 `other` |
+| `license` | SPDX 식별자, SPDX 표현식, 또는 `other` (아래 참고) |
 | `extent.spatial.bbox` | 공간 범위 목록 |
 | `extent.temporal.interval` | 시간 구간 목록. 열린 끝은 `null` |
 | `providers` | 생산·처리·호스팅 주체 목록 |
 | `summaries` | 소속 Item 속성 값의 요약. 검색·UI용 |
+
+### license
+
+- SPDX 목록에 있으면 SPDX 식별자나 표현식을 쓴다.
+- 없으면 `other`다. `proprietary`·`various`는 STAC 1.1에서 폐기됐다.
+- SPDX가 아니면 `license` rel 링크로 원문을 가리킨다. 공개 URL이 없으면 원문 파일을 두고 링크한다.
+- `other`에 링크가 없으면 이용 권리가 부여되지 않는다(스펙상 비공개).
 
 ## Common Metadata
 

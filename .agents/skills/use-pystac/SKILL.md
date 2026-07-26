@@ -36,6 +36,7 @@ collection.ext.version.apply(version="1.0.0", experimental=True, deprecated=Fals
 
 - `Publication` 같은 값 객체는 해당 extension 모듈에서 import
 - accessor 미지원이거나 classmethod가 더 명확할 때만 `*Extension.ext(...)` 허용
+- 값 객체가 빈 필드를 `null`로 직렬화할 수 있음. 스키마가 문자열만 허용하면 검증 실패. 예: `Publication(doi=None, ...)` → `"doi": null`. scientific extension은 DOI 패턴 문자열만 허용. 그 필드는 쓰지 말고 코어 필드로 대신함
 
 ## 직렬화 확인
 
