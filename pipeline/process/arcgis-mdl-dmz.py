@@ -1,300 +1,216 @@
 # /// script
 # dependencies = [
 #   "duckdb==1.5.5",
+#   "geopandas==1.1.2",
 #   "pyarrow==25.0.0",
 #   "pystac==1.15.1",
-#   "python-dotenv==1.2.2",
-#   "geovars[pipeline,catalog] @ git+file:///workspace@95f5254a4aea65eb78a52c6095ba1bb59da4640d#subdirectory=geovars",
+#   "python-dotenv==1.1.0",
+#   "ardkr[storage] @ git+file:///workspace#subdirectory=ardkr",
 # ]
 #
-# [tool.geovars]
+# [tool.ardkr]
 # image = "2026.07.21"
 # ///
 
-from __future__ import annotations
-
-from pathlib import Path
-
-import duckdb
-import geovars.pipeline as gp
-import pystac as ps
-from dotenv import load_dotenv
-
-# from geovars.catalog import register_collection_version
-# from geovars.pipeline import (
-#     multihash_sha256,
-#     publish_asset,
-#     remote_checksum,
-#     s3_path,
-# )
-
-load_dotenv()
-
-
-# ----------------------------------------------------------------------------
-# settings - developer configurable
-VERSION = "3.0.1"
-EXPERIMENTAL = True
-PUBLISH_MODE = "local"
-
-# metadata configuration -----------------------------------------------------
-ITEM_ID_FMT = "{name}"
-ASSET_FMT = "{name}.{suffix}"
-DESCRIPTION = """
+"""
 # 소개
 ArcGIS API에서 제공하는 군사분계선(MDL) 및 비무장지대(DMZ) 데이터.
 
-인프라 검증용 겸 실사용 collection이다. 
+인프라 검증용 겸 실사용 collection이다.
 인프라 검증 대상은 아래와 같다.
 - 파이프라인 코드 동작
 - S3 호환 스토리지로의 Asset 업로드
 - STAC metadata 등록
 """
 
+from __future__ import annotations
 
-# define stac collection -----------------------------------------------------
-coll = ps.Collection(
+from datetime import datetime
+from pprint import pprint
+
+import ardkr.storage as rs
+import geopandas as gpd
+import pystac as ps
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# developer configurable
+VERSION = "3.0.1"
+EXPERIMENTAL = True
+
+# collection constants
+ARMISTICE_STARTED_AT = datetime.fromisoformat("1953-07-27T22:00:00+09:00")
+PROCESSED_AT = datetime.now()
+SOURCE_EPSG = 4326
+
+
+# define collection ----------------------------------------------------------
+c = ps.Collection(
     id="arcgis-mdl-dmz",
     title="ArcGIS 군사분계선/비무장지대",
     keywords=["ArcGIS", "MDL", "DMZ", "Military Demarcation Line"],
-    description=DESCRIPTION,
-    extent=None,
+    description=__doc__,
+    extent=ps.Extent(
+        spatial=ps.SpatialExtent([[-180.0, -90.0, 180.0, 90.0]]),
+        temporal=ps.TemporalExtent([[ARMISTICE_STARTED_AT, PROCESSED_AT]]),
+    ),
     license="proprietary",
-    extra_fields={
-        "version": VERSION,
-        "experimental": EXPERIMENTAL,
-        "deprecated": False,
-    },
+    providers=[
+        ps.Provider(name="ArcGIS", roles=["host", "producer", "licensor"])
+    ],
 )
-
-# geovars core extensions
-coll.ext.add("version")
-coll.ext.add("file")
-coll.ext.version.apply(version=VERSION, experimental=EXPERIMENTAL)
-
-# additional extensions
-coll.ext.add("table")
+c.ext.add("version")
+c.ext.version.apply(version=VERSION, experimental=EXPERIMENTAL)
 
 
-# process collection/item/asset ----------------------------------------------
-
-class Processor:
-
-    _con: duckdb.DuckDBPyConnection | None = None
-
-    def run(self) -> None:
-        self.build_item_mdl()
-        self.build_item_dmz()
-        self.upload_asset()
-    
-    def read_mdl_dmz(self) -> Processor:
-        self.con.execute(self.mdl_query)
-        self.con.execute(self.dmz_query)
-        return self
-    
-    @property
-    def con(self) -> duckdb.DuckDBPyConnection:
-        if self._con is None:
-            self._con = duckdb.connect()
-            self._con.execute("""
-            INSTALL spatial;
-            INSTALL httpfs;
-            LOAD spatial;
-            LOAD httpfs;
-
-            SET allow_asterisks_in_http_paths = true;
-            SET enable_curl_server_cert_verification = false;
-            """)
-        return self._con
-    
-    def mdl_query(self) -> str:
-        url = (
-            "https://portal.esrikr.com/arcgis/rest/services/Hosted/"
-            "KR_MDL_DMZ/FeatureServer/0/"
-            "query?"
-            "where=1%3D1"
-            "&outFields=*"
-            "&returnGeometry=true"
-            "&f=geojson"
-            "&outSR=5179"
-        )
-        return f"""
-        CREATE OR REPLACE TEMP TABLE mdl AS (
-            SELECT geom FROM ST_Read('{url}')
-        )
-        """
-    
-    def dmz_query(self) -> str:
-        url = (
-            "https://portal.esrikr.com/arcgis/rest/services/Hosted/"
-            "KR_MDL_DMZ/FeatureServer/1/"
-            "query?"
-            "where=1%3D1"
-            "&outFields=*"
-            "&returnGeometry=true"
-            "&f=geojson"
-            "&outSR=5179"
-        )
-        return f"""
-        CREATE OR REPLACE TEMP TABLE dmz AS (
-            SELECT geom FROM ST_Read('{url}')
-        )
-        """
-    
-    # def build_item(self) -> None:
-    #     item = ps.Item(
-    #         id=ITEM_ID_FMT.format(name="references"),
-    #         geometry=None,
-    #         bbox=None,
-    #         datetime=datetime.fromisoformat(GENERATED_AT),
-    #         properties={},
-    #     )
-
-    #     item.ext.add("sci")
-    #     item.ext.sci.apply(
-    #         publications=[
-    #             Publication(doi=ref["doi"], citation=citation(ref))
-    #             for ref in self.references
-    #         ]
-    #     )
-
-    #     asset = pystac.Asset(
-    #         href=ASSET_FILENAME,  # R2/S3 key 그대로(self-describing) — 버킷명/엔드포인트는 env(GEOVARS_S3_*)
-    #         media_type="application/vnd.apache.parquet",
-    #         roles=["data"],
-    #     )
-    #     item.add_asset(
-    #         "references", asset
-    #     )  # upload_asset이 checksum을 채우려면 owner가 먼저 있어야 함
-
-    #     self.item = item
-    
-    # @property
-    # def reference_table_columns(self) -> list[dict]:
-    #     """논문 서지 데이터 테이블의 열 정의. STAC Table extension 문서 참조.
-    #     https://github.com/stac-extensions/table#column-object
-    #     https://github.com/stac-extensions/scientific
-    #     """
-    #     return [
-    #         {
-    #             "name": "doi",
-    #             "description": "논문 DOI",
-    #             "type": "string",
-    #         },
-    #         {
-    #             "name": "citation",
-    #             "description": "논문 인용 문자열(APA 6th edition)",
-    #             "type": "string",
-    #         }
-    #     ]
+# process --------------------------------------------------------------------
+def main():
+    """main function"""
+    define_item_asset()
+    define_item()
+    register_collection()
+    test()
 
 
+def define_item_asset():
+    """define item-asset definition for mdl and dmz"""
+    # mdl
+    mdl = ps.ItemAssetDefinition(
+        owner=c,
+        properties={
+            "title": "군사분계선",
+            "description": "군사분계선 데이터",
+            "roles": ["data"],
+            "media_type": "application/parquet",
+        },
+    )
+    mdl.ext.add("proj")
+    mdl.ext.add("file")
+    mdl.ext.add("table")
+    mdl.ext.proj.apply(epsg=SOURCE_EPSG)
 
-#     def upload_asset(self) -> None:
-#         """geovars.pipeline.publish_asset()으로 asset을 업로드하고 checksum을 기록한다.
+    # dmz
+    dmz = ps.ItemAssetDefinition(
+        owner=c,
+        properties={
+            "title": "비무장지대",
+            "description": "비무장지대 데이터",
+            "roles": ["data"],
+            "media_type": "application/parquet",
+        },
+    )
+    dmz.ext.add("proj")
+    dmz.ext.add("file")
+    dmz.ext.add("table")
+    dmz.ext.proj.apply(epsg=SOURCE_EPSG)
 
-#         Sets:
-#             self.checksum: 업로드된 파일의 Multihash(sha2-256).
-#         """
-#         asset = self.item.assets["references"]
-#         self.checksum = publish_asset(
-#             asset,
-#             ASSET_FILENAME,
-#             write=lambda f: pd.DataFrame(self.references).to_parquet(f),
-#             mode=PUBLISH_MODE,
-#         )
-#         print(
-#             f"[{COLLECTION_ID}] 업로드 완료(mode={PUBLISH_MODE}): "
-#             f"key={ASSET_FILENAME} checksum={self.checksum}"
-#         )
-
-#     def evaluate_asset(self) -> None:
-#         """업로드한 asset을 재검증한다. checksum이 다르거나 로컬 캐시를 재다운로드했으면 예외를 던진다.
-
-#         local 모드는 R2를 건드리지 않으므로 재검증할 원격 실체가 없다 — 스킵한다.
-#         발행 여부의 진실은 항상 `verify_uploaded()`가 마지막에 강제한다.
-#         """
-#         if PUBLISH_MODE == "local":
-#             print(f"[{COLLECTION_ID}] local 모드 — 재검증 스킵(원격 미접촉)")
-#             return
-
-#         path = s3_path(ASSET_FILENAME)
-#         cache_file = Path(path.fspath)
-#         mtime_before = cache_file.stat().st_mtime if cache_file.exists() else None
-
-#         data = path.read_bytes()
-#         if multihash_sha256(data) != self.checksum:
-#             raise ValueError(
-#                 f"재다운로드한 asset의 checksum이 기록값과 다릅니다: key={ASSET_FILENAME}"
-#             )
-
-#         mtime_after = cache_file.stat().st_mtime
-#         if mtime_before != mtime_after:
-#             raise ValueError(
-#                 f"asset을 로컬 캐시 대신 재다운로드했습니다: key={ASSET_FILENAME}"
-#             )
-
-#         print(f"[{COLLECTION_ID}] 재검증 완료: checksum 일치, 로컬 캐시 히트")
-
-#     def build_collection(self) -> None:
-#         """STAC Collection을 구성한다.
-
-#         Sets:
-#             self.collection: 구성된 pystac.Collection.
-#         """
-#         collection = pystac.Collection(
-#             id=COLLECTION_ID,
-#             title=TITLE,
-#             description=DESCRIPTION,
-#             extent=pystac.Extent(
-#                 spatial=pystac.SpatialExtent([[-180.0, -90.0, 180.0, 90.0]]),
-#                 temporal=pystac.TemporalExtent(
-#                     [[datetime.fromisoformat(GENERATED_AT), None]]
-#                 ),
-#             ),
-#             license="proprietary",
-#         )
-#         collection.ext.add("version")
-#         collection.ext.version.apply(
-#             version=VERSION,
-#             experimental=EXPERIMENTAL,
-#             deprecated=DEPRECATED,
-#         )
-
-#         self.collection = collection
-
-#     def register(self) -> None:
-#         """collection에 item을 붙이고 카탈로그에 등록한다."""
-#         self.collection.add_item(self.item)
-#         register_collection(self.collection, VERSION)
-#         print(f"[{COLLECTION_ID}] STAC 등록 완료: version={VERSION}")
-
-#     def verify_uploaded(self) -> None:
-#         """asset이 실제로 R2에 발행돼 있는지 mode와 무관하게 항상 강제 확인한다.
-
-#         HEAD로 원격 checksum 메타데이터를 읽어 기록값과 비교한다. local 모드로 돌렸다면
-#         R2에 아무것도 안 올라가 있으므로 여기서 반드시 실패한다(의도된 안전장치).
-#         """
-#         actual = remote_checksum(ASSET_FILENAME)
-#         if actual != self.checksum:
-#             raise ValueError(
-#                 f"[{COLLECTION_ID}] asset이 R2에 발행되지 않았거나 checksum이 다릅니다"
-#                 f"(mode={PUBLISH_MODE}): key={ASSET_FILENAME} "
-#                 f"expected={self.checksum} actual={actual}"
-#             )
-#         print(f"[{COLLECTION_ID}] 발행 검증 완료: checksum 일치")
+    # register
+    c.item_assets = {"mdl": mdl, "dmz": dmz}
+    mdl.set_owner(c)
+    dmz.set_owner(c)
 
 
+def define_item():
+    """define item"""
+
+    # item
+    item = ps.Item(
+        id=c.id,
+        geometry=None,
+        bbox=None,
+        datetime=None,
+        start_datetime=ARMISTICE_STARTED_AT,
+        end_datetime=PROCESSED_AT,
+        collection=c.id,
+        properties={},
+    )
+    c.add_item(item)
+
+    # asset = mdl
+    mdl_path = rs.object_path(collection=c, item=item, filename="mdl.parquet")
+    mdl_gdf = _read_mdl()
+    mdl_gdf.to_parquet(mdl_path.cache_path, compression="zstd")
+    mdl_asset = c.item_assets["mdl"].create_asset(href=mdl_path.s3_key)
+    mdl_asset.set_owner(item)
+    mdl_asset.ext.add("file")
+    mdl_asset.ext.file.apply(**mdl_path.file_ext_props)
+    item.assets["mdl"] = mdl_asset
+
+    # asset = dmz
+    dmz_path = rs.object_path(collection=c, item=item, filename="dmz.parquet")
+    dmz_gdf = _read_dmz()
+    dmz_gdf.to_parquet(dmz_path.cache_path, compression="zstd")
+    dmz_asset = c.item_assets["dmz"].create_asset(href=dmz_path.s3_key)
+    dmz_asset.set_owner(item)
+    dmz_asset.ext.add("file")
+    dmz_asset.ext.file.apply(**dmz_path.file_ext_props)
+    item.assets["dmz"] = dmz_asset
+
+    # set extent for item & collection
+    item.bbox = dmz_gdf.geometry.total_bounds
+    c.update_extent_from_items()
 
 
-# def citation(ref: dict) -> str:
-#     """서지 데이터 한 행을 인용 문자열로 바꾼다."""
-#     authors = ref["authors"].replace("; ", ", ")
-#     return (
-#         f"{authors} ({ref['year']}). {ref['title_ko']}. "
-#         f"{ref['venue']}, {ref['volume']}({ref['issue']}), {ref['pages']}. {ref['url']}"
-#     )
+def register_collection():
+    """register collection"""
+    rs.register_collection(collection=c)
+
+def test():
+    """test function"""
+    _evaluate_stac_metadata()
+    _evaluate_stac_assets_readable()
+
+def _read_mdl() -> gpd.GeoDataFrame:
+    """read mdl from ArcGIS API"""
+    url = (
+        "https://portal.esrikr.com/arcgis/rest/services/Hosted/"
+        "KR_MDL_DMZ/FeatureServer/0/"
+        "query?"
+        "where=1%3D1"
+        "&outFields=*"
+        "&returnGeometry=true"
+        "&f=geojson"
+        f"&outSR={SOURCE_EPSG}"
+    )
+    gdf = gpd.read_file(url, driver="GeoJSON")
+    return gdf
 
 
+def _read_dmz() -> gpd.GeoDataFrame:
+    """read dmz from ArcGIS API"""
+    url = (
+        "https://portal.esrikr.com/arcgis/rest/services/Hosted/"
+        "KR_MDL_DMZ/FeatureServer/1/"
+        "query?"
+        "where=1%3D1"
+        "&outFields=*"
+        "&returnGeometry=true"
+        "&f=geojson"
+        f"&outSR={SOURCE_EPSG}"
+    )
+    gdf = gpd.read_file(url, driver="GeoJSON")
+    return gdf
+
+def _evaluate_stac_metadata():
+    """evaluate stac metadata"""
+    cat = ps.Catalog.from_file("stac-metadata/catalog.json")
+    col = cat.get_child(c.id)
+
+def _evaluate_stac_assets_readable():
+    """evaluate stac assets readable"""
+    for item in c.get_items():
+        for key, asset in item.assets.items():
+            asset.href
+            duckdb.
+
+            gdf = gpd.read_parquet()
+            asset.read()
+            pprint(asset.to_dict())
+            raise Exception()
+    print(c.item.assets["mdl"].to_dict())
+    print(c.item.assets["dmz"].to_dict())
+
+# run ------------------------------------------------------------------------
 if __name__ == "__main__":
-    Processor().run()
+    main()

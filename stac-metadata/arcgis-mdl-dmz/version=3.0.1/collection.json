@@ -1,0 +1,85 @@
+{
+  "type": "Collection",
+  "id": "arcgis-mdl-dmz",
+  "stac_version": "1.1.0",
+  "description": "\n# 소개\nArcGIS API에서 제공하는 군사분계선(MDL) 및 비무장지대(DMZ) 데이터.\n\n인프라 검증용 겸 실사용 collection이다.\n인프라 검증 대상은 아래와 같다.\n- 파이프라인 코드 동작\n- S3 호환 스토리지로의 Asset 업로드\n- STAC metadata 등록\n",
+  "links": [
+    {
+      "rel": "root",
+      "href": "./collection.json",
+      "type": "application/json",
+      "title": "ArcGIS 군사분계선/비무장지대"
+    },
+    {
+      "rel": "item",
+      "href": "./arcgis-mdl-dmz/arcgis-mdl-dmz.json",
+      "type": "application/geo+json"
+    }
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/version/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/table/v1.2.0/schema.json"
+  ],
+  "version": "3.0.1",
+  "experimental": true,
+  "item_assets": {
+    "mdl": {
+      "title": "군사분계선",
+      "description": "군사분계선 데이터",
+      "roles": [
+        "data"
+      ],
+      "media_type": "application/parquet",
+      "proj:code": "EPSG:4326"
+    },
+    "dmz": {
+      "title": "비무장지대",
+      "description": "비무장지대 데이터",
+      "roles": [
+        "data"
+      ],
+      "media_type": "application/parquet",
+      "proj:code": "EPSG:4326"
+    }
+  },
+  "title": "ArcGIS 군사분계선/비무장지대",
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          126.64685893945881,
+          37.83399740919223,
+          128.3683860401958,
+          38.635703428605204
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "1953-07-27T22:00:00+09:00",
+          "2026-07-26T06:20:58.953533Z"
+        ]
+      ]
+    }
+  },
+  "license": "proprietary",
+  "keywords": [
+    "ArcGIS",
+    "MDL",
+    "DMZ",
+    "Military Demarcation Line"
+  ],
+  "providers": [
+    {
+      "name": "ArcGIS",
+      "roles": [
+        "host",
+        "producer",
+        "licensor"
+      ]
+    }
+  ]
+}

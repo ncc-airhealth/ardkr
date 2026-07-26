@@ -1,0 +1,61 @@
+{
+  "type": "Feature",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json"
+  ],
+  "id": "arcgis-mdl-dmz",
+  "geometry": null,
+  "properties": {
+    "start_datetime": "1953-07-27T22:00:00+09:00",
+    "end_datetime": "2026-07-26T06:20:58.953533Z",
+    "datetime": null
+  },
+  "links": [
+    {
+      "rel": "root",
+      "href": "../collection.json",
+      "type": "application/json",
+      "title": "ArcGIS 군사분계선/비무장지대"
+    },
+    {
+      "rel": "collection",
+      "href": "../collection.json",
+      "type": "application/json",
+      "title": "ArcGIS 군사분계선/비무장지대"
+    },
+    {
+      "rel": "parent",
+      "href": "../collection.json",
+      "type": "application/json",
+      "title": "ArcGIS 군사분계선/비무장지대"
+    }
+  ],
+  "assets": {
+    "mdl": {
+      "href": "arcgis-mdl-dmz/version=3.0.1/arcgis-mdl-dmz/mdl.parquet",
+      "title": "군사분계선",
+      "description": "군사분계선 데이터",
+      "media_type": "application/parquet",
+      "proj:code": "EPSG:4326",
+      "file:checksum": "12201603181e894b203f0dd2b72082531dd7688d17e182e799ff8538c569e01722ae",
+      "file:size": 46048,
+      "roles": [
+        "data"
+      ]
+    },
+    "dmz": {
+      "href": "arcgis-mdl-dmz/version=3.0.1/arcgis-mdl-dmz/dmz.parquet",
+      "title": "비무장지대",
+      "description": "비무장지대 데이터",
+      "media_type": "application/parquet",
+      "proj:code": "EPSG:4326",
+      "file:checksum": "1220eb207352deb727cca4ee58f850beb60075dc457e2026217a8686db723c48be13",
+      "file:size": 69675,
+      "roles": [
+        "data"
+      ]
+    }
+  },
+  "collection": "arcgis-mdl-dmz"
+}
