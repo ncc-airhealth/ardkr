@@ -1,4 +1,5 @@
 target-version = "py312"
+line-length = 80
 
 [lint]
 select = ["E", "F", "I", "UP"]

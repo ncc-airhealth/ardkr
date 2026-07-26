@@ -214,7 +214,10 @@ def _save_stac_catalog(
     catalog_json["links"] = [
         link
         for link in catalog_json["links"]
-        if not (link.get("rel") == "child" and link.get("href", "").startswith(prefix))
+        if not (
+            link.get("rel") == "child"
+            and link.get("href", "").startswith(prefix)
+        )
     ]
     catalog_json["links"].append(
         {
@@ -225,7 +228,8 @@ def _save_stac_catalog(
         }
     )
     catalog_path.write_text(
-        json.dumps(catalog_json, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        json.dumps(catalog_json, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
     )
 
     for json_path in catalog_root.rglob("*.json"):
@@ -233,7 +237,8 @@ def _save_stac_catalog(
             continue
         data = json.loads(json_path.read_text(encoding="utf-8"))
         json_path.write_text(
-            json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
         )
 
 

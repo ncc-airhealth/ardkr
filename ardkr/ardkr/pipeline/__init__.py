@@ -41,22 +41,22 @@ except ImportError as exc:  # pragma: no cover
         'ardkr.pipeline 은 botocore 가 필요합니다: pip install "ardkr[pipeline]"'
     ) from exc
 
-from pystac.extensions.file import FileExtension
 from pystac import Collection
+from pystac.extensions.file import FileExtension
 
 
 class BaseCollection(Collection):
     def __init__(self):
         super().__init__(
-            id=self.id, 
-            description=self.description, 
-            extent=self.extent, 
-            title=self.title, 
-            extra_fields=self.extra_fields, 
-            license=self.license, 
-            keywords=self.keywords, 
-            providers=self.providers, 
-            summaries=self.summaries, 
+            id=self.id,
+            description=self.description,
+            extent=self.extent,
+            title=self.title,
+            extra_fields=self.extra_fields,
+            license=self.license,
+            keywords=self.keywords,
+            providers=self.providers,
+            summaries=self.summaries,
         )
         self.ext.add("file")
         self.ext.add("version")
@@ -83,12 +83,16 @@ def s3_cache_dir() -> Path:
 
 def duckdb_cache_dir() -> Path:
     """duckdb extension·spill(temp_directory) 위치."""
-    return Path(os.environ.get("ARDKR_DUCKDB_CACHE_DIR", str(cache_root() / "duckdb")))
+    return Path(
+        os.environ.get("ARDKR_DUCKDB_CACHE_DIR", str(cache_root() / "duckdb"))
+    )
 
 
 def scratch_dir() -> Path:
     """현재 처리 스크립트(collection)의 중간산출물 스크래치 디렉토리."""
-    return Path(os.environ.get("ARDKR_SCRATCH_DIR", str(cache_root() / "pipeline")))
+    return Path(
+        os.environ.get("ARDKR_SCRATCH_DIR", str(cache_root() / "pipeline"))
+    )
 
 
 def multihash_sha256(data: bytes) -> str:
@@ -133,7 +137,9 @@ def remote_checksum(key: str) -> str | None:
     path = s3_path(key)
     try:
         obj = path.client.s3.Object(path.bucket, path.key)
-        return obj.metadata.get("checksum")  # .metadata 접근이 HEAD(load)를 트리거
+        return obj.metadata.get(
+            "checksum"
+        )  # .metadata 접근이 HEAD(load)를 트리거
     except ClientError as exc:
         if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
             return None
