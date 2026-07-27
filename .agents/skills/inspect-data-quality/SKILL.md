@@ -8,14 +8,7 @@ description: 실제 데이터와 출처 문서를 조사하여 품질·한계·�
 실제 데이터와 출처 문서를 조사하여 데이터의 품질·한계·분석 맥락을 확보한다.
 데이터 특성에 맞는 reference를 고르고, 선택한 reference의 모든 질문을 조사한다.
 
-기계적 전수 검증·불변식 검사는 이 skill의 범위가 아니다. 파이프라인 verify stage(`../write-pipeline-script/SKILL.md`)가 담당한다.
-
-## 책임
-
-- 실제 데이터와 출처 문서 조사
-- 품질 판단에 필요한 정보 획득
-- 데이터 특성에 따라 reference를 활용하여 검토
-- 검토 내용을 후속 파이프라인 작업과 `../design-stac-metadata/SKILL.md`의 STAC metadata 설계에 전달할 수 있게 정리
+기계적 전수 검증·불변식 검사는 이 skill의 범위가 아니다.
 
 ## 조사 및 검토 방법
 

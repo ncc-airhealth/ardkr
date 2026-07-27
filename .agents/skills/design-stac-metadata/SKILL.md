@@ -31,9 +31,10 @@ PySTAC API는 `../use-pystac/SKILL.md`, 문체는 `../write-korean/SKILL.md`를 
 ## links·license·providers
 
 - 외부 자료는 collection/item `links`로 참조
-  - link 객체의 `type` 필드는 IANA media type. PySTAC `MediaType` 상수를 우선 확인
+  - `type`은 IANA media type
   - `title`은 collection 안에서 unique
   - `rel` 필드는 {`via`, `describedby`, `license`, `related`}를 값으로 허용
+  - link 작성 API는 `../use-pystac/SKILL.md`를 따름
 - `license` — STAC Collection Spec
 - `providers` — STAC Common Metadata (Provider)
 

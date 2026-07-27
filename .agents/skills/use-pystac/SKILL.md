@@ -32,6 +32,10 @@ collection.ext.add("version")
 collection.ext.version.apply(version="1.0.0", experimental=True, deprecated=False)
 ```
 
+## Link
+
+- link 객체의 `type`에는 PySTAC `MediaType` 상수를 우선 씀
+
 ## 값 객체와 예외
 
 - `Publication` 같은 값 객체는 해당 extension 모듈에서 import

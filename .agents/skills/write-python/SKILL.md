@@ -1,6 +1,6 @@
 ---
 name: write-python
-description: 파이썬 코드를 쓸 때 따르는 일반 규약. 최소한의 코드로 짜고 한글로 문서화한다. 다른 skill이 바탕으로 참조한다.
+description: 파이썬 코드를 새로 쓰거나 고칠 때 발동. 최소한의 코드로 짜고 한글로 문서화한다.
 ---
 
 # write-python

@@ -1,6 +1,6 @@
 ---
 name: write-pipeline-script
-description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새로 쓰거나 고칠 때 따르는 규약. 스크립트 구조·stage 함수·verify stage·재현성 규칙을 담는다.
+description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새로 쓰거나 고칠 때 발동.
 ---
 
 # write-pipeline-script
