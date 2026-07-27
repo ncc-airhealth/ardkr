@@ -17,17 +17,17 @@ PySTAC API는 `../use-pystac/SKILL.md`, 문체는 `../write-korean/SKILL.md`를 
 
 ## 정보 배치
 
-품질 판단에 필요한 정보는 다음 순서로 배치한다.
+담을 정보가 생기면 다음 순서로 보고, 먼저 걸리는 곳에만 둔다.
+이미 다른 곳에 있으면 다시 쓰지 않는다.
 
 1. STAC core나 공식 extension 필드
 2. 외부 근거는 collection/item `links`
-3. `__doc__`의 `## 한계` 섹션 (필드와 link만으로는 담기 어려운 결함·미확인 정보·예외·제한사항만)
+3. `__doc__`의 `## 한계` (필드와 link만으로는 담기 어려운 결함·미확인·예외·제한만)
 
 ## 필드와 extension
 
-- STAC core field만 허용
-- STAC extension 사용 시, 해당 field 추가 허용
-- 사용할 extension은 [STAC Extensions](https://stac-extensions.github.io/)에서 탐색
+커스텀 필드는 만들지 않는다.
+담을 필드가 없으면 [STAC Extensions](https://stac-extensions.github.io/)에서 먼저 찾고, 맞는 extension이 있을 때만 그 필드를 쓴다.
 
 ## links·license·providers
 
@@ -39,7 +39,6 @@ PySTAC API는 `../use-pystac/SKILL.md`, 문체는 `../write-korean/SKILL.md`를 
 - `license` — STAC Collection Spec
 - `providers` — STAC Common Metadata (Provider)
 
-
 ## description
 
 - 파이프라인 스크립트에서 collection 정의 시, `description=__doc__`로 넘김
@@ -47,7 +46,6 @@ PySTAC API는 `../use-pystac/SKILL.md`, 문체는 `../write-korean/SKILL.md`를 
 - 엄밀함과 구체성을 유지하고, UI 미리보기용으로 사실을 줄이지 않음
 - 맨 위는 제목 없이 데이터 소개와 처리 의도를 2–3문장으로 작성
 - 원본이 설명하지 않는 내용은 추정하지 않음
-- description 이외의 필드(`라이선스`, `item` 등)에 작성된 내용은 제외
 - `## 한계`에는 `../inspect-data-quality/SKILL.md` 조사 결과 중 필드와 link로 담기 어려운 항목만 기록
 
 ## reference
