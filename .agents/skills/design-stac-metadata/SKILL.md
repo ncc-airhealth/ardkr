@@ -10,6 +10,7 @@ description: 파이프라인 스크립트에서 STAC collection·item 메타데�
 `stac-metadata/` JSON은 파이프라인 스크립트가 생성한다.
 손으로 직접 고치지 않는다.
 예외는 version extension으로 deprecated 전환하는 경우뿐이다.
+설계한 내용은 파이프라인 스크립트에 반영한다.
 
 PySTAC API는 `../use-pystac/SKILL.md`, 문체는 `../write-korean/SKILL.md`를 따른다.
 필드 정의는 아래 reference를 본다.
