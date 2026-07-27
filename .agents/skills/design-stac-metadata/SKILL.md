@@ -22,7 +22,7 @@ PySTAC API는 `../use-pystac/SKILL.md`, 문체는 `../write-korean/SKILL.md`를 
 
 1. STAC core나 공식 extension 필드
 2. 외부 근거는 collection/item `links`
-3. `__doc__`의 `## 한계` (필드와 link만으로는 담기 어려운 결함·미확인·예외·제한만)
+3. `__doc__` 산문 — 파이프라인이 데이터에 가한 변환·수정은 `## 처리`, 출처 충돌·필드 해석·활용 시 유의·미확인은 `## 주의사항`
 
 ## 필드와 extension
 
@@ -46,7 +46,8 @@ PySTAC API는 `../use-pystac/SKILL.md`, 문체는 `../write-korean/SKILL.md`를 
 - 엄밀함과 구체성을 유지하고, UI 미리보기용으로 사실을 줄이지 않음
 - 맨 위는 제목 없이 데이터 소개와 처리 의도를 2–3문장으로 작성
 - 원본이 설명하지 않는 내용은 추정하지 않음
-- `## 한계`에는 `../inspect-data-quality/SKILL.md` 조사 결과 중 필드와 link로 담기 어려운 항목만 기록
+- `## 처리`에는 파이프라인이 데이터에 가한 변환·수정만 기록 (출처 충돌·필드 해석은 넣지 않음)
+- `## 주의사항`에는 `../inspect-data-quality/SKILL.md` 조사 결과 중 필드와 link로 담기 어려운 항목만 기록
 
 ## reference
 
