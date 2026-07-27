@@ -49,7 +49,8 @@ knowledge/        # OKF 기반 지식 (문의 이력·경험칙·참고자료)
 STAC 카탈로그는 JSON으로 이 레포에 커밋된다.
 표준 STAC 도구로 탐색할 수 있다.
 
-- [stac-browser](https://github.com/radiantearth/stac-browser)에 카탈로그 URL을 넣어 Collection·Item을 시각적으로 탐색함
+- [STAC Browser로 이 카탈로그 열기](https://browser.moregeo.it/external/raw.githubusercontent.com/ncc-airhealth/ardkr/main/stac-metadata/catalog.json) — 현재 포함된 Collection·Item 메타데이터를 확인할 수 있음
+- [stac-browser](https://github.com/radiantearth/stac-browser)에 카탈로그 raw URL을 직접 넣어도 됨: `https://raw.githubusercontent.com/ncc-airhealth/ardkr/main/stac-metadata/catalog.json`
 - 카탈로그(메타데이터)는 공개됨. collection마다 **최신 버전**이 노출됨. 과거 버전 메타데이터는 이 레포의 버전 경로로 조회함
 
 ## 데이터 접근
