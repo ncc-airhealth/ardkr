@@ -8,27 +8,33 @@ description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새
 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 쓸 때 따르는 규약.
 스크립트 하나가 collection 하나를 만든다.
 
-일반 파이썬 규칙은 `../write-python/SKILL.md`, PySTAC 사용법은 `../use-pystac/SKILL.md`를 따른다.
-승인이 필요한 행위는 `../repo-rule/SKILL.md`가 정한다.
-메타데이터 내용·`__doc__` 작성은 `../design-stac-metadata/SKILL.md`를 따른다.
-여기서는 파이프라인 전용 규칙만 더한다.
+- 일반 파이썬 규칙은 `../write-python/SKILL.md`를 따름
+- PySTAC 사용법은 `../use-pystac/SKILL.md`를 따름
+- STAC 내용의 구성은 `../design-stac-metadata/SKILL.md`를 따름
+
+## 작업 순서
+
+파이프라인 작업 전체를 다음 순서로 진행한다.
+
+1. 파이프라인 스크립트 `pipeline/process/<collection-id>.py`의 뼈대(`## 스크립트 구성` 참조)를 생성
+2. `../inspect-data-quality/SKILL.md`로 원본 데이터와 출처를 조사하며 파이프라인 스크립트를 재귀적으로 개선
+3. 이 skill의 규칙 전체를 최종 검토함
 
 ## 용어
 
-- **stage 함수** — `main`이 인자 없이 호출하는 처리 단위. 스크립트의 뼈대
-- **util 함수** — stage 함수가 쓰는 헬퍼. `_` prefix, 인자 허용
-- **verify stage** — 마지막 stage 함수. 결과가 맞는지 판정함
+- **stage 함수** — `main` 함수 내부에서 호출하는 함수 (인자 비허용)
+- **util 함수** — stage 함수가 쓰는 헬퍼 함수 (함수 이름에 `_` prefix 적용, 인자 허용)
+- **verify stage** — 마지막 stage 함수. 데이터 검증 목적으로 사용.
 
 ## 파일과 식별자
 
-- 파일명은 collection id와 같게 지음 (`arcgis-mdl-dmz.py` ↔ `id="arcgis-mdl-dmz"`)
-- 한 스크립트에 collection 하나만 정의함
-- 의존성 lock(`*.py.lock`)은 스크립트와 함께 갱신·커밋함
-- 의존성을 고치면 `python3 pipeline/run.py <collection-id> --relock`으로 lock을 다시 만듦. 안 하면 `--frozen` 실행이 실패함
+- 파일명은 collection id와 동일하게 작성 (`arcgis-mdl-dmz.py` ↔ `id="arcgis-mdl-dmz"`)
+- 한 스크립트에 collection 하나만 정의
+- 의존성 lock(`*.py.lock`)은 스크립트와 함께 갱신
 
-## 작성 순서
+## 스크립트 구성
 
-스크립트 상단부터 아래 순서로 쓴다.
+스크립트 상단부터 아래 순서로 작성한다.
 
 1. PEP 723 의존성 정의 (`# /// script`)
 2. `__doc__`
@@ -49,22 +55,14 @@ description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새
 - 사람이 실행마다 조정하는 값 (`VERSION`, `EXPERIMENTAL` 등)
 - 고정 상수 (출처 URL, 원본 EPSG, 기준 시각, 경로 등)
 
-`datetime.now()`처럼 실행마다 바뀌는 값은 그 값이 무슨 시각인지 이름으로 밝힌다.
-관측 시각을 모른다고 처리 시각으로 대신 채우지 않는다.
-취득 시각을 시간 범위에 쓴다면 그 해석은 `../design-stac-metadata/SKILL.md`에 따른다.
-
 ## main과 stage 함수
 
-- `main` 본문에는 stage 함수 호출만 둠. 조건·반복·계산 금지
-- stage 함수는 이름만으로 무슨 일을 하는지 알 수 있어야 함. 동사구로 지음 (`define_item_assets`, `build_item_from_source`, `register_collection`, `verify_registration`)
+- `main` 본문에는 stage 함수 호출만 둠. (조건문, 반복문 금지)
+- stage 함수는 이름만으로 무슨 일을 하는지 알 수 있어야 함. 동사구로 명명 (예: `define_item_assets`, `register_collection`, `verify_registration`)
 - stage 함수는 인자를 받지 않음. 입력은 상수와 모듈 전역 collection에서 읽음
 - 인자가 필요한 로직은 util 함수로 내림
 - stage 간 상태는 collection 객체로만 넘김. stage끼리 주고받을 임시 전역 변수를 만들지 않음
-
-원격이나 카탈로그를 바꾸는 일은 stage를 나눈다.
-
-- STAC 등록과 원격 업로드는 각각 별도 stage로 둔다.
-- 원본을 받아 가공하고 로컬 캐시에 쓰는 일은 한 stage에 넣어도 된다.
+- STAC 등록과 원격 업로드는 각각 별도 stage로 둠.
 
 ## verify stage
 
@@ -79,16 +77,15 @@ verify stage는 마지막 stage 함수로 반드시 둔다.
 
 **사람 판정** — 해석이 필요한 항목은 자동으로 통과시키지 않음.
 
-- 판정할 항목과 근거를 표준출력에 보고함
-- `input()`으로 대기하지 않음
-- 사람이 출력을 읽고 판정한 결과는 상수(`EXPERIMENTAL` 등)나 메타데이터에 남김
+- 판정할 항목과 근거를 print (`input()`으로 대기하지 않음)
+- 사람이 출력을 읽고 판정한 결과는 메타데이터에 남김
 
 ## 재사용과 재현성
 
 스크립트는 완전히 재현 가능해야 한다.
 
 - `pipeline/process/*.py`끼리 import·코드 공유 금지
-- 의존성은 lock과 commit-pin으로 고정
+- 의존성은 lock으로 고정
 - 공용 로직이 필요하면 `ardkr` 패키지로 올려 commit-pin으로 활용
 
 ## 참고 구현
