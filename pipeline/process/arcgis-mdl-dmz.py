@@ -11,53 +11,25 @@
 # image = "2026.07.21"
 # ///
 
-"""# 군사분계선/비무장지대
-
-한반도 군사분계선(MDL)과 비무장지대(DMZ) 경계 벡터다.
+"""
+한반도 군사분계선(MDL)과 비무장지대(DMZ) 경계 데이터셋이다.
 한국에스리 ArcGIS Living Atlas hosted FeatureServer에서 받아 GeoParquet으로 저장했다.
 
-## 계보와 라이선스
-
-원본은 한국환경연구원(KEI) 국토환경성평가지도 자료제공서비스의 shapefile 두 종이다.
-
-- [군사분계선](https://data.neins.go.kr/detail/dts-eh03eVuTQu)
-- [비무장지대](https://data.neins.go.kr/detail/dts-FeJLArLgg1)
-
-한국에스리가 두 종을 한 레이어로 병합해 FeatureServer로 올렸다.
-우리는 그 서비스에서 받았다.
-원본 데이터 기준일은 2025년 5월 1일이다.
-
-형상의 근거는 [정전협정](https://www.archives.gov/milestone-documents/armistice-agreement-restoration-south-korean-state)이다.
-제1조는 군사분계선과 DMZ 경계를 첨부 지도첩으로 정의한다.
-[KEI 보고서](https://repository.kei.re.kr/handle/2017.oak/22531)는 그 지도첩을 근거로 DMZ 공간역을 정의했다고 밝힌다.
-우리가 받은 파일이 그 작업의 산출물과 같은지는 원본이 밝히지 않는다.
-
-원본 item의 이용 조건은 "All rights reserved by Ministry of Environment"다.
-같은 데이터의 한국에스리 포털 item은 권리자를 "Ministry of Climate, Energy and Environment"로 적는다.
-부처 영문 명칭이 달라 어느 쪽이 최신인지는 확인하지 못했다.
-
-SPDX 목록에 없는 조건이라 `license`는 `other`로 둔다.
-원본 배포처의 [저작권 정책](https://data.neins.go.kr/copyright)은 공공누리 표시가 붙은 자료만 자유 이용을 허용한다.
-우리가 받은 두 데이터셋에 공공누리 표시가 있는지는 확인하지 못했다.
-재배포 허용 여부가 미확인이라 `experimental`을 `true`로 유지한다.
-데이터 저장소에 사본을 올리지 않는다.
-
-## 시간과 좌표계
-
-시작은 정전협정 발효 시각(1953-07-27 22:00 KST, UTC 13:00)이다.
-끝은 원본 데이터 기준일 2025년 5월 1일이다.
-스크립트 실행 시각은 item `created`에 적는다.
+## 처리
 
 원본 서비스 좌표계는 EPSG:5186이다.
 `outSR=4326`으로 요청해 서버가 변환한 결과를 EPSG:4326으로 저장한다.
-원본 item 설명은 EPSG:5181이다. 서비스 응답은 EPSG:5186이다. 서비스 응답을 믿는다.
 
-## 한계
+## 주의사항
 
+- 원본 item 설명은 EPSG:5181을 적지만 서비스 응답은 EPSG:5186이다. 서비스 응답을 따름
+- 시간 범위의 시작은 정전협정 발효 시각, 끝은 원본 데이터 기준일로 해석함
 - 원본이 속성 컬럼 의미를 설명하지 않음. 컬럼은 이름·타입만 `table:columns`에 남김
 - 두 레이어의 관계(군사분계선이 DMZ 중심선인지 등)를 원본이 명시하지 않음
 - 한국에스리가 병합 외 가공을 했는지는 밝혀져 있지 않음
+- KEI 보고서가 정의한 DMZ 공간역과 이 데이터가 같은 산출물인지는 원본이 밝히지 않음
 - 원본 데이터셋 상세 페이지는 자바스크립트로 그려져 공공누리 유형을 문서로 확인하지 못함
+- 재배포 허용 여부가 미확인임
 """
 
 from __future__ import annotations
@@ -85,6 +57,14 @@ SOURCE_SERVICE_URL = "https://portal.esrikr.com/arcgis/rest/services/Hosted/KR_M
 SOURCE_ITEM_URL = (
     "https://www.arcgis.com/home/item.html?id=38abc1ea73d94ab18e55f7b0ee13c812"
 )
+KEI_MDL_URL = "https://data.neins.go.kr/detail/dts-eh03eVuTQu"
+KEI_DMZ_URL = "https://data.neins.go.kr/detail/dts-FeJLArLgg1"
+ARMISTICE_URL = (
+    "https://www.archives.gov/milestone-documents/"
+    "armistice-agreement-restoration-south-korean-state"
+)
+KEI_REPORT_URL = "https://repository.kei.re.kr/handle/2017.oak/22531"
+COPYRIGHT_POLICY_URL = "https://data.neins.go.kr/copyright"
 ASSET_EPSG = 4326
 ARMISTICE_EFFECTIVE_AT = datetime(1953, 7, 27, 13, 0, tzinfo=UTC)
 SOURCE_REFERENCE_AT = datetime(2025, 5, 1, tzinfo=UTC)
@@ -140,13 +120,67 @@ c = ps.Collection(
 )
 c.ext.add("version")
 c.ext.version.apply(version=VERSION, experimental=EXPERIMENTAL)
-c.add_link(ps.Link(rel="via", target=SOURCE_SERVICE_URL, title="FeatureServer"))
-c.add_link(ps.Link(rel="via", target=SOURCE_ITEM_URL, title="ArcGIS item"))
-c.add_link(ps.Link(rel="license", target=SOURCE_ITEM_URL, title="원본 item 이용 조건"))
+c.add_link(
+    ps.Link(
+        rel="via",
+        target=SOURCE_SERVICE_URL,
+        media_type=ps.MediaType.HTML,
+        title="FeatureServer",
+    )
+)
+c.add_link(
+    ps.Link(
+        rel="via",
+        target=SOURCE_ITEM_URL,
+        media_type=ps.MediaType.HTML,
+        title="ArcGIS item",
+    )
+)
+c.add_link(
+    ps.Link(
+        rel="via",
+        target=KEI_MDL_URL,
+        media_type=ps.MediaType.HTML,
+        title="군사분계선 원본",
+    )
+)
+c.add_link(
+    ps.Link(
+        rel="via",
+        target=KEI_DMZ_URL,
+        media_type=ps.MediaType.HTML,
+        title="비무장지대 원본",
+    )
+)
+c.add_link(
+    ps.Link(
+        rel="related",
+        target=ARMISTICE_URL,
+        media_type=ps.MediaType.HTML,
+        title="정전협정",
+    )
+)
+c.add_link(
+    ps.Link(
+        rel="describedby",
+        target=KEI_REPORT_URL,
+        media_type=ps.MediaType.HTML,
+        title="KEI DMZ 공간역 보고서",
+    )
+)
 c.add_link(
     ps.Link(
         rel="license",
-        target="https://data.neins.go.kr/copyright",
+        target=SOURCE_ITEM_URL,
+        media_type=ps.MediaType.HTML,
+        title="원본 item 이용 조건",
+    )
+)
+c.add_link(
+    ps.Link(
+        rel="license",
+        target=COPYRIGHT_POLICY_URL,
+        media_type=ps.MediaType.HTML,
         title="원본 배포처 저작권 정책",
     )
 )

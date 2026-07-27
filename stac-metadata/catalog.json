@@ -14,7 +14,7 @@
       "rel": "child",
       "href": "./arcgis-mdl-dmz/version=3.0.1/collection.json",
       "type": "application/json",
-      "title": "ArcGIS 군사분계선/비무장지대"
+      "title": "군사분계선/비무장지대"
     }
   ],
   "title": "ardkr 공간데이터 카탈로그"
