@@ -1,6 +1,6 @@
 ---
 name: write-python
-description: 파이썬 코드를 새로 쓰거나 고칠 때 발동. 최소한의 코드로 짜고 한글로 문서화한다.
+description: 파이썬 코드를 새로 쓰거나 고칠 때 발동. 최소한의 코드로 짠다.
 ---
 
 # write-python
@@ -25,7 +25,5 @@ description: 파이썬 코드를 새로 쓰거나 고칠 때 발동. 최소한�
 ## 문서화
 
 - 공개 API 또는 동작·제약이 명확하지 않은 코드에는 Google 스타일 docstring 사용
-- `Args:`, `Returns:`, `Raises:` 같은 표준 섹션명은 영어로, 설명은 한국어로 작성
 - 주석은 이유·제약·주의사항을 설명하고 코드 동작을 반복하지 않음
 - 상태 변경 등 부수 효과는 docstring 본문에 설명하고 비표준 `Sets:` 섹션은 사용하지 않음
-- 주석·docstring의 문체는 `../write-korean/SKILL.md`를 따름
