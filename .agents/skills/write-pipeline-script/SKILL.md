@@ -24,7 +24,8 @@ description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새
 
 - **stage 함수** — `main` 함수 내부에서 호출하는 함수 (인자 비허용)
 - **util 함수** — stage 함수가 쓰는 헬퍼 함수 (함수 이름에 `_` prefix 적용, 인자 허용)
-- **verify stage** — 마지막 stage 함수. 데이터 검증 목적으로 사용.
+- **verify stage** — 기계적 데이터 검증 stage. 실패 시 예외로 멈춤
+- **report stage** — 사람 판정 보고 stage. 해석이 필요할 때 둠
 
 ## 파일과 식별자
 
@@ -42,12 +43,12 @@ description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새
 4. 환경변수 로딩·상수 정의
 5. collection 객체 정의
 6. `main`
-7. stage 함수 (마지막은 verify stage)
+7. stage 함수 (끝은 검증 구간: verify, 있으면 report)
 8. util 함수
 9. `if __name__ == "__main__":` 실행 코드
 
-4~9 각 블록 앞에 구분선 주석을 둔다.
-이름은 `상수`·`collection`·`main`·`stage`·`util`·`실행`이다.
+5~9 각 블록 앞에 구분선 주석을 둔다.
+이름은 `collection`·`main`·`stage`·`util`·`실행`이다.
 예: `# 실행 ------------------------------------------------------------------------`
 
 상수는 주석으로 두 묶음으로 나눈다.
@@ -58,27 +59,30 @@ description: 파이프라인 처리 스크립트(`pipeline/process/*.py`)를 새
 ## main과 stage 함수
 
 - `main` 본문에는 stage 함수 호출만 둠. (조건문, 반복문 금지)
-- stage 함수는 이름만으로 무슨 일을 하는지 알 수 있어야 함. 동사구로 명명 (예: `define_item_assets`, `register_collection`, `verify_registration`)
+- stage 함수는 이름만으로 무슨 일을 하는지 알 수 있어야 함. 동사구로 명명 (예: `define_item_assets`, `register_collection`, `verify_registration`, `report_for_human_review`)
 - stage 함수는 인자를 받지 않음. 입력은 상수와 모듈 전역 collection에서 읽음
 - 인자가 필요한 로직은 util 함수로 내림
 - stage 간 상태는 collection 객체로만 넘김. stage끼리 주고받을 임시 전역 변수를 만들지 않음
 - STAC 등록과 원격 업로드는 각각 별도 stage로 둠.
 
-## verify stage
+## 검증 구간
 
-verify stage는 마지막 stage 함수로 반드시 둔다.
+pipeline 끝에 검증 구간을 둔다.
+순서는 **verify → (있으면) report**다.
+report가 있으면 그게 마지막 stage다.
 
-**기계적 판정** — 실패하면 예외로 멈춤. 경고만 찍고 넘어가거나 부분 성공으로 등록하지 않음.
+**기계적 판정 (verify)** — 실패하면 예외로 멈춤. 경고만 찍고 넘어가거나 부분 성공으로 등록하지 않음.
 
 - 저장된 파일을 다시 읽어 검증함. 메모리 객체는 link href가 비어 스키마 검증을 통과하지 못함
 - STAC 스키마 검증 (`pystac[validation]`의 `validate()`)
 - asset 실제 판독. 파일을 다시 열어 checksum·size가 STAC에 적은 값과 같은지 확인
 - 데이터 불변식. 행 수, 좌표계, 범위가 STAC에 적은 값과 어긋나지 않는지 확인
 
-**사람 판정** — 해석이 필요한 항목은 자동으로 통과시키지 않음.
+**사람 판정 (report)** — 해석이 필요한 항목은 자동으로 통과시키지 않음.
 
 - 판정할 항목과 근거를 print (`input()`으로 대기하지 않음)
 - 사람이 출력을 읽고 판정한 결과는 메타데이터에 남김
+- 해석 이슈가 있을 때 stage로 둠. util로 숨기지 않음
 
 ## 재사용과 재현성
 

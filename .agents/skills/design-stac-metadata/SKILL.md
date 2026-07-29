@@ -7,7 +7,7 @@ description: 파이프라인 스크립트에서 STAC collection·item 메타데�
 
 파이프라인 스크립트가 기록할 STAC 메타데이터 **내용**을 설계할 때 따르는 규약.
 
-`stac-metadata/` JSON은 파이프라인 스크립트가 생성한다.
+`stac-metadata/` JSON은 파이프라인 스크립트가 생성하는 빌드 산출물이다.
 손으로 직접 고치지 않는다.
 예외는 version extension으로 deprecated 전환하는 경우뿐이다.
 설계한 내용은 파이프라인 스크립트에 반영한다.
