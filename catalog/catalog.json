@@ -1,0 +1,15 @@
+{
+  "type": "Catalog",
+  "id": "ardkr",
+  "stac_version": "1.1.0",
+  "title": "ardkr Catalog",
+  "description": "Analysis-ready Korean Spatial Data Catalog",
+  "links": [
+    {
+      "rel": "root",
+      "href": "./catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    }
+  ]
+}
