@@ -3,8 +3,7 @@
 #   "geopandas==1.1.2",
 #   "pyarrow==25.0.0",
 #   "pystac[validation]==1.15.1",
-#   "python-dotenv==1.1.0",
-#   "ardkr[pipeline] @ git+file:///workspace#subdirectory=ardkr",
+#   "ardkr[pipeline] @ git+https://github.com/ncc-airhealth/ardkr.git@main#subdirectory=ardkr",
 # ]
 #
 # [tool.ardkr]
@@ -13,12 +12,6 @@
 
 """
 한반도 군사분계선(MDL)과 비무장지대(DMZ) 경계 데이터셋.
-한국에스리 ArcGIS Living Atlas hosted FeatureServer에서 받아 GeoParquet으로 저장했다.
-
-## 처리
-
-원본 서비스 좌표계는 EPSG:5186이다.
-`outSR=4326`으로 요청해 서버가 변환한 결과를 EPSG:4326으로 저장한다.
 
 ## 주의사항
 
@@ -34,9 +27,6 @@ from __future__ import annotations
 import geopandas as gpd
 import pystac
 from ardkr.pipeline import CollectionBuilder
-from dotenv import load_dotenv
-
-load_dotenv()
 
 EPSG = 4326
 SOURCE_URL = (
@@ -44,7 +34,6 @@ SOURCE_URL = (
     "KR_MDL_DMZ/FeatureServer/{layer_id}/"
     "query?where=1%3D1&outFields=*&returnGeometry=true&f=geojson&outSR={epsg}"
 )
-
 
 # fmt: off
 COLLECTION_STAC_CONTENT = {
@@ -54,7 +43,6 @@ COLLECTION_STAC_CONTENT = {
     "stac_version": "1.1.0",
     "stac_extensions": [
         "https://stac-extensions.github.io/proj/v2.0.0/schema.json",
-        "https://stac-extensions.github.io/version/v1.2.0/schema.json",
     ],
 
     # version
@@ -138,6 +126,11 @@ COLLECTION_STAC_CONTENT = {
 
 class PipelineCollection(CollectionBuilder):
     collection = pystac.Collection.from_dict(COLLECTION_STAC_CONTENT)
+    checklist = {
+        "데이터를 QGIS로 로드하여 베이스맵과의 위치 일관성을 확인": True,
+        "providers 필드의 name·roles가 실제 제공 주체와 맞는지 검증": True,
+        "기간의 끝을 원본 기준일로 두는 해석이 맞는가": False,
+    }
 
     def process(self):
         mdl = self._add_mdl_asset()
@@ -148,33 +141,20 @@ class PipelineCollection(CollectionBuilder):
         self._verify_mdl_file()
         self._verify_dmz_file()
 
-    manual_checklist = {
-        "데이터를 QGIS로 로드하여 베이스맵과의 위치 일관성을 확인": True,
-        "providers 필드의 name·roles가 실제 제공 주체와 맞는지 검증": True,
-        "기간의 끝을 원본 기준일로 두는 해석이 맞는가": False,
-    }
-
-    def _update_collection_spatial_extent(
-        self, mdl: gpd.GeoDataFrame, dmz: gpd.GeoDataFrame
-    ) -> None:
-        minx = min(mdl.total_bounds[0], dmz.total_bounds[0])
-        miny = min(mdl.total_bounds[1], dmz.total_bounds[1])
-        maxx = max(mdl.total_bounds[2], dmz.total_bounds[2])
-        maxy = max(mdl.total_bounds[3], dmz.total_bounds[3])
-        self.collection.extent.spatial.bboxes = [[minx, miny, maxx, maxy]]
-
     def _add_mdl_asset(self):
-        asset = pystac.Asset(
-            href=self.collection.kr.asset_href("mdl.parquet"),
+        asset = self.collection.pipe.define_asset(
+            key="mdl",
+            bucket="ardkr-data",
+            filename="mdl.parquet",
             title="Military Demarcation Line (MDL)",
             roles=["data"],
             media_type="application/vnd.apache.parquet",
         )
-        self.collection.add_asset(key="mdl", asset=asset)
 
         url = SOURCE_URL.format(layer_id=0, epsg=EPSG)
         gdf = gpd.read_file(url, driver="GeoJSON")
-        gdf.to_parquet(asset.kr.path, compression="zstd")
+        gdf.to_parquet(asset.pipe.path, compression="zstd")
+        asset.pipe.apply_digest()
 
         asset.ext.add("table")
         asset.ext.table.columns = [
@@ -189,17 +169,18 @@ class PipelineCollection(CollectionBuilder):
         return gdf
 
     def _add_dmz_asset(self):
-        asset = pystac.Asset(
-            href=self.collection.kr.asset_href("dmz.parquet"),
+        asset = self.collection.pipe.define_asset(
+            key="dmz",
+            bucket="ardkr-data",
+            filename="dmz.parquet",
             title="Demilitarized Zone (DMZ)",
             roles=["data"],
             media_type="application/vnd.apache.parquet",
         )
-        self.collection.add_asset(key="dmz", asset=asset)
-
         url = SOURCE_URL.format(layer_id=1, epsg=EPSG)
         gdf = gpd.read_file(url, driver="GeoJSON")
-        gdf.to_parquet(asset.kr.path, compression="zstd")
+        gdf.to_parquet(asset.pipe.path, compression="zstd")
+        asset.pipe.apply_digest()
 
         asset.ext.add("table")
         asset.ext.table.columns = [
@@ -212,9 +193,18 @@ class PipelineCollection(CollectionBuilder):
         asset.ext.add("proj")
         asset.ext.proj.epsg = EPSG
         return gdf
+    
+    def _update_collection_spatial_extent(
+        self, mdl: gpd.GeoDataFrame, dmz: gpd.GeoDataFrame
+    ):
+        minx = min(mdl.total_bounds[0], dmz.total_bounds[0])
+        miny = min(mdl.total_bounds[1], dmz.total_bounds[1])
+        maxx = max(mdl.total_bounds[2], dmz.total_bounds[2])
+        maxy = max(mdl.total_bounds[3], dmz.total_bounds[3])
+        self.collection.extent.spatial.bboxes = [[minx, miny, maxx, maxy]]
 
     def _verify_mdl_file(self):
-        gdf = gpd.read_parquet(self.collection.assets["mdl"].kr.path)
+        gdf = gpd.read_parquet(self.collection.assets["mdl"].pipe.path)
         assert gdf.crs.to_epsg() == EPSG, f"좌표계가 원본과 다릅니다: {gdf.crs}"
         assert len(gdf) > 0, "데이터가 비었습니다."
 

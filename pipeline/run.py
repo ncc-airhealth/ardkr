@@ -190,6 +190,12 @@ def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[
         "-v", f"{root}:{CONTAINER_WORKSPACE}",
         "-w", CONTAINER_WORKSPACE,
         "-v", f"{cache.root}:{CONTAINER_CACHE_ROOT}",
+    ]
+    # 레포 루트 .env → 컨테이너 환경변수. 캐시 경로 -e 가 뒤에 와서 덮어쓴다.
+    env_file = root / ".env"
+    if env_file.is_file():
+        argv.extend(["--env-file", str(env_file)])
+    argv.extend([
         "-e", f"UV_CACHE_DIR={CONTAINER_CACHE_ROOT}/uv",
         "-e", f"ARDKR_CACHE_ROOT={CONTAINER_CACHE_ROOT}",
         "-e", f"ARDKR_S3_CACHE_DIR={CONTAINER_CACHE_ROOT}/s3",
@@ -197,7 +203,7 @@ def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[
         "-e", f"ARDKR_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{cache.collection_id}",
         image_ref,
         *inner_argv,
-    ]
+    ])
     return subprocess.run(argv).returncode
 
 
