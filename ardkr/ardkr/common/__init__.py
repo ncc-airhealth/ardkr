@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class S3Credentials:
-    """Credentials for one S3-compatible storage scope."""
+    """Credentials for one S3-compatible logical store."""
 
     bucket_name: str
     endpoint_url: str
@@ -17,18 +17,18 @@ class S3Credentials:
 
 
 class Secrets:
-    """S3 credentials for the data and open buckets, read from the environment."""
+    """Private and open store credentials from the environment."""
 
     def __init__(self) -> None:
-        self.s3 = S3Credentials(
-            bucket_name=os.environ["ARDKR_S3_BUCKET_NAME"],
-            endpoint_url=os.environ["ARDKR_S3_ENDPOINT_URL"],
-            access_key_id=os.environ["ARDKR_S3_ACCESS_KEY_ID"],
-            secret_access_key=os.environ["ARDKR_S3_SECRET_ACCESS_KEY"],
+        self.private = S3Credentials(
+            bucket_name=os.environ["ARDKR_PRIVATE_BUCKET_NAME"],
+            endpoint_url=os.environ["ARDKR_PRIVATE_ENDPOINT_URL"],
+            access_key_id=os.environ["ARDKR_PRIVATE_ACCESS_KEY_ID"],
+            secret_access_key=os.environ["ARDKR_PRIVATE_SECRET_ACCESS_KEY"],
         )
         self.open = S3Credentials(
-            bucket_name=os.environ["ARDKR_OPEN_S3_BUCKET_NAME"],
-            endpoint_url=os.environ["ARDKR_OPEN_S3_ENDPOINT_URL"],
-            access_key_id=os.environ["ARDKR_OPEN_S3_ACCESS_KEY_ID"],
-            secret_access_key=os.environ["ARDKR_OPEN_S3_SECRET_ACCESS_KEY"],
+            bucket_name=os.environ["ARDKR_OPEN_BUCKET_NAME"],
+            endpoint_url=os.environ["ARDKR_OPEN_ENDPOINT_URL"],
+            access_key_id=os.environ["ARDKR_OPEN_ACCESS_KEY_ID"],
+            secret_access_key=os.environ["ARDKR_OPEN_SECRET_ACCESS_KEY"],
         )

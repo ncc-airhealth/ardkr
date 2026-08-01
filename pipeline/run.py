@@ -26,6 +26,7 @@ CANONICAL_PLATFORM = "linux/arm64"
 # 컨테이너 안 경로 상수.
 CONTAINER_WORKSPACE = "/workspace"
 CONTAINER_CACHE_ROOT = "/cache"
+CONTAINER_CATALOG_ROOT = f"{CONTAINER_WORKSPACE}/catalog"
 
 
 class LockAction(Enum):
@@ -201,6 +202,7 @@ def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[
         "-e", f"ARDKR_S3_CACHE_DIR={CONTAINER_CACHE_ROOT}/s3",
         "-e", f"ARDKR_DUCKDB_CACHE_DIR={CONTAINER_CACHE_ROOT}/duckdb",
         "-e", f"ARDKR_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{cache.collection_id}",
+        "-e", f"ARDKR_CATALOG_ROOT={CONTAINER_CATALOG_ROOT}",
         image_ref,
         *inner_argv,
     ])

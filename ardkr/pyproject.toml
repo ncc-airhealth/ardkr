@@ -8,21 +8,20 @@ version = "0.0.0"
 description = "Spatial-data pipeline and STAC catalog utilities (agent-native)"
 # Root README.md is the package readme; ardkr is one component of the monorepo.
 requires-python = ">=3.12"
-# Keep the core dependency-free. Features come only via extras below.
+# STAC support is part of the core package. Integrations come via extras below.
 # (The process-script runner lives in pipeline/, not this package → pipeline/run.py)
-dependencies = []
+dependencies = ["pystac>=1.10"]
 
 [project.optional-dependencies]
 # Strict extras: installing [pipeline] must not pull dashboard/modeling deps.
 # Each list starts with anchor deps only; extend as features land (TODO).
-catalog = ["pystac>=1.10"]
+catalog = []
 storage = ["boto3>=1.34"]
-pipeline = ["pystac>=1.10", "boto3>=1.34"]
-dashboard = ["marimo>=0.9", "pystac>=1.10"]
+pipeline = ["boto3>=1.34"]
+dashboard = ["marimo>=0.9"]
 modeling = ["numpy>=2.0", "pandas>=2.2"]
 # Convenience meta-extra: everything.
 all = [
-  "pystac>=1.10",
   "boto3>=1.34",
   "marimo>=0.9",
   "numpy>=2.0",

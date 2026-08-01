@@ -1,12 +1,12 @@
 """ardkr — spatial-data pipeline and STAC catalog package.
 
-The core stays dependency-free. Heavier features load via optional extras and
-are imported lazily from here.
+The core includes STAC support through pystac. Heavier integrations load via
+optional extras and are imported lazily from here.
 
 - ardkr.common    : (core) Secrets and shared helpers
 - ardkr.storage   : [storage]  S3 connection (get_client)
 - ardkr.pipeline  : [pipeline] collection lifecycle framework
-- ardkr.catalog   : [catalog]  STAC catalog load/search
+- ardkr.catalog   : (core) STAC catalog load/search
 - ardkr.dashboard : [dashboard] marimo STAC dashboard
 - ardkr.modeling  : [modeling] team geovariable / modeling
 """
@@ -15,9 +15,9 @@ from __future__ import annotations
 
 __version__ = "0.0.0"
 
-# Lazy import gate: importing ``ardkr.catalog`` (etc.) loads the submodule then;
-# if the extra is missing, the error names which extra to install.
+# Lazy import gate keeps optional modules out of a plain ``import ardkr``.
 _FEATURE_MODULES = ("pipeline", "storage", "catalog", "dashboard", "modeling")
+_CORE_MODULES = {"catalog"}
 
 
 def __getattr__(name: str):
@@ -26,7 +26,9 @@ def __getattr__(name: str):
 
         try:
             return importlib.import_module(f"{__name__}.{name}")
-        except ImportError as exc:  # missing optional extra
+        except ImportError as exc:
+            if name in _CORE_MODULES:
+                raise
             raise ImportError(
                 f'ardkr.{name} requires its extra: pip install "ardkr[{name}]"'
             ) from exc
