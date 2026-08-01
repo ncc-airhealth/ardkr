@@ -1,8 +1,8 @@
-"""ardkr.modeling — 팀 변수생성·모델링 프로세스.
+"""ardkr.modeling — team geovariable and modeling workflows.
 
 extra: [modeling]  (pip install "ardkr[modeling]")
 
-카탈로그의 collection 들을 입력으로 팀 내 변수를 생성하고 모델링하는 절차.
+Build team variables and models from catalog collections.
 """
 
 from __future__ import annotations
@@ -12,7 +12,8 @@ try:
     import pandas  # noqa: F401
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        'ardkr.modeling 은 numpy·pandas 가 필요합니다: pip install "ardkr[modeling]"'
+        'ardkr.modeling requires numpy and pandas: '
+        'pip install "ardkr[modeling]"'
     ) from exc
 
-# TODO: 변수생성·모델링 파이프라인 구현.
+# TODO: geovariable / modeling pipeline.

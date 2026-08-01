@@ -441,7 +441,7 @@ Scope는 **Item**이다.
 
 - [/stac/concepts.md](/stac/concepts.md)
 - [AGENTS.md](../../AGENTS.md) — 구조화 가능하면 extension 우선
-- [pipeline-publish-verify](../../.agents/skills/pipeline-publish-verify/SKILL.md) — 이 저장소의 버전·deprecated 운영, `file:checksum` 등 재현 층
+- [write-pipeline-script](../../.agents/skills/write-pipeline-script/SKILL.md) — 발행·버전·검증 계약
 
 # Citations
 

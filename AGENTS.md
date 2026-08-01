@@ -6,7 +6,7 @@
 ## 3원칙
 
 - **agent-native**: 작업은 대화로, 지식은 레포 안에. 인간의 암묵지가 밖에 남지 않는다 (보안 정보는 예외).
-- **catalog-in-repo**: 공간데이터 메타데이터는 STAC 1.1.0 JSON으로 `stac-metadata/`에 커밋한다.
+- **open-static-stac**: 공간데이터 메타데이터는 STAC 1.1.0으로, open 버킷에 static self-contained 카탈로그로 발행한다.
 - **reproducibility**: 데이터 처리 과정은 완전히 재현 가능해야 한다. 환경·의존성도 이 레포에서 관리한다.
 
 ## 절대규칙

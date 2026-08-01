@@ -1,8 +1,8 @@
-"""ardkr.dashboard — marimo 기반 STAC 카탈로그 대시보드.
+"""ardkr.dashboard — marimo STAC catalog dashboard.
 
 extra: [dashboard]  (pip install "ardkr[dashboard]")
 
-stac-metadata/ 카탈로그를 탐색·시각화하는 marimo 반응형 노트북/앱.
+Reactive marimo notebook/app for exploring the open-bucket static STAC catalog.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ try:
     import marimo  # noqa: F401
 except ImportError as exc:  # pragma: no cover
     raise ImportError(
-        'ardkr.dashboard 는 marimo 가 필요합니다: pip install "ardkr[dashboard]"'
+        'ardkr.dashboard requires marimo: pip install "ardkr[dashboard]"'
     ) from exc
 
-# TODO: marimo 앱 진입점(app()) 구현.
+# TODO: marimo app entrypoint (app()).

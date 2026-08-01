@@ -24,6 +24,8 @@ description: 파이썬 코드를 새로 쓰거나 고칠 때 발동. 최소한�
 
 ## 문서화
 
+- `ardkr/` 패키지(파이썬 모듈)의 주석·docstring·예외 메시지는 **영어**
 - 공개 API 또는 동작·제약이 명확하지 않은 코드에는 Google 스타일 docstring 사용
 - 주석은 이유·제약·주의사항을 설명하고 코드 동작을 반복하지 않음
 - 상태 변경 등 부수 효과는 docstring 본문에 설명하고 비표준 `Sets:` 섹션은 사용하지 않음
+- 레포 한국어 문서·`pipeline/process` 스크립트 산문(`__doc__` 등)은 `../write-korean/SKILL.md`

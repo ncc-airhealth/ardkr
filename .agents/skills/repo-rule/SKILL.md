@@ -16,12 +16,11 @@ description: AGENTS.md가 지정한 절대규칙 진입점. 세션의 첫 사용
     - `git add`·`git commit`·`git mv` 등 스테이징·커밋 실행
     - 현재 작업 공간(워크트리) 외부의 파일 변경 또는 명령어 실행
 
-2. **에이전트의 메타데이터 변경 제약** 
+2. **에이전트의 메타데이터 변경 제약**
 
     다음은 사용자의 명시적 승인 없이 실행·변경하지 않는다.
-    - 라이선스 미확인 상태의 STAC metadata 저장
-    - STAC metadata의 `EXPERIMENTAL = False` 전환
-    - STAC metadata의 `PUBLISH_MODE = "remote"` 전환
+    - 라이선스 미확인 상태로 `experimental = False` 전환
+    - STAC metadata의 `experimental = False` 전환
 
 3. **에이전트의 데이터 수정 제약** 
 

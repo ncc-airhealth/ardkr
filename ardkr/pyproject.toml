@@ -5,36 +5,35 @@ build-backend = "hatchling.build"
 [project]
 name = "ardkr"
 version = "0.0.0"
-description = "연구팀 공간데이터 파이프라인·STAC 카탈로그 유틸 (agent-native)"
-# readme: 저장소 루트 README.md 참조. ardkr는 모노레포의 한 컴포넌트라 여기선 생략.
+description = "Spatial-data pipeline and STAC catalog utilities (agent-native)"
+# Root README.md is the package readme; ardkr is one component of the monorepo.
 requires-python = ">=3.12"
-# 코어는 의존성 없이 얇게 유지한다. 기능은 아래 extras로만 딸려온다.
-# (처리 스크립트 실행기는 이 패키지가 아니라 pipeline/ 워크스페이스가 소유 → pipeline/run.py)
+# Keep the core dependency-free. Features come only via extras below.
+# (The process-script runner lives in pipeline/, not this package → pipeline/run.py)
 dependencies = []
 
 [project.optional-dependencies]
-# optional extras 엄격 분리 — 스크립트가 [pipeline]만 끌 때 대시보드·모델링 deps가 안 딸려오게.
-# 각 목록은 앵커 의존성만 둔 초기값. 기능 구현하며 확장(TODO).
+# Strict extras: installing [pipeline] must not pull dashboard/modeling deps.
+# Each list starts with anchor deps only; extend as features land (TODO).
 catalog = ["pystac>=1.10"]
-storage = ["pystac>=1.10", "boto3>=1.34"]
-pipeline = ["pystac>=1.10", "cloudpathlib[s3]>=0.20"]
+storage = ["boto3>=1.34"]
+pipeline = ["pystac>=1.10", "boto3>=1.34"]
 dashboard = ["marimo>=0.9", "pystac>=1.10"]
 modeling = ["numpy>=2.0", "pandas>=2.2"]
-# 편의 메타-extra: 전부.
+# Convenience meta-extra: everything.
 all = [
   "pystac>=1.10",
   "boto3>=1.34",
   "marimo>=0.9",
   "numpy>=2.0",
   "pandas>=2.2",
-  "cloudpathlib[s3]>=0.20",
 ]
-# 패키지 자체 개발용(uv). 처리 스크립트 실행 환경(Docker+pixi)과는 무관.
+# Package-local dev tools (uv). Unrelated to the Docker+pixi process runtime.
 dev = ["pytest>=8", "ruff>=0.6"]
 
-# TODO: 안정화 후 git 태그로 전환하기 전까지 처리 스크립트는 ardkr를 git commit으로 pin한다.
-#   예) dependencies = ["ardkr[pipeline] @ git+<repo-url>@<commit>"]
-# [project.urls] 의 repo-url 은 원격 저장소 확정 시 채운다.
+# TODO: until tagged releases, process scripts pin ardkr by git commit.
+#   e.g. dependencies = ["ardkr[pipeline] @ git+<repo-url>@<commit>"]
+# Fill [project.urls] when the remote is fixed.
 
 [tool.hatch.build.targets.wheel]
 packages = ["ardkr"]

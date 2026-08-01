@@ -19,7 +19,7 @@
 | 원칙 | 의미 |
 |---|---|
 | **agent-native** | 작업은 에이전트 하네스(Claude Code, Codex 등)와의 대화로 수행함. 지식은 이 레포 안에 둠 |
-| **catalog-in-repo** | 공간데이터 메타데이터를 STAC 1.1.0으로 관리함. static STAC(JSON)을 git으로 버전 관리함 |
+| **open-static-stac** | 공간데이터 메타데이터를 STAC 1.1.0으로 관리함. open 버킷에 static self-contained로 발행함 |
 | **reproducibility** | 데이터 처리가 완전히 재현 가능함. 같은 입력이면 같은 출력이 나옴 |
 
 Analysis-ready data란 품질을 스스로 판정할 수 있게 만든 데이터다.
@@ -39,26 +39,25 @@ ardkr/          # Python 패키지 (STAC 대시보드·파이프라인 유틸·�
 pipeline/
   images/         # 시스템 환경 정의 (pixi + Dockerfile), 날짜 버전별
   process/        # 처리 스크립트 (collection id별 flat 파일)
-stac-metadata/    # STAC 카탈로그 JSON (데이터 사실의 SSOT)
 .agents/skills/   # 작업 절차와 그 근거 (<name>/SKILL.md)
 knowledge/        # OKF 기반 지식 (문의 이력·경험칙·참고자료)
 ```
 
 ## 카탈로그 둘러보기
 
-STAC 카탈로그는 JSON으로 이 레포에 커밋된다.
-표준 STAC 도구로 탐색할 수 있다.
+STAC 카탈로그는 open 버킷에 static self-contained로 발행된다.
+표준 STAC 도구로 탐색할 수 있다. 공개 HTTP URL은 서빙 설정 후 안내한다.
 
-- [STAC Browser로 이 카탈로그 열기](https://browser.moregeo.it/external/raw.githubusercontent.com/ncc-airhealth/ardkr/main/stac-metadata/catalog.json) — 현재 포함된 Collection·Item 메타데이터를 확인할 수 있음
-- [stac-browser](https://github.com/radiantearth/stac-browser)에 카탈로그 raw URL을 직접 넣어도 됨: `https://raw.githubusercontent.com/ncc-airhealth/ardkr/main/stac-metadata/catalog.json`
-- 카탈로그(메타데이터)는 공개됨. collection마다 **최신 버전**이 노출됨. 과거 버전 메타데이터는 이 레포의 버전 경로로 조회함
+- 카탈로그(메타데이터)와 썸네일은 open 버킷에서 공개됨
+- root catalog에는 collection당 **최신 버전**만 child로 노출됨. 과거 버전은 `version={version}/` 경로에 누적됨
+- 데이터 asset은 데이터 버킷(비공개)에 둠. 접근에는 자격증명 또는 향후 sign이 필요함
 
 ## 데이터 접근
 
-- **메타데이터**는 누구나 열람할 수 있음
-- **데이터 자산**(R2) 접근에는 자격증명이 필요함. 담당자에게 요청함. 보안서약 데이터 보호와 스토리지 비용 관리를 위한 접근 제어임
+- **메타데이터·썸네일**은 open 버킷에서 열람할 수 있음
+- **데이터 자산**(데이터 버킷) 접근에는 자격증명이 필요함. 담당자에게 요청함. 보안서약 데이터 보호와 스토리지 비용 관리를 위한 접근 제어임
 
-STAC asset의 `href`에는 R2 객체 key가 그대로 들어 있다.
+STAC asset의 `href`는 `s3://` URI다.
 버킷·엔드포인트 설정만 붙이면 데이터 위치를 스스로 서술한다.
 
 ## Collection 추가하기
@@ -69,7 +68,10 @@ STAC asset의 `href`에는 R2 객체 key가 그대로 들어 있다.
 2. 에이전트가 **검증 절차를 포함한** 처리 스크립트 `pipeline/process/<collection-id>.py`를 작성함
 3. 담당자가 `pipeline/` 실행기(`pipeline/run.py`)로 스크립트를 실행함
 
-처리 스크립트는 ① collection 정의 → ② item/asset 로컬 프로세싱 → ③ 검증 → ④ R2 업로드 → ⑤ STAC 메타데이터 저장 순으로 진행한다.
+처리 스크립트는 `CollectionBuilder` 생명주기
+(`process → verify_auto → verify_manual → publish`)를 따른다.
+발행 시 데이터 asset은 데이터 버킷에, STAC 메타데이터·썸네일은 open 버킷에 올린다.
+`experimental=True`이면 발행은 수행되지 않는다.
 Python 의존성은 PEP 723으로 스크립트마다 독립 선언하고 lock으로 고정한다.
 시스템 의존성(GDAL/GEOS/PROJ)은 스크립트가 지정한 **Docker+pixi 이미지 버전**으로 고정된다.
 실행기(`pipeline/run.py`)가 그 컨테이너 안에서 스크립트를 실행한다.
