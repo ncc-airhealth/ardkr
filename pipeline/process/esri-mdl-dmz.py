@@ -2,7 +2,7 @@
 # dependencies = [
 #   "geopandas==1.1.2",
 #   "pyarrow==25.0.0",
-#   "pystac[validation]==1.15.1",
+#   "pystac[validation]==1.15.2",
 #   "ardkr[pipeline] @ git+https://github.com/ncc-airhealth/ardkr.git@main#subdirectory=ardkr",
 # ]
 #
@@ -29,7 +29,8 @@ from ardkr.pipeline import CollectionBuilder
 
 EPSG = 4326
 SOURCE_URL = (
-    "https://services.arcgis.com/rOo16HdIMeOBI4Mb/arcgis/rest/services/"
+    # "https://services.arcgis.com/rOo16HdIMeOBI4Mb/arcgis/rest/services/"
+     "https://portal.esrikr.com/arcgis/rest/services/Hosted/"
     "KR_MDL_DMZ/FeatureServer/{layer_id}/"
     "query?where=1%3D1&outFields=*&returnGeometry=true&f=geojson&outSR={epsg}"
 )
@@ -134,6 +135,7 @@ class PipelineCollection(CollectionBuilder):
     def process(self):
         mdl = self._add_mdl_asset()
         dmz = self._add_dmz_asset()
+        self._add_thumbnail_asset()
         self._update_collection_spatial_extent(mdl, dmz)
 
     def verify_auto(self):
@@ -143,7 +145,7 @@ class PipelineCollection(CollectionBuilder):
     def _add_mdl_asset(self):
         asset = self.collection.pipe.define_asset(
             key="mdl",
-            bucket="ardkr-data",
+            store="private",
             filename="mdl.parquet",
             title="Military Demarcation Line (MDL)",
             roles=["data"],
@@ -152,7 +154,7 @@ class PipelineCollection(CollectionBuilder):
 
         url = SOURCE_URL.format(layer_id=0, epsg=EPSG)
         gdf = gpd.read_file(url, driver="GeoJSON")
-        gdf.to_parquet(asset.pipe.path, compression="zstd")
+        gdf.to_parquet(asset.pipe.path(), compression="zstd")
         asset.pipe.apply_digest()
 
         asset.ext.add("table")
@@ -170,7 +172,7 @@ class PipelineCollection(CollectionBuilder):
     def _add_dmz_asset(self):
         asset = self.collection.pipe.define_asset(
             key="dmz",
-            bucket="ardkr-data",
+            store="private",
             filename="dmz.parquet",
             title="Demilitarized Zone (DMZ)",
             roles=["data"],
@@ -178,7 +180,7 @@ class PipelineCollection(CollectionBuilder):
         )
         url = SOURCE_URL.format(layer_id=1, epsg=EPSG)
         gdf = gpd.read_file(url, driver="GeoJSON")
-        gdf.to_parquet(asset.pipe.path, compression="zstd")
+        gdf.to_parquet(asset.pipe.path(), compression="zstd")
         asset.pipe.apply_digest()
 
         asset.ext.add("table")
@@ -193,6 +195,19 @@ class PipelineCollection(CollectionBuilder):
         asset.ext.proj.epsg = EPSG
         return gdf
     
+    def _add_thumbnail_asset(self):
+        asset = self.collection.pipe.define_asset(
+            key="thumbnail",
+            store="open",
+            filename="thumbnail.jpeg",
+            title="Thumbnail",
+            roles=["thumbnail"],
+            media_type="image/jpeg",
+        )
+        print(asset.pipe.path())
+        print()
+        assert asset.pipe.path().is_file(), "thumbnail 생성하여 캐시 경로에 두기"
+    
     def _update_collection_spatial_extent(
         self, mdl: gpd.GeoDataFrame, dmz: gpd.GeoDataFrame
     ):
@@ -203,12 +218,12 @@ class PipelineCollection(CollectionBuilder):
         self.collection.extent.spatial.bboxes = [[minx, miny, maxx, maxy]]
 
     def _verify_mdl_file(self):
-        gdf = gpd.read_parquet(self.collection.assets["mdl"].pipe.path)
+        gdf = gpd.read_parquet(self.collection.assets["mdl"].pipe.path())
         assert gdf.crs.to_epsg() == EPSG, f"좌표계가 원본과 다릅니다: {gdf.crs}"
         assert len(gdf) > 0, "데이터가 비었습니다."
 
     def _verify_dmz_file(self):
-        gdf = gpd.read_parquet(self.collection.assets["dmz"].kr.path)
+        gdf = gpd.read_parquet(self.collection.assets["dmz"].pipe.path())
         assert gdf.crs.to_epsg() == EPSG, f"좌표계가 원본과 다릅니다: {gdf.crs}"
         assert len(gdf) > 0, "데이터가 비었습니다."
 
