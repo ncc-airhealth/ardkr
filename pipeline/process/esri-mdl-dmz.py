@@ -29,8 +29,7 @@ from ardkr.pipeline import CollectionBuilder
 
 EPSG = 4326
 SOURCE_URL = (
-    # "https://services.arcgis.com/rOo16HdIMeOBI4Mb/arcgis/rest/services/"
-     "https://portal.esrikr.com/arcgis/rest/services/Hosted/"
+    "https://portal.esrikr.com/arcgis/rest/services/Hosted/"
     "KR_MDL_DMZ/FeatureServer/{layer_id}/"
     "query?where=1%3D1&outFields=*&returnGeometry=true&f=geojson&outSR={epsg}"
 )
@@ -159,8 +158,7 @@ class PipelineCollection(CollectionBuilder):
 
         asset.ext.add("table")
         asset.ext.table.columns = [
-            {"name": name, "type": str(dtype)}
-            for name, dtype in gdf.dtypes.items()
+            {"name": name, "type": str(dtype)} for name, dtype in gdf.dtypes.items()
         ]
         asset.ext.table.row_count = len(gdf)
         asset.ext.table.primary_geometry = gdf.geometry.name
@@ -185,8 +183,7 @@ class PipelineCollection(CollectionBuilder):
 
         asset.ext.add("table")
         asset.ext.table.columns = [
-            {"name": name, "type": str(dtype)}
-            for name, dtype in gdf.dtypes.items()
+            {"name": name, "type": str(dtype)} for name, dtype in gdf.dtypes.items()
         ]
         asset.ext.table.row_count = len(gdf)
         asset.ext.table.primary_geometry = gdf.geometry.name
@@ -194,7 +191,7 @@ class PipelineCollection(CollectionBuilder):
         asset.ext.add("proj")
         asset.ext.proj.epsg = EPSG
         return gdf
-    
+
     def _add_thumbnail_asset(self):
         asset = self.collection.pipe.define_asset(
             key="thumbnail",
