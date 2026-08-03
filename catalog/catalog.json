@@ -2,7 +2,6 @@
   "type": "Catalog",
   "id": "ardkr",
   "stac_version": "1.1.0",
-  "title": "ardkr Catalog",
   "description": "Analysis-ready Korean Spatial Data Catalog",
   "links": [
     {
@@ -10,6 +9,17 @@
       "href": "./catalog.json",
       "type": "application/json",
       "title": "ardkr Catalog"
+    },
+    {
+      "rel": "child",
+      "href": "./esri-mdl-dmz/3.0.1/collection.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "self",
+      "href": "/workspace/catalog/catalog.json",
+      "type": "application/json"
     }
-  ]
+  ],
+  "title": "ardkr Catalog"
 }

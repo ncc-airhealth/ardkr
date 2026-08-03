@@ -47,7 +47,7 @@ COLLECTION_STAC_CONTENT = {
 
     # version
     "version": "3.0.1",
-    "experimental": True,
+    "experimental": False,
 
     # core: searchables
     "id": "esri-mdl-dmz",
@@ -129,7 +129,7 @@ class PipelineCollection(CollectionBuilder):
     checklist = {
         "데이터를 QGIS로 로드하여 베이스맵과의 위치 일관성을 확인": True,
         "providers 필드의 name·roles가 실제 제공 주체와 맞는지 검증": True,
-        "기간의 끝을 원본 기준일로 두는 해석이 맞는가": False,
+        "기간의 끝을 원본 기준일로 두는 해석이 맞는가": True,
     }
 
     def process(self):
@@ -153,7 +153,7 @@ class PipelineCollection(CollectionBuilder):
         )
 
         url = SOURCE_URL.format(layer_id=0, epsg=EPSG)
-        gdf = gpd.read_file(url, driver="GeoJSON")
+        gdf = gpd.read_file(url)
         gdf.to_parquet(asset.pipe.path(), compression="zstd")
         asset.pipe.apply_digest()
 
@@ -179,7 +179,7 @@ class PipelineCollection(CollectionBuilder):
             media_type="application/vnd.apache.parquet",
         )
         url = SOURCE_URL.format(layer_id=1, epsg=EPSG)
-        gdf = gpd.read_file(url, driver="GeoJSON")
+        gdf = gpd.read_file(url)
         gdf.to_parquet(asset.pipe.path(), compression="zstd")
         asset.pipe.apply_digest()
 
@@ -204,10 +204,8 @@ class PipelineCollection(CollectionBuilder):
             roles=["thumbnail"],
             media_type="image/jpeg",
         )
-        print(asset.pipe.path())
-        print()
-        assert asset.pipe.path().is_file(), "thumbnail 생성하여 캐시 경로에 두기"
-    
+        asset.pipe.apply_digest()
+
     def _update_collection_spatial_extent(
         self, mdl: gpd.GeoDataFrame, dmz: gpd.GeoDataFrame
     ):

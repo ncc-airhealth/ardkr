@@ -1,0 +1,199 @@
+{
+  "type": "Collection",
+  "id": "esri-mdl-dmz",
+  "stac_version": "1.1.0",
+  "description": "\n\ud55c\ubc18\ub3c4 \uad70\uc0ac\ubd84\uacc4\uc120(MDL)\uacfc \ube44\ubb34\uc7a5\uc9c0\ub300(DMZ) \uacbd\uacc4 \ub370\uc774\ud130\uc14b.\n\n## memo\n\n- \uc6d0\ubcf8 item \uc124\uba85\uc740 EPSG:5181\uc744 \uc801\uc9c0\ub9cc \uc11c\ube44\uc2a4 \uc751\ub2f5\uc740 EPSG:5186.\n- \uc2dc\uac04 \ubc94\uc704\uc758 \uc2dc\uc791\uc740 \uc815\uc804\ud611\uc815 \ubc1c\ud6a8 \uc2dc\uac01, \ub05d\uc740 \uc6d0\ubcf8 \ub370\uc774\ud130 \uae30\uc900\uc77c\ub85c \ud574\uc11d.\n- \ub370\uc774\ud130 \uc81c\uacf5\uc790\uc5d0\uc11c \uc2a4\ud0a4\ub9c8 \uc815\ubcf4\ub97c \ubbf8\uc81c\uacf5.\n- \ud55c\uad6d\uc5d0\uc2a4\ub9ac\uac00 \ubcd1\ud569 \uc678 \ubcc4\ub3c4 \uac00\uacf5\uc744 \ud588\ub294\uc9c0 \uba85\uc2dc\ub418\uc9c0 \uc54a\uc74c.\n",
+  "links": [
+    {
+      "rel": "via",
+      "href": "https://portal.esrikr.com/arcgis/rest/services/Hosted/KR_MDL_DMZ/FeatureServer",
+      "title": "FeatureServer"
+    },
+    {
+      "rel": "via",
+      "href": "https://www.arcgis.com/home/item.html?id=38abc1ea73d94ab18e55f7b0ee13c812",
+      "title": "ArcGIS item"
+    },
+    {
+      "rel": "via",
+      "href": "https://data.neins.go.kr/detail/dts-eh03eVuTQu",
+      "title": "\uad70\uc0ac\ubd84\uacc4\uc120 \uc6d0\ubcf8"
+    },
+    {
+      "rel": "via",
+      "href": "https://data.neins.go.kr/detail/dts-FeJLArLgg1",
+      "title": "\ube44\ubb34\uc7a5\uc9c0\ub300 \uc6d0\ubcf8"
+    },
+    {
+      "rel": "related",
+      "href": "https://www.archives.gov/milestone-documents/armistice-agreement-restoration-south-korean-state",
+      "title": "\uc815\uc804\ud611\uc815"
+    },
+    {
+      "rel": "related",
+      "href": "https://repository.kei.re.kr/handle/2017.oak/22531",
+      "title": "KEI DMZ \uacf5\uac04\uc5ed \ubcf4\uace0\uc11c"
+    },
+    {
+      "rel": "license",
+      "href": "https://www.arcgis.com/home/item.html?id=38abc1ea73d94ab18e55f7b0ee13c812",
+      "title": "\uc6d0\ubcf8 item \uc774\uc6a9 \uc870\uac74"
+    },
+    {
+      "rel": "license",
+      "href": "https://data.neins.go.kr/copyright",
+      "title": "\uc6d0\ubcf8 \ubc30\ud3ec\ucc98 \uc800\uc791\uad8c \uc815\ucc45"
+    },
+    {
+      "rel": "root",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "parent",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    }
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/proj/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/version/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/table/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+  ],
+  "version": "3.0.1",
+  "experimental": false,
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          126.64685893945881,
+          37.83399740919223,
+          128.3683860401958,
+          38.635703428605204
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "1953-07-27T13:00:00Z",
+          "2025-05-01T00:00:00Z"
+        ]
+      ]
+    }
+  },
+  "license": "proprietary",
+  "keywords": [
+    "\uad70\uc0ac\ubd84\uacc4\uc120",
+    "\ube44\ubb34\uc7a5\uc9c0\ub300",
+    "MDL",
+    "DMZ",
+    "\uc815\uc804\ud611\uc815"
+  ],
+  "providers": [
+    {
+      "name": "\ud658\uacbd\ubd80",
+      "roles": [
+        "licensor"
+      ],
+      "url": "https://www.me.go.kr/"
+    },
+    {
+      "name": "\ud55c\uad6d\ud658\uacbd\uc5f0\uad6c\uc6d0",
+      "roles": [
+        "producer"
+      ],
+      "url": "https://data.neins.go.kr/"
+    },
+    {
+      "name": "\ud55c\uad6d\uc5d0\uc2a4\ub9ac",
+      "roles": [
+        "processor",
+        "host"
+      ],
+      "url": "https://www.esrikr.com/"
+    }
+  ],
+  "assets": {
+    "mdl": {
+      "href": "s3://geovars/ardkr/esri-mdl-dmz/3.0.1/assets/mdl.parquet",
+      "type": "application/vnd.apache.parquet",
+      "title": "Military Demarcation Line (MDL)",
+      "file:checksum": "12201603181e894b203f0dd2b72082531dd7688d17e182e799ff8538c569e01722ae",
+      "file:size": 46048,
+      "table:columns": [
+        {
+          "name": "fid",
+          "type": "int32"
+        },
+        {
+          "name": "SHAPE__Length",
+          "type": "float64"
+        },
+        {
+          "name": "objectid",
+          "type": "int32"
+        },
+        {
+          "name": "geometry",
+          "type": "geometry"
+        }
+      ],
+      "table:row_count": 1,
+      "table:primary_geometry": "geometry",
+      "proj:code": "EPSG:4326",
+      "roles": [
+        "data"
+      ]
+    },
+    "dmz": {
+      "href": "s3://geovars/ardkr/esri-mdl-dmz/3.0.1/assets/dmz.parquet",
+      "type": "application/vnd.apache.parquet",
+      "title": "Demilitarized Zone (DMZ)",
+      "file:checksum": "1220eb207352deb727cca4ee58f850beb60075dc457e2026217a8686db723c48be13",
+      "file:size": 69675,
+      "table:columns": [
+        {
+          "name": "fid",
+          "type": "int32"
+        },
+        {
+          "name": "SHAPE__Length",
+          "type": "float64"
+        },
+        {
+          "name": "objectid",
+          "type": "int32"
+        },
+        {
+          "name": "SHAPE__Area",
+          "type": "float64"
+        },
+        {
+          "name": "geometry",
+          "type": "geometry"
+        }
+      ],
+      "table:row_count": 1,
+      "table:primary_geometry": "geometry",
+      "proj:code": "EPSG:4326",
+      "roles": [
+        "data"
+      ]
+    },
+    "thumbnail": {
+      "href": "s3://ardkr-open/ardkr/esri-mdl-dmz/3.0.1/assets/thumbnail.jpeg",
+      "type": "image/jpeg",
+      "title": "Thumbnail",
+      "file:checksum": "1220901cad338d2b5bafcb61bd38f913991043ddb89468ac12f76c8c84a9e88fb7c3",
+      "file:size": 163267,
+      "roles": [
+        "thumbnail"
+      ]
+    }
+  }
+}
