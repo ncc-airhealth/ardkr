@@ -16,8 +16,6 @@ from __future__ import annotations
 import subprocess
 import sys
 import tomllib
-from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 
 # 정규 arch. 세부: pipeline/images/README.md.
@@ -27,29 +25,6 @@ CANONICAL_PLATFORM = "linux/arm64"
 CONTAINER_WORKSPACE = "/workspace"
 CONTAINER_CACHE_ROOT = "/cache"
 CONTAINER_CATALOG_ROOT = f"{CONTAINER_WORKSPACE}/catalog"
-
-
-class LockAction(Enum):
-    GENERATE = "generate"  # lock 없음 → 컨테이너 안에서 생성
-    FROZEN = "frozen"      # lock 있음 → 그대로 사용(pin 유지)
-    RELOCK = "relock"      # --relock → 재생성(새 버전 취급)
-
-
-@dataclass(frozen=True)
-class RunPlan:
-    collection_id: str
-    root: Path          # 레포 루트
-    script: Path        # pipeline/process/<collection-id>.py
-    lock: Path          # pipeline/process/<collection-id>.py.lock
-    image: str          # YYYY.MM.DD
-    image_dir: Path     # pipeline/images/<image>/
-    lock_action: LockAction
-
-
-@dataclass(frozen=True)
-class CachePaths:
-    root: Path  # <repo>/.cache/
-    collection_id: str
 
 
 def find_repo_root(start: Path | None = None) -> Path:
@@ -112,8 +87,86 @@ def _extract_pep723(text: str) -> str | None:
     return None  # 닫는 `# ///` 없음
 
 
-def plan_run(collection_id: str, *, relock: bool, repo_root: Path | None = None) -> RunPlan:
-    root = repo_root or find_repo_root()
+def image_tag(image: str) -> str:
+    return f"ardkr-pipeline-image:{image}"
+
+
+def ensure_image(image: str, image_dir: Path) -> str:
+    """이미지가 로컬에 있으면 그대로 쓰고, 없으면 빌드한다.
+
+    레지스트리 선택(GHCR/R2 등)은 아직 미정이라, 정규 경로인 "보존된 이미지 pull"은
+    나중에 여기 추가한다. 지금은 로컬 빌드로 폴백한다 — 매 스크립트 실행마다가 아니라
+    이미지가 없을 때 딱 한 번만 든다.
+    """
+    tag = image_tag(image)
+    inspect = subprocess.run(
+        ["docker", "image", "inspect", tag],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if inspect.returncode == 0:
+        return tag
+
+    subprocess.run(
+        [
+            "docker",
+            "build",
+            "--platform",
+            CANONICAL_PLATFORM,
+            "-t",
+            tag,
+            str(image_dir),
+        ],
+        check=True,
+    )
+    return tag
+
+
+def prepare_cache(root: Path, collection_id: str) -> Path:
+    """`.cache/` 서브디렉토리를 만든다(host 전용, git-ignored, 순수 가속 장치)."""
+    cache_root = root / ".cache"
+    for sub in ("uv", "duckdb", "s3", f"pipeline/{collection_id}"):
+        (cache_root / sub).mkdir(parents=True, exist_ok=True)
+    return cache_root
+
+
+def _to_container_path(root: Path, path: Path) -> str:
+    return f"{CONTAINER_WORKSPACE}/{path.relative_to(root).as_posix()}"
+
+
+def _docker_run(
+    root: Path,
+    image_ref: str,
+    cache_root: Path,
+    collection_id: str,
+    inner_argv: list[str],
+) -> int:
+    argv = [
+        "docker", "run", "--rm",
+        "--platform", CANONICAL_PLATFORM,
+        "-v", f"{root}:{CONTAINER_WORKSPACE}",
+        "-w", CONTAINER_WORKSPACE,
+        "-v", f"{cache_root}:{CONTAINER_CACHE_ROOT}",
+    ]
+    # 레포 루트 .env → 컨테이너 환경변수. 캐시 경로 -e 가 뒤에 와서 덮어쓴다.
+    env_file = root / ".env"
+    if env_file.is_file():
+        argv.extend(["--env-file", str(env_file)])
+    argv.extend([
+        "-e", f"UV_CACHE_DIR={CONTAINER_CACHE_ROOT}/uv",
+        "-e", f"ARDKR_CACHE_ROOT={CONTAINER_CACHE_ROOT}",
+        "-e", f"ARDKR_S3_CACHE_DIR={CONTAINER_CACHE_ROOT}/s3",
+        "-e", f"ARDKR_DUCKDB_CACHE_DIR={CONTAINER_CACHE_ROOT}/duckdb",
+        "-e", f"ARDKR_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{collection_id}",
+        "-e", f"ARDKR_CATALOG_ROOT={CONTAINER_CATALOG_ROOT}",
+        image_ref,
+        *inner_argv,
+    ])
+    return subprocess.run(argv).returncode
+
+
+def run_collection(collection_id: str, *, relock: bool = False) -> int:
+    root = find_repo_root()
     script = root / "pipeline" / "process" / f"{collection_id}.py"
     if not script.is_file():
         raise FileNotFoundError(f"처리 스크립트가 없습니다: {script}")
@@ -127,101 +180,29 @@ def plan_run(collection_id: str, *, relock: bool, repo_root: Path | None = None)
         )
 
     lock = script.with_suffix(".py.lock")
-    if relock:
-        action = LockAction.RELOCK
-    elif lock.is_file():
-        action = LockAction.FROZEN
-    else:
-        action = LockAction.GENERATE
 
-    return RunPlan(
-        collection_id=collection_id,
-        root=root,
-        script=script,
-        lock=lock,
-        image=image,
-        image_dir=image_dir,
-        lock_action=action,
-    )
+    tag = ensure_image(image, image_dir)
+    cache_root = prepare_cache(root, collection_id)
+    container_script = _to_container_path(root, script)
 
-
-def image_tag(image: str) -> str:
-    return f"ardkr-pipeline-image:{image}"
-
-
-def ensure_image(plan: RunPlan) -> str:
-    """이미지가 로컬에 있으면 그대로 쓰고, 없으면 빌드한다.
-
-    레지스트리 선택(GHCR/R2 등)은 아직 미정이라, 정규 경로인 "보존된 이미지 pull"은
-    나중에 여기 추가한다. 지금은 로컬 빌드로 폴백한다 — 매 스크립트 실행마다가 아니라
-    이미지가 없을 때 딱 한 번만 든다.
-    """
-    tag = image_tag(plan.image)
-    inspect = subprocess.run(
-        ["docker", "image", "inspect", tag],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-    if inspect.returncode == 0:
-        return tag
-
-    subprocess.run(
-        ["docker", "build", "--platform", CANONICAL_PLATFORM, "-t", tag, str(plan.image_dir)],
-        check=True,
-    )
-    return tag
-
-
-def prepare_cache(root: Path, collection_id: str) -> CachePaths:
-    """`.cache/` 서브디렉토리를 만든다(host 전용, git-ignored, 순수 가속 장치)."""
-    cache_root = root / ".cache"
-    for sub in ("uv", "duckdb", "s3", f"pipeline/{collection_id}"):
-        (cache_root / sub).mkdir(parents=True, exist_ok=True)
-    return CachePaths(root=cache_root, collection_id=collection_id)
-
-
-def _to_container_path(root: Path, path: Path) -> str:
-    return f"{CONTAINER_WORKSPACE}/{path.relative_to(root).as_posix()}"
-
-
-def _docker_run(root: Path, image_ref: str, cache: CachePaths, inner_argv: list[str]) -> int:
-    argv = [
-        "docker", "run", "--rm",
-        "--platform", CANONICAL_PLATFORM,
-        "-v", f"{root}:{CONTAINER_WORKSPACE}",
-        "-w", CONTAINER_WORKSPACE,
-        "-v", f"{cache.root}:{CONTAINER_CACHE_ROOT}",
-    ]
-    # 레포 루트 .env → 컨테이너 환경변수. 캐시 경로 -e 가 뒤에 와서 덮어쓴다.
-    env_file = root / ".env"
-    if env_file.is_file():
-        argv.extend(["--env-file", str(env_file)])
-    argv.extend([
-        "-e", f"UV_CACHE_DIR={CONTAINER_CACHE_ROOT}/uv",
-        "-e", f"ARDKR_CACHE_ROOT={CONTAINER_CACHE_ROOT}",
-        "-e", f"ARDKR_S3_CACHE_DIR={CONTAINER_CACHE_ROOT}/s3",
-        "-e", f"ARDKR_DUCKDB_CACHE_DIR={CONTAINER_CACHE_ROOT}/duckdb",
-        "-e", f"ARDKR_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{cache.collection_id}",
-        "-e", f"ARDKR_CATALOG_ROOT={CONTAINER_CATALOG_ROOT}",
-        image_ref,
-        *inner_argv,
-    ])
-    return subprocess.run(argv).returncode
-
-
-def run_collection(collection_id: str, *, relock: bool = False) -> int:
-    plan = plan_run(collection_id, relock=relock)
-
-    tag = ensure_image(plan)
-    cache = prepare_cache(plan.root, collection_id)
-    container_script = _to_container_path(plan.root, plan.script)
-
-    if plan.lock_action in (LockAction.GENERATE, LockAction.RELOCK):
-        rc = _docker_run(plan.root, tag, cache, ["uv", "lock", "--script", container_script])
+    if relock or not lock.is_file():
+        rc = _docker_run(
+            root,
+            tag,
+            cache_root,
+            collection_id,
+            ["uv", "lock", "--script", container_script],
+        )
         if rc != 0:
             return rc
 
-    return _docker_run(plan.root, tag, cache, ["uv", "run", "--frozen", "--script", container_script])
+    return _docker_run(
+        root,
+        tag,
+        cache_root,
+        collection_id,
+        ["uv", "run", "--frozen", "--script", container_script],
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
