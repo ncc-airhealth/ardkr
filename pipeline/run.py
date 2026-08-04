@@ -134,6 +134,29 @@ def _to_container_path(root: Path, path: Path) -> str:
     return f"{CONTAINER_WORKSPACE}/{path.relative_to(root).as_posix()}"
 
 
+def _with_image_site_packages(inner_argv: list[str]) -> list[str]:
+    """uv --script 격리 env에 이미지(pixi) site-packages·data dir를 붙인다.
+
+    이미지의 gdal/osgeo 등 conda 패키지는 PyPI 휠이 아니라 uv script deps로
+    넣을 수 없다. site-packages를 PYTHONPATH에 올리고, PROJ/GDAL 데이터
+    경로도 이미지 prefix 기준으로 잡는다.
+    """
+    # prefix = .../envs/default ; site-packages = prefix/lib/pythonX.Y/site-packages
+    return [
+        "sh",
+        "-c",
+        "prefix=\"$(python -c 'import sys; print(sys.prefix)')\" && "
+        "pyver=\"$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")')\" && "
+        "export PYTHONPATH=\"$prefix/lib/python$pyver/site-packages${PYTHONPATH:+:$PYTHONPATH}\" && "
+        "export PROJ_DATA=\"$prefix/share/proj\" && "
+        "export PROJ_LIB=\"$prefix/share/proj\" && "
+        "export GDAL_DATA=\"$prefix/share/gdal\" && "
+        'exec "$@"',
+        "sh",
+        *inner_argv,
+    ]
+
+
 def _docker_run(
     root: Path,
     image_ref: str,
@@ -160,7 +183,7 @@ def _docker_run(
         "-e", f"ARDKR_SCRATCH_DIR={CONTAINER_CACHE_ROOT}/pipeline/{collection_id}",
         "-e", f"ARDKR_CATALOG_ROOT={CONTAINER_CATALOG_ROOT}",
         image_ref,
-        *inner_argv,
+        *_with_image_site_packages(inner_argv),
     ])
     return subprocess.run(argv).returncode
 
