@@ -20,6 +20,7 @@
 
 - [ ] Helper 메서드('_' prefix 적용)를 활용한다.
 - [ ] `pipeline/ruff.toml`을 적용한다.
+- [ ] 불필요한 `from __future__ import annotations`를 넣지 않는다.
 
 ## STAC 메타데이터 처리
 

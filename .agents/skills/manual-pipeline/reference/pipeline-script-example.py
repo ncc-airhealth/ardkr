@@ -10,7 +10,13 @@
 # ///
 
 """
-<Collection별 pipeline script 초안>
+<한 줄 요약>
+
+## 주의사항
+- <사용 시 주의>
+
+## <주제> 관련 의사결정
+- <선택/해석과 근거>
 """
 
 from ardkr.pipeline import CollectionBuilder

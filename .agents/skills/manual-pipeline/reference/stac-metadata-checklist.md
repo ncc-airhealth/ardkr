@@ -29,14 +29,21 @@
 
 - [ ] `stac_version`이 `"1.1.0"`이다.
 - [ ] `id`, `version`, `license`가 정의되어 있다.
-- [ ] `description`은 한국어 Markdown이다.
 - [ ] `title`은 한국어를 기본으로 한다. (기관명·플랫폼 등 고유명사 영문 허용)
 - [ ] `keywords`는 한국어를 기본으로 한다. (고유명사 영문 허용)
 - [ ] `providers`의 name·roles·url이 확인된 주체·역할과 맞다.
 - [ ] `providers.roles` 값은 `producer`, `processor`, `licensor`, `host`만 허용한다.
 - [ ] `license`는 SPDX 식별자·표현식, `proprietary`, 또는 `various`이다. SPDX 목록 밖이면 `proprietary`를 쓰고 `license` link로 근거를 남긴다.
 
-## Link
+## `description` 필드
+
+- [ ] 한국어로, Markdown 포맷으로 작성한다.
+- [ ] 다른 STAC field·extension field에 이미 있는 정보를 중복해 쓰지 않는다.
+- [ ] 헤더 + 리스트로 읽기 쉽게 쓴다.
+- [ ] 데이터 사용 시 주의사항을 포함한다.
+- [ ] 메타데이터 설계 관련 의사결정을 포함한다. (예: 시점 해석, 좌표계 선택, 원본 충돌 처리, 가공 범위 한계)
+
+## `Link` 필드
 
 - [ ] 출처·대체·라이선스·관련 `rel` 필드의 값이 적절히 사용되었다.
   - `alternate`: 동일 내용의 다른 표현 (예: `text/html` 웹 페이지)
