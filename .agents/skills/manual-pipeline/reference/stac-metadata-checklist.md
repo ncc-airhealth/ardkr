@@ -38,6 +38,8 @@
 ## `description` 필드
 
 - [ ] 한국어로, Markdown 포맷으로 작성한다.
+- [ ] 구조화 가능한 정보는 core/extension 필드에 둔다.
+- [ ] description에는 사용 주의, 해석·의사결정, 원본 충돌·한계만 둔다.
 - [ ] 다른 STAC field·extension field에 이미 있는 정보를 중복해 쓰지 않는다.
 - [ ] 헤더 + 리스트로 읽기 쉽게 쓴다.
 - [ ] 데이터 사용 시 주의사항을 포함한다.
