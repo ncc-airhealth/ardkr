@@ -7,4 +7,4 @@
 - 빌드된 이미지는 레지스트리에 **보존**한다(냉동). 여기 커밋되는 것은 **빌드 정의**이지 이미지 blob이 아니다.
 - 처리 스크립트가 상단 `[tool.ardkr] image`로 이 중 하나를 가리킨다. 시스템 deps를 올리면 새 날짜 디렉토리를 만들고, 옛 스크립트는 옛 버전을 계속 가리킨다.
 
-세부: [`../../.agents/skills/pipeline-script-shape/SKILL.md`](../../.agents/skills/pipeline-script-shape/SKILL.md)
+처리 스크립트와의 연결은 [`../run.py`](../run.py)가 담당한다. 새 시스템 환경은 이 디렉터리의 날짜 버전 정의와 `run.py`의 image 해석을 함께 확인한다.
