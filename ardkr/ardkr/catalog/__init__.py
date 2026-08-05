@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
 import pystac
 from pystac.layout import TemplateLayoutStrategy
+from pystac.stac_io import DefaultStacIO
 
 CATALOG_ROOT_ENV = "ARDKR_CATALOG_ROOT"
 
@@ -16,6 +18,15 @@ _LAYOUT_STRATEGY = TemplateLayoutStrategy(
     collection_template="${id}/${version}/collection.json",
     item_template="items/${id}/item.json",
 )
+
+
+class _Utf8StacIO(DefaultStacIO):
+    """Serialize STAC JSON as readable UTF-8 text."""
+
+    def json_dumps(self, json_dict, *args, **kwargs) -> str:
+        kwargs.setdefault("indent", 2)
+        kwargs["ensure_ascii"] = False
+        return json.dumps(json_dict, *args, **kwargs)
 
 
 def _catalog_root() -> Path:
@@ -82,6 +93,7 @@ def register_collection(collection: pystac.Collection) -> None:
         str(_catalog_root()),
         catalog_type=pystac.CatalogType.RELATIVE_PUBLISHED,
         strategy=_LAYOUT_STRATEGY,
+        stac_io=_Utf8StacIO(),
     )
 
 
