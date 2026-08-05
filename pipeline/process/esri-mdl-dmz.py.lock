@@ -21,7 +21,7 @@ requirements = [
 [[package]]
 name = "ardkr"
 version = "0.0.0"
-source = { git = "https://github.com/ncc-airhealth/ardkr.git?subdirectory=ardkr&rev=main#f34ce29123eb4afbd20338239b2660b8e38c6706" }
+source = { git = "https://github.com/ncc-airhealth/ardkr.git?subdirectory=ardkr&rev=main#25eaa363ada78a9f81691d8c482ccef9b564125a" }
 dependencies = [
     { name = "pystac" },
 ]
@@ -29,6 +29,7 @@ dependencies = [
 [package.optional-dependencies]
 pipeline = [
     { name = "boto3" },
+    { name = "pystac", extra = ["validation"] },
 ]
 
 [[package]]
