@@ -17,7 +17,7 @@ dependencies = ["pystac>=1.10"]
 # Each list starts with anchor deps only; extend as features land (TODO).
 catalog = []
 storage = ["boto3>=1.34"]
-pipeline = ["boto3>=1.34"]
+pipeline = ["boto3>=1.34", "pystac[validation]>=1.10"]
 dashboard = ["marimo>=0.9"]
 modeling = ["numpy>=2.0", "pandas>=2.2"]
 # Convenience meta-extra: everything.

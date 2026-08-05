@@ -41,6 +41,10 @@ class CollectionBuilder(ABC):
                 raise ValueError(f"confrim checklist : `{q}`")
 
     def publish(self) -> None:
+        self.collection.validate()
+        for item in self.collection.get_items(recursive=True):
+            item.validate()
+
         catalog.register_collection(self.collection)
 
         if self.collection.ext.version.experimental:
