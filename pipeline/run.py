@@ -2,7 +2,7 @@
 
   래퍼 한 번 실행 =
     ① 스크립트 상단 PEP 723 `[tool.ardkr] image` 읽기 → 그 컨테이너 진입
-    ② lock 처리 (없으면 생성 / 있으면 frozen / --relock 로만 재생성)
+    ② lock 처리 (없으면 생성 / 있으면 frozen / --relock 시 upgrade로 재생성)
     ③ 컨테이너 안에서 `uv run --script <script>`
 
 CLI: `python3 pipeline/run.py <collection-id>`
@@ -209,12 +209,16 @@ def run_collection(collection_id: str, *, relock: bool = False) -> int:
     container_script = _to_container_path(root, script)
 
     if relock or not lock.is_file():
+        lock_argv = ["uv", "lock", "--script", container_script]
+        if relock:
+            # 기존 pin(git branch resolved commit 포함)을 무시하고 최신으로 재해석한다.
+            lock_argv.append("--upgrade")
         rc = _docker_run(
             root,
             tag,
             cache_root,
             collection_id,
-            ["uv", "lock", "--script", container_script],
+            lock_argv,
         )
         if rc != 0:
             return rc
@@ -234,7 +238,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("collection_id", help="pipeline/process/<collection-id>.py 의 id")
     parser.add_argument(
-        "--relock", action="store_true", help="lock을 의도적으로 재생성(새 버전 취급)"
+        "--relock", action="store_true", help="lock을 의도적으로 재생성(uv lock --upgrade; 기존 pin 무시)"
     )
     args = parser.parse_args(argv)
     return run_collection(args.collection_id, relock=args.relock)
