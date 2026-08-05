@@ -1,0 +1,221 @@
+{
+  "type": "Collection",
+  "id": "esri-mdl-dmz",
+  "stac_version": "1.1.0",
+  "description": "\n한반도 군사분계선(MDL)과 비무장지대(DMZ) 경계 데이터.\n\n## 주의사항\n- 연구·분석 참고용이다. 군사·행정 경계의 공식 확정본으로 보지 않는다.\n- 한국에스리 쪽 문서에 적힌 가공은 shapefile 병합까지다. 그 밖의 가공 여부는 확인되지 않았다.\n- live FeatureServer를 조회하므로, 나중에 서비스가 바뀌면 결과가 달라질 수 있다.\n- 위치 정확도, 축척, 법적 효력은 원본에서 확인되지 않았다.\n\n## 시점 관련 의사결정\n- 정전협정 서명 시각이 아니라 발효 시각을 시작 시각으로 설정했다.\n- 종료 시점은 비워 둔다. MDL·DMZ는 아직 유효하다.\n- Esri ArcGIS item의 `Data Reference Date: 2025.05`를 데이터 기준월로 설정했다.\n- NEINS 원본에는 2024년 생성·갱신 기록이 있고, FeatureServer layer의 lastEditDate는 2025-08-26이다.\n- Collection `created`는 이 컬렉션 스냅샷을 파이프라인으로 만든 시각이다.\n\n## 좌표계 관련 의사결정\n- FeatureServer를 `outSR=4326`으로 조회했다.\n- 서비스와 NEINS 원본 메타데이터는 `EPSG:5186`이다.\n- ArcGIS item 문구만 `EPSG:5181`을 적는다. 원본 미터 좌표를 5181로 읽으면 위치가 크게 틀어지므로, 원본 좌표계는 서비스·NEINS를 따른다.\n",
+  "links": [
+    {
+      "rel": "via",
+      "href": "https://portal.esrikr.com/arcgis/rest/services/Hosted/KR_MDL_DMZ/FeatureServer",
+      "type": "application/json",
+      "title": "FeatureServer (수집 원천)"
+    },
+    {
+      "rel": "via",
+      "href": "https://www.arcgis.com/home/item.html?id=38abc1ea73d94ab18e55f7b0ee13c812",
+      "type": "text/html",
+      "title": "ArcGIS item (공개 메타데이터)"
+    },
+    {
+      "rel": "via",
+      "href": "https://data.neins.go.kr/detail/dts-eh03eVuTQu",
+      "type": "text/html",
+      "title": "NEINS 군사분계선 원본"
+    },
+    {
+      "rel": "via",
+      "href": "https://data.neins.go.kr/detail/dts-FeJLArLgg1",
+      "type": "text/html",
+      "title": "NEINS 비무장지대 원본"
+    },
+    {
+      "rel": "related",
+      "href": "https://www.archives.gov/milestone-documents/armistice-agreement-restoration-south-korean-state",
+      "type": "text/html",
+      "title": "정전협정 원문·설명 (NARA)"
+    },
+    {
+      "rel": "related",
+      "href": "https://repository.kei.re.kr/handle/2017.oak/22531",
+      "type": "text/html",
+      "title": "KEI 2019 DMZ 공간역 정의 참고 보고서"
+    },
+    {
+      "rel": "license",
+      "href": "https://www.arcgis.com/home/item.html?id=38abc1ea73d94ab18e55f7b0ee13c812",
+      "type": "text/html",
+      "title": "환경부 all rights reserved (ArcGIS item)"
+    },
+    {
+      "rel": "license",
+      "href": "https://data.neins.go.kr/copyright",
+      "type": "text/html",
+      "title": "NEINS: 공공누리 없으면 담당 부서 사전협의"
+    },
+    {
+      "rel": "root",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "parent",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    }
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/version/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/table/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+  ],
+  "version": "3.0.2",
+  "experimental": false,
+  "created": "2026-08-05T13:36:50Z",
+  "title": "한반도 군사분계선·비무장지대 경계",
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          126.64685893945881,
+          37.83399740919223,
+          128.3683860401958,
+          38.635703428605204
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "1953-07-27T13:00:00Z",
+          null
+        ]
+      ]
+    }
+  },
+  "license": "proprietary",
+  "keywords": [
+    "군사분계선",
+    "비무장지대",
+    "MDL",
+    "DMZ",
+    "정전협정",
+    "휴전선"
+  ],
+  "providers": [
+    {
+      "name": "환경부",
+      "roles": [
+        "licensor"
+      ],
+      "url": "https://www.me.go.kr/"
+    },
+    {
+      "name": "한국환경연구원",
+      "roles": [
+        "producer"
+      ],
+      "url": "https://data.neins.go.kr/"
+    },
+    {
+      "name": "한국에스리",
+      "roles": [
+        "processor",
+        "host"
+      ],
+      "url": "https://www.esrikr.com/"
+    }
+  ],
+  "assets": {
+    "mdl": {
+      "href": "s3://geovars/ardkr/esri-mdl-dmz/3.0.2/assets/mdl.parquet",
+      "type": "application/vnd.apache.parquet",
+      "title": "군사분계선 (MDL)",
+      "description": "한반도를 남북으로 가르는 군사분계선. 흔히 휴전선이라고 부른다. FeatureServer layer 0 (KR_MDL). 전국 단위 LineString feature 한 행.",
+      "file:checksum": "12201603181e894b203f0dd2b72082531dd7688d17e182e799ff8538c569e01722ae",
+      "file:size": 46048,
+      "table:columns": [
+        {
+          "name": "fid",
+          "type": "int32",
+          "description": "FeatureServer object ID (layer OID)."
+        },
+        {
+          "name": "SHAPE__Length",
+          "type": "float64",
+          "description": "ArcGIS virtual geometry length. 서비스 투영좌표계 기준 평면 길이(m). 측지 거리가 아니다."
+        },
+        {
+          "name": "objectid",
+          "type": "int32",
+          "description": "원본 shapefile object ID로 보이는 식별자."
+        },
+        {
+          "name": "geometry",
+          "type": "geometry",
+          "description": "주 geometry. 배포 CRS는 EPSG:4326. 전국 단위 단일 feature이며 Z/M 없음."
+        }
+      ],
+      "table:row_count": 1,
+      "table:primary_geometry": "geometry",
+      "proj:code": "EPSG:4326",
+      "roles": [
+        "data"
+      ]
+    },
+    "dmz": {
+      "href": "s3://geovars/ardkr/esri-mdl-dmz/3.0.2/assets/dmz.parquet",
+      "type": "application/vnd.apache.parquet",
+      "title": "비무장지대 (DMZ)",
+      "description": "정전협정에 따라 군사분계선에서 쌍방이 각 2 km씩 물러나 만든 비무장지대 경계. FeatureServer layer 1 (KR_DMZ). 전국 단위 Polygon feature 한 행.",
+      "file:checksum": "1220eb207352deb727cca4ee58f850beb60075dc457e2026217a8686db723c48be13",
+      "file:size": 69675,
+      "table:columns": [
+        {
+          "name": "fid",
+          "type": "int32",
+          "description": "FeatureServer object ID (layer OID)."
+        },
+        {
+          "name": "SHAPE__Length",
+          "type": "float64",
+          "description": "ArcGIS virtual geometry length. 서비스 투영좌표계 기준 평면 길이(m). 측지 거리가 아니다."
+        },
+        {
+          "name": "objectid",
+          "type": "int32",
+          "description": "원본 shapefile object ID로 보이는 식별자."
+        },
+        {
+          "name": "SHAPE__Area",
+          "type": "float64",
+          "description": "ArcGIS virtual geometry area. 서비스 투영좌표계 기준 평면 면적(m²). 측지 면적이 아니다."
+        },
+        {
+          "name": "geometry",
+          "type": "geometry",
+          "description": "주 geometry. 배포 CRS는 EPSG:4326. 전국 단위 단일 feature이며 Z/M 없음."
+        }
+      ],
+      "table:row_count": 1,
+      "table:primary_geometry": "geometry",
+      "proj:code": "EPSG:4326",
+      "roles": [
+        "data"
+      ]
+    },
+    "thumbnail": {
+      "href": "s3://ardkr-open/ardkr/esri-mdl-dmz/3.0.2/assets/thumbnail.jpeg",
+      "type": "image/jpeg",
+      "title": "미리보기",
+      "description": "MDL·DMZ 경계 미리보기. 미리 둔 파일을 등록하고 digest만 계산한다.",
+      "file:checksum": "1220901cad338d2b5bafcb61bd38f913991043ddb89468ac12f76c8c84a9e88fb7c3",
+      "file:size": 163267,
+      "roles": [
+        "thumbnail"
+      ]
+    }
+  }
+}

@@ -12,8 +12,9 @@
     },
     {
       "rel": "child",
-      "href": "./esri-mdl-dmz/3.0.1/collection.json",
-      "type": "application/json"
+      "href": "./esri-mdl-dmz/3.0.2/collection.json",
+      "type": "application/json",
+      "title": "한반도 군사분계선·비무장지대 경계"
     },
     {
       "rel": "self",
