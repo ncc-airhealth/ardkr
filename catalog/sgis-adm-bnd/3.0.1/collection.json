@@ -254,7 +254,7 @@
       ]
     }
   },
-  "created": "2026-08-06T00:28:54Z",
+  "created": "2026-08-06T06:04:12Z",
   "title": "SGIS 센서스용 행정구역 경계",
   "extent": {
     "spatial": {
@@ -298,7 +298,7 @@
   ],
   "assets": {
     "thumbnail": {
-      "href": "s3://ardkr-open/ardkr/sgis-adm-bnd/3.0.1/assets/thumbnail.webp",
+      "href": "https://pub-971e04c6b4ee4304b9463f2e375033b3.r2.dev/ardkr/sgis-adm-bnd/3.0.1/assets/thumbnail.webp",
       "type": "image/webp",
       "title": "미리보기",
       "description": "SGIS 행정구역 경계 데이터의 미리보기 이미지.",

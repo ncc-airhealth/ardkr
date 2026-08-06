@@ -36,7 +36,7 @@ wheels = [
 [[package]]
 name = "ardkr"
 version = "0.0.0"
-source = { git = "https://github.com/ncc-airhealth/ardkr.git?subdirectory=ardkr&rev=main#51f5723c16a0f0583089a7adb12401ab8421a5bb" }
+source = { git = "https://github.com/ncc-airhealth/ardkr.git?subdirectory=ardkr&rev=main#c86915cb489f9ede01eafcba017c135bcaf8d304" }
 dependencies = [
     { name = "pystac" },
 ]

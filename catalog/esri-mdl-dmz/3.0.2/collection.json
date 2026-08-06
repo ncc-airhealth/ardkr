@@ -73,7 +73,7 @@
   ],
   "version": "3.0.2",
   "experimental": false,
-  "created": "2026-08-05T14:24:32Z",
+  "created": "2026-08-06T06:02:09Z",
   "title": "한반도 군사분계선·비무장지대 경계",
   "extent": {
     "spatial": {
@@ -207,7 +207,7 @@
       ]
     },
     "thumbnail": {
-      "href": "s3://ardkr-open/ardkr/esri-mdl-dmz/3.0.2/assets/thumbnail.jpeg",
+      "href": "https://pub-971e04c6b4ee4304b9463f2e375033b3.r2.dev/ardkr/esri-mdl-dmz/3.0.2/assets/thumbnail.jpeg",
       "type": "image/jpeg",
       "title": "미리보기",
       "description": "MDL·DMZ 경계 미리보기. 미리 둔 파일을 등록하고 digest만 계산한다.",
