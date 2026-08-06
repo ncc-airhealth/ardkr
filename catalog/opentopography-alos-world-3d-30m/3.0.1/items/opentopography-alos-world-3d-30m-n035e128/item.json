@@ -1,0 +1,117 @@
+{
+  "type": "Feature",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v1.1.0/schema.json"
+  ],
+  "id": "opentopography-alos-world-3d-30m-n035e128",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          128.0,
+          35.0
+        ],
+        [
+          129.0,
+          35.0
+        ],
+        [
+          129.0,
+          36.0
+        ],
+        [
+          128.0,
+          36.0
+        ],
+        [
+          128.0,
+          35.0
+        ]
+      ]
+    ]
+  },
+  "bbox": [
+    128.0,
+    35.0,
+    129.0,
+    36.0
+  ],
+  "properties": {
+    "title": "AW3D30 DSM tile ALPSMLC30_N035E128_DSM",
+    "description": "OpenTopography AW3D30 V3.2 1° DSM 타일. 원본 파일명: ALPSMLC30_N035E128_DSM.tif",
+    "start_datetime": "2006-01-01T00:00:00Z",
+    "end_datetime": "2011-01-01T00:00:00Z",
+    "datetime": null
+  },
+  "links": [
+    {
+      "rel": "root",
+      "href": "../../../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "collection",
+      "href": "../../collection.json",
+      "type": "application/json",
+      "title": "OpenTopography ALOS World 3D 30m DSM (한반도 주변 타일)"
+    },
+    {
+      "rel": "parent",
+      "href": "../../collection.json",
+      "type": "application/json",
+      "title": "OpenTopography ALOS World 3D 30m DSM (한반도 주변 타일)"
+    }
+  ],
+  "assets": {
+    "dsm": {
+      "href": "s3://geovars/ardkr/opentopography-alos-world-3d-30m/3.0.1/items/opentopography-alos-world-3d-30m-n035e128/assets/ALPSMLC30_N035E128_DSM.tif",
+      "type": "image/tiff; application=geotiff",
+      "title": "AW3D30 DSM GeoTIFF",
+      "description": "OpenTopography S3의 AW3D30_global 경로에서 받은 원본 DSM GeoTIFF.",
+      "file:checksum": "1220ff5def614a859a2a575effd557a951c4968f4fbec261e92155c9b1a0f42e2918",
+      "file:size": 21478316,
+      "proj:code": "EPSG:4326",
+      "proj:shape": [
+        3600,
+        3600
+      ],
+      "proj:transform": [
+        0.0002777777777777778,
+        0.0,
+        128.0,
+        0.0,
+        -0.0002777777777777778,
+        36.0
+      ],
+      "proj:bbox": [
+        128.0,
+        35.0,
+        129.0,
+        36.0
+      ],
+      "raster:bands": [
+        {
+          "sampling": "area",
+          "data_type": "int16",
+          "spatial_resolution": 30,
+          "statistics": {
+            "minimum": -49.0,
+            "maximum": 1408.0,
+            "mean": 177.75434814814815,
+            "stddev": 183.540144804506
+          },
+          "unit": "m"
+        }
+      ],
+      "roles": [
+        "data"
+      ]
+    }
+  },
+  "collection": "opentopography-alos-world-3d-30m"
+}

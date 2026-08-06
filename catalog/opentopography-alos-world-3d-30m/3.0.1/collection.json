@@ -1,0 +1,268 @@
+{
+  "type": "Collection",
+  "id": "opentopography-alos-world-3d-30m",
+  "stac_version": "1.1.0",
+  "description": "\nOpenTopography가 배포하는 ALOS World 3D 30m(AW3D30) DSM 원본 타일.\n\n## 데이터 개요\n- JAXA의 ALOS 위성 PRISM 센서가 2006년부터 2011년까지 촬영한 영상으로 만든 지표면 모델이다.\n- 수목·건물 등 지표면 위 객체를 포함하는 DSM이다.\n- OpenTopography는 평균(average) 다운샘플링 방식이 적용된 V3.2(Jan 2021)를 제공하고 있다.\n\n## 사용 시 주의사항\n- 타일 GeoTIFF에 nodata가 정해져 있지 않다. 데이터가 없는 셀은 따로 표시되지 않으므로 주의한다.\n- 음수 고도 값이 실제 지형일 수 있다.\n- 이 컬렉션은 한반도와 주변의 1° 타일 29개만 포함한다.\n- 각 타일은 1° 셀 하나를 담고, 타일 이름의 숫자는 셀의 SW 모서리 위경도다.\n- 시간 범위는 ALOS PRISM 관측 기간을 기준으로 정했다.\n- 타일별 정확한 촬영일은 제공되지 않아 Item은 관측 기간을 `start_datetime`/`end_datetime`으로 갖는다.\n\n## 라이선스\n- OpenTopography 메타데이터는 Use License를 \"Not Provided\"로 표시한다. 권리와 이용 조건은 JAXA `Terms of Use of Research Data`를 따른다.\n- SPDX 식별자가 없어 `license`는 `proprietary`로 설정했다.\n",
+  "links": [
+    {
+      "rel": "via",
+      "href": "https://portal.opentopography.org/datasetMetadata?otCollectionID=OT.112016.4326.2",
+      "type": "text/html",
+      "title": "OpenTopography 데이터셋 메타데이터"
+    },
+    {
+      "rel": "via",
+      "href": "https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm",
+      "type": "text/html",
+      "title": "JAXA AW3D30 제품 설명"
+    },
+    {
+      "rel": "related",
+      "href": "https://doi.org/10.5069/G94M92HB",
+      "type": "text/html",
+      "title": "DOI: ALOS World 3D 30 meter DEM V3.2"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://object.cloud.sdsc.edu/v1/AUTH_opentopography/www/metadata/AW3D30_Metadata.pdf",
+      "type": "application/pdf",
+      "title": "OpenTopography AW3D30 메타데이터 PDF"
+    },
+    {
+      "rel": "license",
+      "href": "https://earth.jaxa.jp/en/data/policy/",
+      "type": "text/html",
+      "title": "JAXA Terms of Use of Research Data"
+    },
+    {
+      "rel": "license",
+      "href": "https://opentopography.org/usageterms",
+      "type": "text/html",
+      "title": "OpenTopography Terms of Use"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n033e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n034e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n034e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n034e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n034e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n034e129/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n035e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n035e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n035e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n035e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n035e129/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n036e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n036e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n036e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n036e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n036e129/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n037e124/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n037e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n037e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n037e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n037e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n037e129/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n037e130/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n037e131/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n038e124/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n038e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n038e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n038e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-alos-world-3d-30m-n038e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "root",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "parent",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    }
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/version/v1.2.0/schema.json"
+  ],
+  "version": "3.0.1",
+  "experimental": false,
+  "item_assets": {
+    "dsm": {
+      "title": "AW3D30 DSM GeoTIFF",
+      "description": "OpenTopography가 배포하는 ALOS World 3D 30m DSM 1° 타일 원본 GeoTIFF.",
+      "type": "image/tiff; application=geotiff",
+      "roles": [
+        "data"
+      ]
+    }
+  },
+  "created": "2026-08-06T04:18:54Z",
+  "title": "OpenTopography ALOS World 3D 30m DSM (한반도 주변 타일)",
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          124.0,
+          33.0,
+          132.0,
+          39.0
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "2006-01-01T00:00:00Z",
+          "2011-01-01T00:00:00Z"
+        ]
+      ]
+    }
+  },
+  "license": "proprietary",
+  "keywords": [
+    "고도",
+    "DSM",
+    "ALOS",
+    "AW3D30",
+    "OpenTopography",
+    "지형",
+    "수치표면모델"
+  ],
+  "providers": [
+    {
+      "name": "Japan Aerospace Exploration Agency",
+      "roles": [
+        "producer",
+        "licensor"
+      ],
+      "url": "https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm"
+    },
+    {
+      "name": "OpenTopography",
+      "roles": [
+        "host"
+      ],
+      "url": "https://portal.opentopography.org/datasetMetadata?otCollectionID=OT.112016.4326.2"
+    }
+  ]
+}

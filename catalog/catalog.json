@@ -23,6 +23,12 @@
       "title": "SGIS 센서스용 행정구역 경계"
     },
     {
+      "rel": "child",
+      "href": "./opentopography-alos-world-3d-30m/3.0.1/collection.json",
+      "type": "application/json",
+      "title": "OpenTopography ALOS World 3D 30m DSM (한반도 주변 타일)"
+    },
+    {
       "rel": "self",
       "href": "/workspace/catalog/catalog.json",
       "type": "application/json"
