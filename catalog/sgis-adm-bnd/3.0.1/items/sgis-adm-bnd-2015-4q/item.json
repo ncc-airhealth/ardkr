@@ -1,0 +1,160 @@
+{
+  "type": "Feature",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/table/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+  ],
+  "id": "sgis-adm-bnd-2015-4q",
+  "geometry": null,
+  "properties": {
+    "datetime": "2015-12-31T00:00:00Z"
+  },
+  "links": [
+    {
+      "rel": "root",
+      "href": "../../../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "collection",
+      "href": "../../collection.json",
+      "type": "application/json",
+      "title": "SGIS 센서스용 행정구역 경계"
+    },
+    {
+      "rel": "parent",
+      "href": "../../collection.json",
+      "type": "application/json",
+      "title": "SGIS 센서스용 행정구역 경계"
+    }
+  ],
+  "assets": {
+    "sido": {
+      "href": "s3://geovars/ardkr/sgis-adm-bnd/3.0.1/items/sgis-adm-bnd-2015-4q/assets/bnd_sido_00_2015_4Q.zip",
+      "type": "application/zip",
+      "title": "시도 경계",
+      "description": "SGIS가 제공한 시도 단위 Shapefile ZIP.",
+      "file:checksum": "12207070437d0bd4521c5ba89ed750ff235165981c447128af2905c3a0401c665e75",
+      "file:size": 6796911,
+      "table:columns": [
+        {
+          "name": "base_year",
+          "type": "str",
+          "description": "원본 DBF가 기록한 경계 기준연도."
+        },
+        {
+          "name": "sido_cd",
+          "type": "str"
+        },
+        {
+          "name": "sido_nm",
+          "type": "str"
+        },
+        {
+          "name": "geometry",
+          "type": "geometry",
+          "description": "행정구역 경계 geometry."
+        }
+      ],
+      "table:row_count": 17,
+      "table:primary_geometry": "geometry",
+      "table:storage_options": {
+        "encoding": "cp949"
+      },
+      "proj:code": "EPSG:5179",
+      "roles": [
+        "data"
+      ]
+    },
+    "sigungu": {
+      "href": "s3://geovars/ardkr/sgis-adm-bnd/3.0.1/items/sgis-adm-bnd-2015-4q/assets/bnd_sigungu_00_2015_4Q.zip",
+      "type": "application/zip",
+      "title": "시군구 경계",
+      "description": "SGIS가 제공한 시군구 단위 Shapefile ZIP.",
+      "file:checksum": "12206b468528a0516e3707627383ce2441b4073d1cb052f2c3c8ce3ef05ce5a0c664",
+      "file:size": 12922204,
+      "table:columns": [
+        {
+          "name": "BASE_YEAR",
+          "type": "str",
+          "description": "원본 DBF가 기록한 경계 기준연도."
+        },
+        {
+          "name": "SIGUNGU_CD",
+          "type": "str"
+        },
+        {
+          "name": "SIGUNGU_NM",
+          "type": "str"
+        },
+        {
+          "name": "geometry",
+          "type": "geometry",
+          "description": "행정구역 경계 geometry."
+        }
+      ],
+      "table:row_count": 252,
+      "table:primary_geometry": "geometry",
+      "table:storage_options": {
+        "encoding": "cp949"
+      },
+      "proj:code": "EPSG:5179",
+      "roles": [
+        "data"
+      ]
+    },
+    "dong": {
+      "href": "s3://geovars/ardkr/sgis-adm-bnd/3.0.1/items/sgis-adm-bnd-2015-4q/assets/bnd_dong_00_2015_4Q.zip",
+      "type": "application/zip",
+      "title": "읍면동 경계",
+      "description": "SGIS가 제공한 읍면동 단위 Shapefile ZIP.",
+      "file:checksum": "1220e4bae8a243071cf4d70fe171a59dc0d32236458f01a2a47fd051b96e96dad7b1",
+      "file:size": 33161609,
+      "table:columns": [
+        {
+          "name": "OBJECTID",
+          "type": "int32"
+        },
+        {
+          "name": "BASE_YEAR",
+          "type": "str",
+          "description": "원본 DBF가 기록한 경계 기준연도."
+        },
+        {
+          "name": "ADM_DR_CD",
+          "type": "str"
+        },
+        {
+          "name": "ADM_DR_NM",
+          "type": "str"
+        },
+        {
+          "name": "SHAPE_LENG",
+          "type": "float64"
+        },
+        {
+          "name": "SHAPE_AREA",
+          "type": "float64"
+        },
+        {
+          "name": "geometry",
+          "type": "geometry",
+          "description": "행정구역 경계 geometry."
+        }
+      ],
+      "table:row_count": 3502,
+      "table:primary_geometry": "geometry",
+      "table:storage_options": {
+        "encoding": "cp949"
+      },
+      "proj:code": "EPSG:5179",
+      "roles": [
+        "data"
+      ]
+    }
+  },
+  "collection": "sgis-adm-bnd"
+}

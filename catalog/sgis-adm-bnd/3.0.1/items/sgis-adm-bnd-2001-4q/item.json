@@ -1,0 +1,148 @@
+{
+  "type": "Feature",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/table/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+  ],
+  "id": "sgis-adm-bnd-2001-4q",
+  "geometry": null,
+  "properties": {
+    "datetime": "2001-12-31T00:00:00Z"
+  },
+  "links": [
+    {
+      "rel": "root",
+      "href": "../../../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "collection",
+      "href": "../../collection.json",
+      "type": "application/json",
+      "title": "SGIS 센서스용 행정구역 경계"
+    },
+    {
+      "rel": "parent",
+      "href": "../../collection.json",
+      "type": "application/json",
+      "title": "SGIS 센서스용 행정구역 경계"
+    }
+  ],
+  "assets": {
+    "sido": {
+      "href": "s3://geovars/ardkr/sgis-adm-bnd/3.0.1/items/sgis-adm-bnd-2001-4q/assets/bnd_sido_00_2001_4Q.zip",
+      "type": "application/zip",
+      "title": "시도 경계",
+      "description": "SGIS가 제공한 시도 단위 Shapefile ZIP.",
+      "file:checksum": "1220c688ffae4bfcf9eae48914569a3ae6a5216bcc7aa248f219ea016a4c04a6772f",
+      "file:size": 5506687,
+      "table:columns": [
+        {
+          "name": "base_year",
+          "type": "str",
+          "description": "원본 DBF가 기록한 경계 기준연도."
+        },
+        {
+          "name": "sido_cd",
+          "type": "str"
+        },
+        {
+          "name": "sido_nm",
+          "type": "str"
+        },
+        {
+          "name": "geometry",
+          "type": "geometry",
+          "description": "행정구역 경계 geometry."
+        }
+      ],
+      "table:row_count": 16,
+      "table:primary_geometry": "geometry",
+      "table:storage_options": {
+        "encoding": "cp949"
+      },
+      "proj:code": "EPSG:5179",
+      "roles": [
+        "data"
+      ]
+    },
+    "sigungu": {
+      "href": "s3://geovars/ardkr/sgis-adm-bnd/3.0.1/items/sgis-adm-bnd-2001-4q/assets/bnd_sigungu_00_2001_4Q.zip",
+      "type": "application/zip",
+      "title": "시군구 경계",
+      "description": "SGIS가 제공한 시군구 단위 Shapefile ZIP.",
+      "file:checksum": "12208af21fdcfd4eadeee0e3d1773c1d18612739f8705f0272ab624a4a9c5b99d8f6",
+      "file:size": 10858408,
+      "table:columns": [
+        {
+          "name": "BASE_YEAR",
+          "type": "str",
+          "description": "원본 DBF가 기록한 경계 기준연도."
+        },
+        {
+          "name": "SIGUNGU_CD",
+          "type": "str"
+        },
+        {
+          "name": "SIGUNGU_NM",
+          "type": "str"
+        },
+        {
+          "name": "geometry",
+          "type": "geometry",
+          "description": "행정구역 경계 geometry."
+        }
+      ],
+      "table:row_count": 245,
+      "table:primary_geometry": "geometry",
+      "table:storage_options": {
+        "encoding": "cp949"
+      },
+      "proj:code": "EPSG:5179",
+      "roles": [
+        "data"
+      ]
+    },
+    "dong": {
+      "href": "s3://geovars/ardkr/sgis-adm-bnd/3.0.1/items/sgis-adm-bnd-2001-4q/assets/bnd_dong_00_2001_4Q.zip",
+      "type": "application/zip",
+      "title": "읍면동 경계",
+      "description": "SGIS가 제공한 읍면동 단위 Shapefile ZIP.",
+      "file:checksum": "122066b1b9a88f8d33318ec8d6e08edf48dffbc8e6a75c55b965772c592073348266",
+      "file:size": 28858295,
+      "table:columns": [
+        {
+          "name": "base_year",
+          "type": "str",
+          "description": "원본 DBF가 기록한 경계 기준연도."
+        },
+        {
+          "name": "adm_dr_cd",
+          "type": "str"
+        },
+        {
+          "name": "adm_dr_nm",
+          "type": "str"
+        },
+        {
+          "name": "geometry",
+          "type": "geometry",
+          "description": "행정구역 경계 geometry."
+        }
+      ],
+      "table:row_count": 3507,
+      "table:primary_geometry": "geometry",
+      "table:storage_options": {
+        "encoding": "cp949"
+      },
+      "proj:code": "EPSG:5179",
+      "roles": [
+        "data"
+      ]
+    }
+  },
+  "collection": "sgis-adm-bnd"
+}

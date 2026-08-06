@@ -1,0 +1,312 @@
+{
+  "type": "Collection",
+  "id": "sgis-adm-bnd",
+  "stac_version": "1.1.0",
+  "description": "\n시기별 대한민국 행정구역 경계(SGIS 센서스용 원본 Shapefile ZIP).\n\n## 데이터 범위\n- 시·도, 시·군·구, 읍·면·동 세 단위의 행정구역 경계를 연도·분기별로 담고 있다.\n- 각 시점은 해당 경계의 기준일이며, 공간 범위는 대한민국 전역이다.\n- 좌표계는 EPSG:5179(UTM-K)다.\n\n## 시점\n- 기준일은 파일명이 아니라 원본 DBF에 적힌 `BASE_DATE`/`base_date` 또는 `base_year` 값을 쓴다. 예를 들어 `2023-2Q`는 파일명과 달리 `2023-07-01`이다.\n- `base_year`만 있는 자료는 2분기를 6월 30일, 4분기와 1995년 자료를 12월 31일로 정했다.\n- 1995년 원본 DBF에는 `base_year=1995`만 있어 월·일이 직접 기록되지 않았고, SGIS 문서도 기준일이 12월 31일 또는 6월 30일로 서로 다르다. 현재 명시된 12월 31일은 추론된 값이다.\n- Collection의 temporal extent는 Item 기준일의 최솟값과 최댓값이다. 그 사이 모든 시점에 경계가 존재하거나 유효하다는 뜻은 아니다.\n\n## 가공 범위\n- 원본 ZIP의 공간·속성 데이터는 변환·정규화·보정·삭제하지 않은 원본 그대로다.\n- 원본 내 좌표계 정보가 확인됐고, projection 확장에 EPSG:5179로 명시했다.\n\n## 주의사항\n- 1975·1980·1990년 읍·면·동 경계의 일부 geometry가 자기 자신과 교차한다. 111개 ZIP(총 138,661개 행) 중 읍·면·동 3개에서 12개다. 세부 개수는 1975년 3개, 1980년 4개, 1990년 5개다.\n- 이 geometry는 면적·교차·인접성 같은 공간 연산 결과에 영향을 줄 수 있어, 공간 분석 전 유효성을 검토해야 한다.\n",
+  "links": [
+    {
+      "rel": "via",
+      "href": "https://sgis.mods.go.kr/view/pss/openDataIntrcn",
+      "type": "text/html",
+      "title": "SGIS 자료제공 목록"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://sgis.mods.go.kr/view/pss/dataProvdIntrcn",
+      "type": "text/html",
+      "title": "SGIS 자료제공 안내"
+    },
+    {
+      "rel": "license",
+      "href": "https://sgis.mods.go.kr/jsp/member/copyright.jsp",
+      "type": "text/html",
+      "title": "SGIS 저작권 정책"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-1975-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-1980-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-1985-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-1990-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-1995-0q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2000-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2001-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2002-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2003-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2004-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2005-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2006-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2007-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2008-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2009-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2010-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2011-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2012-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2013-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2014-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2015-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2016-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2017-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2018-2q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2018-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2019-2q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2019-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2020-2q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2020-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2021-2q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2021-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2022-2q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2022-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2023-2q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2023-4q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2024-2q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/sgis-adm-bnd-2025-2q/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "root",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "parent",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    }
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/table/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/version/v1.2.0/schema.json"
+  ],
+  "version": "3.0.1",
+  "experimental": false,
+  "item_assets": {
+    "sido": {
+      "title": "시도 경계",
+      "description": "SGIS가 제공한 시도 단위 Shapefile ZIP.",
+      "type": "application/zip",
+      "roles": [
+        "data"
+      ]
+    },
+    "sigungu": {
+      "title": "시군구 경계",
+      "description": "SGIS가 제공한 시군구 단위 Shapefile ZIP.",
+      "type": "application/zip",
+      "roles": [
+        "data"
+      ]
+    },
+    "dong": {
+      "title": "읍면동 경계",
+      "description": "SGIS가 제공한 읍면동 단위 Shapefile ZIP.",
+      "type": "application/zip",
+      "roles": [
+        "data"
+      ]
+    }
+  },
+  "created": "2026-08-06T00:28:54Z",
+  "title": "SGIS 센서스용 행정구역 경계",
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          124.0,
+          33.0,
+          132.0,
+          39.0
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "1975-12-31T00:00:00Z",
+          "2025-06-30T00:00:00Z"
+        ]
+      ]
+    }
+  },
+  "license": "proprietary",
+  "keywords": [
+    "행정구역 경계",
+    "센서스",
+    "시도",
+    "시군구",
+    "읍면동",
+    "SGIS"
+  ],
+  "providers": [
+    {
+      "name": "국가데이터처(통계지리정보서비스)",
+      "roles": [
+        "producer",
+        "licensor",
+        "host"
+      ],
+      "url": "https://sgis.mods.go.kr/"
+    }
+  ],
+  "assets": {
+    "thumbnail": {
+      "href": "s3://ardkr-open/ardkr/sgis-adm-bnd/3.0.1/assets/thumbnail.webp",
+      "type": "image/webp",
+      "title": "미리보기",
+      "description": "SGIS 행정구역 경계 데이터의 미리보기 이미지.",
+      "file:checksum": "1220cc76654018e653cefc3e77267abf647318dc744c7e942ce45698ff648bd7c408",
+      "file:size": 102760,
+      "roles": [
+        "thumbnail"
+      ]
+    }
+  }
+}

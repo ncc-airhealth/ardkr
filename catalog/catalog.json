@@ -17,6 +17,12 @@
       "title": "한반도 군사분계선·비무장지대 경계"
     },
     {
+      "rel": "child",
+      "href": "./sgis-adm-bnd/3.0.1/collection.json",
+      "type": "application/json",
+      "title": "SGIS 센서스용 행정구역 경계"
+    },
+    {
       "rel": "self",
       "href": "/workspace/catalog/catalog.json",
       "type": "application/json"
