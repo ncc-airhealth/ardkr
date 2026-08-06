@@ -1,0 +1,260 @@
+{
+  "type": "Collection",
+  "id": "opentopography-srtm-gl1-korea",
+  "stac_version": "1.1.0",
+  "description": "\nOpenTopography가 배포하는 SRTM GL1(1 arc-second, 약 30m) 수치표고모델 원본 타일.\n\n## 데이터 개요\n- SRTM 임무(2000년 2월)에서 간섭레이더로 촬영해 만든 전 지구 DEM이다.\n- OpenTopography는 void-filling을 적용한 SRTM V3를 제공한다.\n- 이 컬렉션은 한반도와 주변 1° 타일 29개로 구성된다.\n\n## 사용 시 주의사항\n- 고도는 EGM96 지오이드 기준, 단위는 m다.\n- 값이 없는 셀은 -32768이다. (분석 전에 nodata를 처리 필요)\n- C-band 레이더 특성상 수목·건물 등 지표면 위 객체를 반영한 고도일 수 있다.\n- 타일은 3601×3601 격자라 이웃 타일과 경계에서 1px(약 30m) 겹친다.\n\n## 메타데이터 설계\n- 시간 범위는 촬영 기간(2000-02-11~22)으로 설정했다.\n- Item의 bbox는 타일 이름 기준 1° 셀이다.\n- USGS는 공공영역, OpenTopography는 \"Not Provided\"로 표기해 license는 CC0-1.0으로 결정했다.\n- 획득 기록의 DOI(10.5069/G9028PQB)는 Copernicus DEM의 것으로, SRTM Global DOI(10.5069/G9445JDF)로 바로잡았다.\n",
+  "links": [
+    {
+      "rel": "via",
+      "href": "https://portal.opentopography.org/datasetMetadata?otCollectionID=OT.042013.4326.1",
+      "type": "text/html",
+      "title": "OpenTopography 데이터셋 메타데이터"
+    },
+    {
+      "rel": "related",
+      "href": "https://doi.org/10.5069/G9445JDF",
+      "type": "text/html",
+      "title": "DOI: OpenTopography SRTM Global collection"
+    },
+    {
+      "rel": "related",
+      "href": "https://doi.org/10.5066/F7PR7TFT",
+      "type": "text/html",
+      "title": "DOI: USGS SRTM 1 Arc-Second Global"
+    },
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/data-management/data-licensing",
+      "type": "text/html",
+      "title": "USGS 데이터 라이선스 정책"
+    },
+    {
+      "rel": "license",
+      "href": "https://opentopography.org/usageterms",
+      "type": "text/html",
+      "title": "OpenTopography Terms of Use"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n33e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n34e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n34e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n34e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n34e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n34e129/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n35e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n35e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n35e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n35e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n35e129/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n36e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n36e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n36e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n36e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n36e129/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n37e124/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n37e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n37e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n37e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n37e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n37e129/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n37e130/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n37e131/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n38e124/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n38e125/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n38e126/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n38e127/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "item",
+      "href": "./items/opentopography-srtm-gl1-korea-n38e128/item.json",
+      "type": "application/geo+json"
+    },
+    {
+      "rel": "root",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "parent",
+      "href": "../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    }
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/version/v1.2.0/schema.json"
+  ],
+  "version": "3.0.1",
+  "experimental": false,
+  "item_assets": {
+    "dsm": {
+      "title": "SRTM GL1 DEM GeoTIFF",
+      "description": "OpenTopography가 배포하는 SRTM GL1 30m DEM 1° 타일 원본 GeoTIFF.",
+      "type": "image/tiff; application=geotiff",
+      "roles": [
+        "data"
+      ]
+    }
+  },
+  "created": "2026-08-06T05:14:09Z",
+  "title": "OpenTopography SRTM GL1 30m DEM (한반도 주변 타일)",
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          124.0,
+          33.0,
+          132.0,
+          39.0
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "2000-02-11T00:00:00Z",
+          "2000-02-23T00:00:00Z"
+        ]
+      ]
+    }
+  },
+  "license": "CC0-1.0",
+  "keywords": [
+    "고도",
+    "DEM",
+    "SRTM",
+    "OpenTopography",
+    "지형",
+    "수치표고모델"
+  ],
+  "providers": [
+    {
+      "name": "National Aeronautics and Space Administration",
+      "roles": [
+        "producer"
+      ],
+      "url": "https://www2.jpl.nasa.gov/srtm/"
+    },
+    {
+      "name": "OpenTopography",
+      "roles": [
+        "host"
+      ],
+      "url": "https://portal.opentopography.org/datasetMetadata?otCollectionID=OT.042013.4326.1"
+    }
+  ]
+}

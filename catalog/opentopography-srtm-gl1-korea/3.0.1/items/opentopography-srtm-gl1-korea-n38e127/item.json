@@ -1,0 +1,118 @@
+{
+  "type": "Feature",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v1.1.0/schema.json"
+  ],
+  "id": "opentopography-srtm-gl1-korea-n38e127",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          127.0,
+          38.0
+        ],
+        [
+          128.0,
+          38.0
+        ],
+        [
+          128.0,
+          39.0
+        ],
+        [
+          127.0,
+          39.0
+        ],
+        [
+          127.0,
+          38.0
+        ]
+      ]
+    ]
+  },
+  "bbox": [
+    127.0,
+    38.0,
+    128.0,
+    39.0
+  ],
+  "properties": {
+    "title": "SRTM GL1 DEM tile N38E127",
+    "description": "OpenTopography SRTM GL1 V3 1° DEM 타일. 원본 파일명: N38E127.tif",
+    "start_datetime": "2000-02-11T00:00:00Z",
+    "end_datetime": "2000-02-23T00:00:00Z",
+    "datetime": null
+  },
+  "links": [
+    {
+      "rel": "root",
+      "href": "../../../../catalog.json",
+      "type": "application/json",
+      "title": "ardkr Catalog"
+    },
+    {
+      "rel": "collection",
+      "href": "../../collection.json",
+      "type": "application/json",
+      "title": "OpenTopography SRTM GL1 30m DEM (한반도 주변 타일)"
+    },
+    {
+      "rel": "parent",
+      "href": "../../collection.json",
+      "type": "application/json",
+      "title": "OpenTopography SRTM GL1 30m DEM (한반도 주변 타일)"
+    }
+  ],
+  "assets": {
+    "dsm": {
+      "href": "s3://geovars/ardkr/opentopography-srtm-gl1-korea/3.0.1/items/opentopography-srtm-gl1-korea-n38e127/assets/N38E127.tif",
+      "type": "image/tiff; application=geotiff",
+      "title": "SRTM GL1 DEM GeoTIFF",
+      "description": "OpenTopography S3의 SRTM_GL1_srtm 경로에서 받은 원본 DEM GeoTIFF.",
+      "file:checksum": "12205e46f82509840720bf875a8d70fe542e7d0581202dd505ef25b4cd534124e208",
+      "file:size": 18990663,
+      "proj:code": "EPSG:4326",
+      "proj:shape": [
+        3601,
+        3601
+      ],
+      "proj:transform": [
+        0.0002777777777777778,
+        0.0,
+        126.99986111111112,
+        0.0,
+        -0.0002777777777777778,
+        39.00013888888889
+      ],
+      "proj:bbox": [
+        126.9998611111,
+        37.9998611111,
+        128.0001388889,
+        39.0001388889
+      ],
+      "raster:bands": [
+        {
+          "nodata": -32768.0,
+          "sampling": "area",
+          "data_type": "int16",
+          "spatial_resolution": 30,
+          "statistics": {
+            "minimum": -3.0,
+            "maximum": 1575.0,
+            "mean": 471.7196150503104,
+            "stddev": 246.53399418689165
+          },
+          "unit": "m"
+        }
+      ],
+      "roles": [
+        "data"
+      ]
+    }
+  },
+  "collection": "opentopography-srtm-gl1-korea"
+}
