@@ -32,11 +32,11 @@ def _collection_asset_href(
 ) -> str:
     catalog_id = collection.get_parent().id
     version = collection.ext.version.version
+    key = f"{catalog_id}/{collection.id}/{version}/assets/{filename}"
+    if store == storage.Store.OPEN:
+        return f"{storage.get_public_base_url(store)}/{key}"
     bucket = storage.get_bucket_name(store)
-    return (
-        f"s3://{bucket}/{catalog_id}/{collection.id}/{version}/"
-        f"assets/{filename}"
-    )
+    return f"s3://{bucket}/{key}"
 
 
 def _item_asset_href(item: Item, store: str, filename: str) -> str:
@@ -46,11 +46,14 @@ def _item_asset_href(item: Item, store: str, filename: str) -> str:
 
     catalog_id = collection.get_parent().id
     version = collection.ext.version.version
-    bucket = storage.get_bucket_name(store)
-    return (
-        f"s3://{bucket}/{catalog_id}/{collection.id}/{version}/"
+    key = (
+        f"{catalog_id}/{collection.id}/{version}/"
         f"items/{item.id}/assets/{filename}"
     )
+    if store == storage.Store.OPEN:
+        return f"{storage.get_public_base_url(store)}/{key}"
+    bucket = storage.get_bucket_name(store)
+    return f"s3://{bucket}/{key}"
 
 
 @register_accessor(Collection)

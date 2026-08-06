@@ -5,6 +5,14 @@ extra: [storage]  (pip install "ardkr[storage]")
 Provides S3 metadata and download operations. Path scheme, STAC metadata,
 upload conventions, and publishing belong to ``ardkr.pipeline``. A ``sign``
 helper (presigned URLs) may be added later.
+
+Object references come in two forms:
+
+- private store: ``s3://<bucket>/<key>``
+- open store: ``https://<public-base-host>/<key>`` where the base comes from
+  ``ARDKR_OPEN_PUBLIC_URL`` (e.g. a Cloudflare R2 public bucket or custom
+  domain). The href doubles as the STAC asset href, so browsers can fetch it
+  without credentials.
 """
 
 from __future__ import annotations
@@ -39,21 +47,42 @@ _BUCKET_ENV = {
     Store.OPEN: "ARDKR_OPEN_BUCKET_NAME",
 }
 
+_PUBLIC_BASE_ENV = {
+    Store.OPEN: "ARDKR_OPEN_PUBLIC_URL",
+}
+
 S3_CACHE_DIR = Path(os.environ["ARDKR_S3_CACHE_DIR"])
 
 
-def _parse_s3_href(href: str) -> tuple[str, str]:
-    """Parse an ``s3://bucket/key`` href."""
+def _parse_object_href(href: str) -> tuple[str, str]:
+    """Parse an object reference into ``(bucket, key)``.
+
+    Accepts ``s3://bucket/key`` for any store and the configured public HTTPS
+    base URL (``https://host/key``) for open-store objects.
+    """
     parsed = urlparse(href)
-    key = parsed.path.lstrip("/")
-    if parsed.scheme != "s3" or not parsed.netloc or not key:
-        raise ValueError(f"invalid S3 href: {href!r}")
-    return parsed.netloc, key
+    if parsed.scheme == "s3":
+        key = parsed.path.lstrip("/")
+        if not parsed.netloc or not key:
+            raise ValueError(f"invalid S3 href: {href!r}")
+        return parsed.netloc, key
+
+    if parsed.scheme in {"http", "https"}:
+        for store, env_name in _PUBLIC_BASE_ENV.items():
+            base = os.environ.get(env_name)
+            if base and urlparse(base).netloc == parsed.netloc:
+                key = parsed.path.lstrip("/")
+                if not key:
+                    raise ValueError(f"invalid object href: {href!r}")
+                return get_bucket_name(store), key
+        raise ValueError(f"unconfigured public href: {href!r}")
+
+    raise ValueError(f"unsupported href scheme: {href!r}")
 
 
 def cache_path(href: str) -> Path:
-    """Map an ``s3://bucket/key`` href to its local cache path."""
-    bucket, key = _parse_s3_href(href)
+    """Map an object href to its local cache path."""
+    bucket, key = _parse_object_href(href)
     return S3_CACHE_DIR / bucket / key
 
 
@@ -74,6 +103,26 @@ def get_bucket_name(store: str | Store = Store.PRIVATE) -> str:
     return bucket_name
 
 
+def get_public_base_url(store: str | Store = Store.OPEN) -> str:
+    """Resolve a store's public HTTPS base URL (trailing slash removed)."""
+    try:
+        store = Store(store)
+    except (TypeError, ValueError) as exc:
+        expected = ", ".join(item.value for item in Store)
+        raise ValueError(
+            f"unknown store {store!r}; expected one of: {expected}"
+        ) from exc
+
+    env_name = _PUBLIC_BASE_ENV.get(store)
+    if env_name is None:
+        raise ValueError(f"store {store!r} has no public URL")
+
+    base = os.environ.get(env_name)
+    if not base:
+        raise RuntimeError(f"{env_name} 환경변수가 필요합니다.")
+    return base.rstrip("/")
+
+
 def _store_for_bucket(bucket_name: str) -> Store:
     for store, env_name in _BUCKET_ENV.items():
         if os.environ.get(env_name) == bucket_name:
@@ -83,7 +132,7 @@ def _store_for_bucket(bucket_name: str) -> Store:
 
 def upload(source: Path, href: str) -> None:
     """Upload a local file and store its SHA-256 multihash metadata."""
-    bucket, key = _parse_s3_href(href)
+    bucket, key = _parse_object_href(href)
     store = _store_for_bucket(bucket)
     source = Path(source)
     if not source.is_file():
@@ -105,7 +154,7 @@ def upload(source: Path, href: str) -> None:
 
 def head(href: str) -> dict[str, int | str | None] | None:
     """Return remote object metadata without downloading its body."""
-    bucket, key = _parse_s3_href(href)
+    bucket, key = _parse_object_href(href)
     store = _store_for_bucket(bucket)
     client = get_client(store)
 
@@ -130,7 +179,7 @@ def download(href: str, target: Path) -> Path:
     existing target is replaced only after the complete download has the
     expected SHA-256 multihash (``1220`` + SHA-256 hex digest).
     """
-    bucket, key = _parse_s3_href(href)
+    bucket, key = _parse_object_href(href)
     store = _store_for_bucket(bucket)
     metadata = head(href)
     if metadata is None:

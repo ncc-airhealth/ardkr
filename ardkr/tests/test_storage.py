@@ -76,10 +76,10 @@ def test_head_returns_none_for_missing_object() -> None:
     assert storage.head(href) is None
 
 
-def test_head_rejects_non_s3_href() -> None:
+def test_head_rejects_unconfigured_https_href() -> None:
     storage = _storage_module()
 
-    with pytest.raises(ValueError, match="invalid S3 href"):
+    with pytest.raises(ValueError, match="unconfigured public href"):
         storage.head("https://example.com/object")
 
 
